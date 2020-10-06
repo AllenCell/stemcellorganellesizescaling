@@ -79,7 +79,7 @@ setup(
     test_suite="stemcellorganellesizescaling/tests",
     tests_require=test_requirements,
     extras_require=extra_requirements,
-    url="https://github.com/tknijnen/stemcellorganellesizescaling",
+    url="https://github.com/AllenCellModeling/stemcellorganellesizescaling",
     # Do not edit this string manually, always use bumpversion
     # Details in CONTRIBUTING.rst
     version="0.0.0",

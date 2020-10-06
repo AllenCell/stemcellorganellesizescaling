@@ -32,7 +32,7 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/tknijnen/stemcellorganellesizescaling
+    $ git clone git://github.com/AllenCellModeling/stemcellorganellesizescaling
 
 Or download the `tarball`_:
 
