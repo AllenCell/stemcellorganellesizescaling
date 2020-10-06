@@ -1,0 +1,29 @@
+stemcellorganellesizescaling package
+====================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   stemcellorganellesizescaling.bin
+
+Submodules
+----------
+
+stemcellorganellesizescaling.example module
+-------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.example
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: stemcellorganellesizescaling
+   :members:
+   :undoc-members:
+   :show-inheritance:

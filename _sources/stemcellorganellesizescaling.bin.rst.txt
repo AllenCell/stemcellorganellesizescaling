@@ -1,0 +1,22 @@
+stemcellorganellesizescaling.bin package
+========================================
+
+Submodules
+----------
+
+stemcellorganellesizescaling.bin.my\_example module
+---------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.bin.my_example
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: stemcellorganellesizescaling.bin
+   :members:
+   :undoc-members:
+   :show-inheritance:
