@@ -135,8 +135,10 @@ def outlier_removal(
     ####### Remove outliers ########
 
     # %% Remove some initial cells
+    print(cells.shape)
     cells = cells[~cells["Structure volume"].isnull()]
-    cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
+    print('FIX LINE 140')
+    # cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
     print(np.any(cells.isnull()))
     print(cells.shape)
 

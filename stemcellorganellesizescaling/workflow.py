@@ -10,7 +10,7 @@ import os, platform
 # Third party
 from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.data_prep"])
-
+from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing
 # Relative
 
 print("Libraries loaded succesfully")
@@ -40,6 +40,6 @@ initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
 print('##################### Data preparation - Outlier Removal #####################')
-# tableIN = "SizeScaling_20200828.csv"
-# tableOUT = "SizeScaling_20200828_clean.csv"
-# outlier_removal(dirs, tableIN, tableOUT)
+tableIN = "SizeScaling_20201006.csv"
+tableOUT = "SizeScaling_20201006_clean.csv"
+outlier_removal(dirs, tableIN, tableOUT)
