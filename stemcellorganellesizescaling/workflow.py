@@ -8,8 +8,8 @@ import sys, importlib
 import os, platform
 
 # Third party
-importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.data_prep"])
 from stemcellorganellesizescaling.analyses.data_prep import outlier_removal
+# importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.data_prep"])
 
 # Relative
 
