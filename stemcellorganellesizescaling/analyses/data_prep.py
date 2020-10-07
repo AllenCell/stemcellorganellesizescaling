@@ -12,6 +12,7 @@ import datetime
 from scipy.stats import gaussian_kde
 from tqdm import tqdm
 from matplotlib import cm
+import os, platform
 
 # Third party
 
@@ -22,6 +23,38 @@ from matplotlib import cm
 log = logging.getLogger(__name__)
 
 ###############################################################################
+
+
+def initial_parsing(
+    dirs: list, dataset: Path, dataset_snippet, dataset_clean: Path,
+):
+    """
+    Parses large table to get size scaling data table which contains only a subset of features
+
+    Parameters
+    ----------
+    dirs: list
+        Lists data and plotting dir
+    dataset: Path
+        absolute Path to original data table csv file
+    dataset_snippet: Path
+        Path to snippet of original table
+    dataset_clean: Path
+        Path to size scaling CSV file
+    """
+
+    # Resolve directories
+    data_root = dirs[0]
+    pic_root = dirs[1]
+
+    if platform.system() == "Linux":
+        # Load dataset
+        cells = pd.read_csv(dataset)
+
+        # Store snippet
+        cells.sample(n=10).to_csv(data_root / dataset_snippet)
+    else:
+        print("Can only be run on Linux machine at AICS")
 
 
 def outlier_removal(
@@ -50,7 +83,7 @@ def outlier_removal(
     # Remove outliers
     # %% Parameters, updated directories
     save_flag = 1  # save plot (1) or show on screen (0)
-    pic_root = (pic_root / 'outlier_removal')
+    pic_root = pic_root / "outlier_removal"
     pic_root.mkdir(exist_ok=True)
 
     # %% Yep
@@ -61,23 +94,47 @@ def outlier_removal(
     ####### Remove outliers ########
 
     # %% Remove some initial cells
-    cells = cells[~cells['Structure volume'].isnull()]
-    cells['Piece std'] = cells['Piece std'].replace(np.nan, 0)
+    cells = cells[~cells["Structure volume"].isnull()]
+    cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
     print(np.any(cells.isnull()))
     print(cells.shape)
 
     # %% Select metrics
-    selected_metricsX = ['Cell volume', 'Cell volume', 'Cytoplasmic volume',
-                         'Cell volume', 'Nuclear volume', 'Cytoplasmic volume']
+    selected_metricsX = [
+        "Cell volume",
+        "Cell volume",
+        "Cytoplasmic volume",
+        "Cell volume",
+        "Nuclear volume",
+        "Cytoplasmic volume",
+    ]
 
-    selected_metricsX_abb = ['Cell Vol', 'Cell Vol', 'Cyt vol',
-                             'Cell Vol', 'Nuc Vol', 'Cyt Vol']
+    selected_metricsX_abb = [
+        "Cell Vol",
+        "Cell Vol",
+        "Cyt vol",
+        "Cell Vol",
+        "Nuc Vol",
+        "Cyt Vol",
+    ]
 
-    selected_metricsY = ['Nuclear volume', 'Cytoplasmic volume', 'Nuclear volume',
-                         'Cell surface area', 'Nuclear surface area', 'Nuclear surface area']
+    selected_metricsY = [
+        "Nuclear volume",
+        "Cytoplasmic volume",
+        "Nuclear volume",
+        "Cell surface area",
+        "Nuclear surface area",
+        "Nuclear surface area",
+    ]
 
-    selected_metricsY_abb = ['Nuc Vol', 'Cyt Vol', 'Nuc Vol',
-                             'Cell Area', 'Nuc Area', 'Nuc Area']
+    selected_metricsY_abb = [
+        "Nuc Vol",
+        "Cyt Vol",
+        "Nuc Vol",
+        "Cell Area",
+        "Nuc Area",
+        "Nuc Area",
+    ]
 
     # %% Plotting parameters
     fac = 1000
@@ -105,7 +162,14 @@ def outlier_removal(
     fig = plt.figure(figsize=(16, 9))
 
     i = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -122,12 +186,20 @@ def outlier_removal(
         row = nrows - np.ceil(i / ncols) + 1
         row = row.astype(np.int64)
         col = i % ncols
-        if col == 0: col = ncols
+        if col == 0:
+            col = ncols
         print(f"{i}_{row}_{col}")
 
         # Main scatterplot
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-        ax.plot(x, y, 'b.', markersize=ms)
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xx,
+                yy,
+            ]
+        )
+        ax.plot(x, y, "b.", markersize=ms)
         xticks = ax.get_xticks()
         yticks = ax.get_yticks()
         xlim = ax.get_xlim()
@@ -138,8 +210,15 @@ def outlier_removal(
         ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
 
         # Bottom histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-        ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)),
+                xx,
+                yw,
+            ]
+        )
+        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
         ax.set_xticks(xticks)
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -149,8 +228,15 @@ def outlier_removal(
         ax.invert_yaxis()
 
         # Side histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-        ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)),
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xw,
+                yy,
+            ]
+        )
+        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
         ax.set_yticks(yticks)
         ax.set_xticks([])
         ax.set_xticklabels([])
@@ -184,7 +270,14 @@ def outlier_removal(
     fig = plt.figure(figsize=(16, 9))
 
     i = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -201,12 +294,20 @@ def outlier_removal(
         row = nrows - np.ceil(i / ncols) + 1
         row = row.astype(np.int64)
         col = i % ncols
-        if col == 0: col = ncols
+        if col == 0:
+            col = ncols
         print(f"{i}_{row}_{col}")
 
         # Main scatterplot
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-        ax.plot(x, y, 'b.', markersize=ms)
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xx,
+                yy,
+            ]
+        )
+        ax.plot(x, y, "b.", markersize=ms)
         xticks = ax.get_xticks()
         yticks = ax.get_yticks()
         xlim = ax.get_xlim()
@@ -217,8 +318,15 @@ def outlier_removal(
         ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
 
         # Bottom histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-        ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)),
+                xx,
+                yw,
+            ]
+        )
+        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
         ax.set_xticks(xticks)
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -228,8 +336,15 @@ def outlier_removal(
         ax.invert_yaxis()
 
         # Side histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-        ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)),
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xw,
+                yy,
+            ]
+        )
+        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
         ax.set_yticks(yticks)
         ax.set_xticks([])
         ax.set_xticklabels([])
@@ -251,12 +366,23 @@ def outlier_removal(
     Rounds = 5
 
     # %% Identify pairs, compute stuff and put into dicts
-    selected_metrics = ['Cell volume', 'Cell surface area',
-                        'Nuclear volume', 'Nuclear surface area']
+    selected_metrics = [
+        "Cell volume",
+        "Cell surface area",
+        "Nuclear volume",
+        "Nuclear surface area",
+    ]
     Q = {}
 
     counter = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -274,13 +400,17 @@ def outlier_removal(
         y = y / fac
 
         # sampling on x and y
-        xii, yii = np.mgrid[x.min():x.max():nbins * 1j, y.min():y.max():nbins * 1j]
+        xii, yii = np.mgrid[
+            x.min() : x.max() : nbins * 1j, y.min() : y.max() : nbins * 1j
+        ]
         xi = xii[:, 0]
 
         # density estimate
         for round in np.arange(Rounds):
             rs = int(datetime.datetime.utcnow().timestamp())
-            xS, yS = resample(x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs)
+            xS, yS = resample(
+                x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
+            )
             # xS, yS = resample(x, y, replace=False, n_samples=len(x), random_state=rs)
             k = gaussian_kde(np.vstack([xS, yS]))
             zii = k(np.vstack([xii.flatten(), yii.flatten()]))
@@ -319,7 +449,14 @@ def outlier_removal(
     remove_cells = []
 
     i = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -338,12 +475,20 @@ def outlier_removal(
         row = nrows - np.ceil(i / ncols) + 1
         row = row.astype(np.int64)
         col = i % ncols
-        if col == 0: col = ncols
+        if col == 0:
+            col = ncols
         print(f"{i}_{row}_{col}")
 
         # Main scatterplot
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-        ax.plot(x, y, 'b.', markersize=ms)
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xx,
+                yy,
+            ]
+        )
+        ax.plot(x, y, "b.", markersize=ms)
         pos = []
         for round in np.arange(Rounds):
             cii = Q[f"{metric1}_{metric2}_dens_c_{round}"]
@@ -352,7 +497,7 @@ def outlier_removal(
         print(len(pos))
         pos = pos.astype(int)
         remove_cells = np.union1d(remove_cells, pos)
-        ax.plot(x[pos], y[pos], 'r.', markersize=ms2)
+        ax.plot(x[pos], y[pos], "r.", markersize=ms2)
         xticks = ax.get_xticks()
         yticks = ax.get_yticks()
         xlim = ax.get_xlim()
@@ -363,8 +508,15 @@ def outlier_removal(
         ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
 
         # Bottom histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-        ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)),
+                xx,
+                yw,
+            ]
+        )
+        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
         ax.set_xticks(xticks)
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -374,8 +526,15 @@ def outlier_removal(
         ax.invert_yaxis()
 
         # Side histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-        ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)),
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xw,
+                yy,
+            ]
+        )
+        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
         ax.set_yticks(yticks)
         ax.set_xticks([])
         ax.set_xticklabels([])
@@ -413,7 +572,14 @@ def outlier_removal(
     fig = plt.figure(figsize=(16, 9))
 
     i = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -430,12 +596,20 @@ def outlier_removal(
         row = nrows - np.ceil(i / ncols) + 1
         row = row.astype(np.int64)
         col = i % ncols
-        if col == 0: col = ncols
+        if col == 0:
+            col = ncols
         print(f"{i}_{row}_{col}")
 
         # Main scatterplot
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-        ax.plot(x, y, 'b.', markersize=ms)
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xx,
+                yy,
+            ]
+        )
+        ax.plot(x, y, "b.", markersize=ms)
         xticks = ax.get_xticks()
         yticks = ax.get_yticks()
         xlim = ax.get_xlim()
@@ -446,8 +620,15 @@ def outlier_removal(
         ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
 
         # Bottom histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-        ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)),
+                xx,
+                yw,
+            ]
+        )
+        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
         ax.set_xticks(xticks)
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -457,8 +638,15 @@ def outlier_removal(
         ax.invert_yaxis()
 
         # Side histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-        ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)),
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xw,
+                yy,
+            ]
+        )
+        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
         ax.set_yticks(yticks)
         ax.set_xticks([])
         ax.set_xticklabels([])
@@ -492,7 +680,14 @@ def outlier_removal(
     fig = plt.figure(figsize=(16, 9))
 
     i = 0
-    for xi, pack in enumerate(zip(selected_metricsX, selected_metricsY, selected_metricsX_abb, selected_metricsY_abb)):
+    for xi, pack in enumerate(
+        zip(
+            selected_metricsX,
+            selected_metricsY,
+            selected_metricsX_abb,
+            selected_metricsY_abb,
+        )
+    ):
         metric1 = pack[0]
         metric2 = pack[1]
         label1 = pack[2]
@@ -509,12 +704,20 @@ def outlier_removal(
         row = nrows - np.ceil(i / ncols) + 1
         row = row.astype(np.int64)
         col = i % ncols
-        if col == 0: col = ncols
+        if col == 0:
+            col = ncols
         print(f"{i}_{row}_{col}")
 
         # Main scatterplot
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-        ax.plot(x, y, 'b.', markersize=ms)
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xx,
+                yy,
+            ]
+        )
+        ax.plot(x, y, "b.", markersize=ms)
         xticks = ax.get_xticks()
         yticks = ax.get_yticks()
         xlim = ax.get_xlim()
@@ -525,8 +728,15 @@ def outlier_removal(
         ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
 
         # Bottom histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-        ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                h1 + ((row - 1) * (yw + yy + h2)),
+                xx,
+                yw,
+            ]
+        )
+        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
         ax.set_xticks(xticks)
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -536,8 +746,15 @@ def outlier_removal(
         ax.invert_yaxis()
 
         # Side histogram
-        ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-        ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+        ax = fig.add_axes(
+            [
+                w1 + ((col - 1) * (xw + xx + w2)),
+                h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                xw,
+                yy,
+            ]
+        )
+        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
         ax.set_yticks(yticks)
         ax.set_xticks([])
         ax.set_xticklabels([])
@@ -556,23 +773,56 @@ def outlier_removal(
     # %% Now to structures
 
     # %% Select metrics
-    selected_metrics = ['Cell volume', 'Cell surface area',
-                        'Nuclear volume', 'Nuclear surface area']
-    selected_metrics_abb = ['Cell Vol', 'Cell Area',
-                            'Nuc Vol', 'Nuc Area']
-    selected_structures = ['LMNB1', 'ST6GAL1', 'TOMM20', 'SEC61B',
-                           'LAMP1', 'RAB5A', 'SLC25A17',
-                           'TUBA1B', 'TJP1',
-                           'NUP153', 'FBL', 'NPM1']
-    selected_structures_org = ['Nuclear envelope', 'Golgi', 'Mitochondria', 'ER',
-                               'Lysosome', 'Endosomes', 'Peroxisomes',
-                               'Microtubules', 'Tight junctions',
-                               'NPC', 'Nucleolus F', 'Nucleolus G']
-    selected_structures_cat = ['Major organelle', 'Major organelle', 'Major organelle', 'Major organelle',
-                               'Somes', 'Somes', 'Somes',
-                               'Cytoplasmic structure', 'Cell-to-cell contact',
-                               'Nuclear', 'Nuclear', 'Nuclear']
-    structure_metric = 'Structure volume'
+    selected_metrics = [
+        "Cell volume",
+        "Cell surface area",
+        "Nuclear volume",
+        "Nuclear surface area",
+    ]
+    selected_metrics_abb = ["Cell Vol", "Cell Area", "Nuc Vol", "Nuc Area"]
+    selected_structures = [
+        "LMNB1",
+        "ST6GAL1",
+        "TOMM20",
+        "SEC61B",
+        "LAMP1",
+        "RAB5A",
+        "SLC25A17",
+        "TUBA1B",
+        "TJP1",
+        "NUP153",
+        "FBL",
+        "NPM1",
+    ]
+    selected_structures_org = [
+        "Nuclear envelope",
+        "Golgi",
+        "Mitochondria",
+        "ER",
+        "Lysosome",
+        "Endosomes",
+        "Peroxisomes",
+        "Microtubules",
+        "Tight junctions",
+        "NPC",
+        "Nucleolus F",
+        "Nucleolus G",
+    ]
+    selected_structures_cat = [
+        "Major organelle",
+        "Major organelle",
+        "Major organelle",
+        "Major organelle",
+        "Somes",
+        "Somes",
+        "Somes",
+        "Cytoplasmic structure",
+        "Cell-to-cell contact",
+        "Nuclear",
+        "Nuclear",
+        "Nuclear",
+    ]
+    structure_metric = "Structure volume"
 
     # %% Plotting parameters
     fac = 1000
@@ -589,7 +839,7 @@ def outlier_removal(
 
     categories = np.unique(selected_structures_cat)
     # colors = np.linspace(0, 1, len(categories))
-    colors = cm.get_cmap('viridis', len(categories))
+    colors = cm.get_cmap("viridis", len(categories))
     colordict = dict(zip(categories, colors.colors))
 
     # %% Initial scatterplot
@@ -613,9 +863,11 @@ def outlier_removal(
     for yi, metric in enumerate(selected_metrics):
         for xi, struct in enumerate(selected_structures):
 
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
-            selcel = (cells['structure_name'] == struct).to_numpy()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
+            selcel = (cells["structure_name"] == struct).to_numpy()
             struct_pos = np.argwhere(selcel)
             x = x.to_numpy()
             y = y.to_numpy()
@@ -627,12 +879,20 @@ def outlier_removal(
             row = nrows - np.ceil(i / ncols) + 1
             row = row.astype(np.int64)
             col = i % ncols
-            if col == 0: col = ncols
+            if col == 0:
+                col = ncols
             print(f"{i}_{row}_{col}")
 
             # Main scatterplot
-            ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-            ax.plot(x, y, 'b.', markersize=ms)
+            ax = fig.add_axes(
+                [
+                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                    xx,
+                    yy,
+                ]
+            )
+            ax.plot(x, y, "b.", markersize=ms)
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
             xlim = ax.get_xlim()
@@ -640,35 +900,61 @@ def outlier_removal(
             ax.grid()
             if xw == 0:
                 if yi == 0:
-                    plt.text(np.mean(xlim), ylim[0] + 1.3 * (ylim[1] - ylim[0]), struct, fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.2 * (ylim[1] - ylim[0]), selected_structures_org[xi],
-                             fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.1 * (ylim[1] - ylim[0]), f"n= {len(x)}", fontsize=fs2,
-                             horizontalalignment='center')
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
+                        struct,
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
+                        selected_structures_org[xi],
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
+                        f"n= {len(x)}",
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
                 if xi == 0:
-                    plt.figtext(0.5, h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2, metric, fontsize=fs3,
-                                horizontalalignment='center')
+                    plt.figtext(
+                        0.5,
+                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
+                        metric,
+                        fontsize=fs3,
+                        horizontalalignment="center",
+                    )
             else:
                 # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
                 ax.set_title(f"n= {len(x)}", fontsize=fs2)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])
 
-            ax.spines['bottom'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['bottom'].set_linewidth(lw3)
-            ax.spines['top'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['top'].set_linewidth(lw3)
-            ax.spines['right'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['right'].set_linewidth(lw3)
-            ax.spines['left'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['left'].set_linewidth(lw3)
+            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["bottom"].set_linewidth(lw3)
+            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["top"].set_linewidth(lw3)
+            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["right"].set_linewidth(lw3)
+            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["left"].set_linewidth(lw3)
 
             if xw != 0:
                 # Bottom histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-                ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                        h1 + ((row - 1) * (yw + yy + h2)),
+                        xx,
+                        yw,
+                    ]
+                )
+                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
                 ax.set_xticks(xticks)
                 ax.set_yticks([])
                 ax.set_yticklabels([])
@@ -679,8 +965,17 @@ def outlier_removal(
                 ax.invert_yaxis()
 
                 # Side histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-                ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)),
+                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                        xw,
+                        yy,
+                    ]
+                )
+                ax.hist(
+                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
+                )
                 ax.set_yticks(yticks)
                 ax.set_xticks([])
                 ax.set_xticklabels([])
@@ -719,9 +1014,11 @@ def outlier_removal(
     for yi, metric in enumerate(selected_metrics):
         for xi, struct in enumerate(selected_structures):
 
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
-            selcel = (cells['structure_name'] == struct).to_numpy()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
+            selcel = (cells["structure_name"] == struct).to_numpy()
             struct_pos = np.argwhere(selcel)
             x = x.to_numpy()
             y = y.to_numpy()
@@ -733,12 +1030,20 @@ def outlier_removal(
             row = nrows - np.ceil(i / ncols) + 1
             row = row.astype(np.int64)
             col = i % ncols
-            if col == 0: col = ncols
+            if col == 0:
+                col = ncols
             print(f"{i}_{row}_{col}")
 
             # Main scatterplot
-            ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-            ax.plot(x, y, 'b.', markersize=ms)
+            ax = fig.add_axes(
+                [
+                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                    xx,
+                    yy,
+                ]
+            )
+            ax.plot(x, y, "b.", markersize=ms)
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
             xlim = ax.get_xlim()
@@ -746,35 +1051,61 @@ def outlier_removal(
             ax.grid()
             if xw == 0:
                 if yi == 0:
-                    plt.text(np.mean(xlim), ylim[0] + 1.3 * (ylim[1] - ylim[0]), struct, fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.2 * (ylim[1] - ylim[0]), selected_structures_org[xi],
-                             fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.1 * (ylim[1] - ylim[0]), f"n= {len(x)}", fontsize=fs2,
-                             horizontalalignment='center')
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
+                        struct,
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
+                        selected_structures_org[xi],
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
+                        f"n= {len(x)}",
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
                 if xi == 0:
-                    plt.figtext(0.5, h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2, metric, fontsize=fs3,
-                                horizontalalignment='center')
+                    plt.figtext(
+                        0.5,
+                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
+                        metric,
+                        fontsize=fs3,
+                        horizontalalignment="center",
+                    )
             else:
                 # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
                 ax.set_title(f"n= {len(x)}", fontsize=fs2)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])
 
-            ax.spines['bottom'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['bottom'].set_linewidth(lw3)
-            ax.spines['top'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['top'].set_linewidth(lw3)
-            ax.spines['right'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['right'].set_linewidth(lw3)
-            ax.spines['left'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['left'].set_linewidth(lw3)
+            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["bottom"].set_linewidth(lw3)
+            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["top"].set_linewidth(lw3)
+            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["right"].set_linewidth(lw3)
+            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["left"].set_linewidth(lw3)
 
             if xw != 0:
                 # Bottom histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-                ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                        h1 + ((row - 1) * (yw + yy + h2)),
+                        xx,
+                        yw,
+                    ]
+                )
+                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
                 ax.set_xticks(xticks)
                 ax.set_yticks([])
                 ax.set_yticklabels([])
@@ -785,8 +1116,17 @@ def outlier_removal(
                 ax.invert_yaxis()
 
                 # Side histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-                ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)),
+                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                        xw,
+                        yy,
+                    ]
+                )
+                ax.hist(
+                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
+                )
                 ax.set_yticks(yticks)
                 ax.set_xticks([])
                 ax.set_xticklabels([])
@@ -814,12 +1154,14 @@ def outlier_removal(
     Q = {}  # 'Structure volume'
     # structure_metric = 'Number of pieces'
 
-    for xm, metric in tqdm(enumerate(selected_metrics), 'Iterating metrics'):
-        for ys, struct in tqdm(enumerate(selected_structures), 'and structures'):
+    for xm, metric in tqdm(enumerate(selected_metrics), "Iterating metrics"):
+        for ys, struct in tqdm(enumerate(selected_structures), "and structures"):
 
             # data
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
             x = x.to_numpy()
             y = y.to_numpy()
             x = x / fac
@@ -828,7 +1170,9 @@ def outlier_removal(
             # density estimate
             for round in np.arange(Rounds):
                 rs = int(datetime.datetime.utcnow().timestamp())
-                xS, yS = resample(x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs)
+                xS, yS = resample(
+                    x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
+                )
                 k = gaussian_kde(np.vstack([xS, yS]))
                 zii = k(np.vstack([xii.flatten(), yii.flatten()]))
                 cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
@@ -870,9 +1214,11 @@ def outlier_removal(
     for yi, metric in enumerate(selected_metrics):
         for xi, struct in enumerate(selected_structures):
 
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
-            selcel = (cells['structure_name'] == struct).to_numpy()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
+            selcel = (cells["structure_name"] == struct).to_numpy()
             struct_pos = np.argwhere(selcel)
             x = x.to_numpy()
             y = y.to_numpy()
@@ -884,12 +1230,20 @@ def outlier_removal(
             row = nrows - np.ceil(i / ncols) + 1
             row = row.astype(np.int64)
             col = i % ncols
-            if col == 0: col = ncols
+            if col == 0:
+                col = ncols
             print(f"{i}_{row}_{col}")
 
             # Main scatterplot
-            ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-            ax.plot(x, y, 'b.', markersize=ms)
+            ax = fig.add_axes(
+                [
+                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                    xx,
+                    yy,
+                ]
+            )
+            ax.plot(x, y, "b.", markersize=ms)
             pos = []
             for round in np.arange(Rounds):
                 cii = Q[f"{metric}_{struct}_dens_c_{round}"]
@@ -898,7 +1252,7 @@ def outlier_removal(
             print(len(pos))
             pos = pos.astype(int)
             remove_cells = np.union1d(remove_cells, struct_pos[pos])
-            ax.plot(x[pos], y[pos], 'r.', markersize=ms2)
+            ax.plot(x[pos], y[pos], "r.", markersize=ms2)
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
             xlim = ax.get_xlim()
@@ -906,35 +1260,61 @@ def outlier_removal(
             ax.grid()
             if xw == 0:
                 if yi == 0:
-                    plt.text(np.mean(xlim), ylim[0] + 1.3 * (ylim[1] - ylim[0]), struct, fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.2 * (ylim[1] - ylim[0]), selected_structures_org[xi],
-                             fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.1 * (ylim[1] - ylim[0]), f"n= {len(x)}", fontsize=fs2,
-                             horizontalalignment='center')
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
+                        struct,
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
+                        selected_structures_org[xi],
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
+                        f"n= {len(x)}",
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
                 if xi == 0:
-                    plt.figtext(0.5, h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2, metric, fontsize=fs3,
-                                horizontalalignment='center')
+                    plt.figtext(
+                        0.5,
+                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
+                        metric,
+                        fontsize=fs3,
+                        horizontalalignment="center",
+                    )
             else:
                 # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
                 ax.set_title(f"n= {len(x)}", fontsize=fs2)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])
 
-            ax.spines['bottom'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['bottom'].set_linewidth(lw3)
-            ax.spines['top'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['top'].set_linewidth(lw3)
-            ax.spines['right'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['right'].set_linewidth(lw3)
-            ax.spines['left'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['left'].set_linewidth(lw3)
+            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["bottom"].set_linewidth(lw3)
+            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["top"].set_linewidth(lw3)
+            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["right"].set_linewidth(lw3)
+            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["left"].set_linewidth(lw3)
 
             if xw != 0:
                 # Bottom histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-                ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                        h1 + ((row - 1) * (yw + yy + h2)),
+                        xx,
+                        yw,
+                    ]
+                )
+                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
                 ax.set_xticks(xticks)
                 ax.set_yticks([])
                 ax.set_yticklabels([])
@@ -945,8 +1325,17 @@ def outlier_removal(
                 ax.invert_yaxis()
 
                 # Side histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-                ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)),
+                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                        xw,
+                        yy,
+                    ]
+                )
+                ax.hist(
+                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
+                )
                 ax.set_yticks(yticks)
                 ax.set_xticks([])
                 ax.set_xticklabels([])
@@ -990,9 +1379,11 @@ def outlier_removal(
     for yi, metric in enumerate(selected_metrics):
         for xi, struct in enumerate(selected_structures):
 
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
-            selcel = (cells['structure_name'] == struct).to_numpy()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
+            selcel = (cells["structure_name"] == struct).to_numpy()
             struct_pos = np.argwhere(selcel)
             x = x.to_numpy()
             y = y.to_numpy()
@@ -1004,12 +1395,20 @@ def outlier_removal(
             row = nrows - np.ceil(i / ncols) + 1
             row = row.astype(np.int64)
             col = i % ncols
-            if col == 0: col = ncols
+            if col == 0:
+                col = ncols
             print(f"{i}_{row}_{col}")
 
             # Main scatterplot
-            ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-            ax.plot(x, y, 'b.', markersize=ms)
+            ax = fig.add_axes(
+                [
+                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                    xx,
+                    yy,
+                ]
+            )
+            ax.plot(x, y, "b.", markersize=ms)
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
             xlim = ax.get_xlim()
@@ -1017,35 +1416,61 @@ def outlier_removal(
             ax.grid()
             if xw == 0:
                 if yi == 0:
-                    plt.text(np.mean(xlim), ylim[0] + 1.3 * (ylim[1] - ylim[0]), struct, fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.2 * (ylim[1] - ylim[0]), selected_structures_org[xi],
-                             fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.1 * (ylim[1] - ylim[0]), f"n= {len(x)}", fontsize=fs2,
-                             horizontalalignment='center')
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
+                        struct,
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
+                        selected_structures_org[xi],
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
+                        f"n= {len(x)}",
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
                 if xi == 0:
-                    plt.figtext(0.5, h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2, metric, fontsize=fs3,
-                                horizontalalignment='center')
+                    plt.figtext(
+                        0.5,
+                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
+                        metric,
+                        fontsize=fs3,
+                        horizontalalignment="center",
+                    )
             else:
                 # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
                 ax.set_title(f"n= {len(x)}", fontsize=fs2)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])
 
-            ax.spines['bottom'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['bottom'].set_linewidth(lw3)
-            ax.spines['top'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['top'].set_linewidth(lw3)
-            ax.spines['right'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['right'].set_linewidth(lw3)
-            ax.spines['left'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['left'].set_linewidth(lw3)
+            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["bottom"].set_linewidth(lw3)
+            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["top"].set_linewidth(lw3)
+            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["right"].set_linewidth(lw3)
+            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["left"].set_linewidth(lw3)
 
             if xw != 0:
                 # Bottom histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-                ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                        h1 + ((row - 1) * (yw + yy + h2)),
+                        xx,
+                        yw,
+                    ]
+                )
+                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
                 ax.set_xticks(xticks)
                 ax.set_yticks([])
                 ax.set_yticklabels([])
@@ -1056,8 +1481,17 @@ def outlier_removal(
                 ax.invert_yaxis()
 
                 # Side histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-                ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)),
+                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                        xw,
+                        yy,
+                    ]
+                )
+                ax.hist(
+                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
+                )
                 ax.set_yticks(yticks)
                 ax.set_xticks([])
                 ax.set_xticklabels([])
@@ -1096,9 +1530,11 @@ def outlier_removal(
     for yi, metric in enumerate(selected_metrics):
         for xi, struct in enumerate(selected_structures):
 
-            x = cells.loc[cells['structure_name'] == struct, [metric]].squeeze()
-            y = cells.loc[cells['structure_name'] == struct, [structure_metric]].squeeze()
-            selcel = (cells['structure_name'] == struct).to_numpy()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            y = cells.loc[
+                cells["structure_name"] == struct, [structure_metric]
+            ].squeeze()
+            selcel = (cells["structure_name"] == struct).to_numpy()
             struct_pos = np.argwhere(selcel)
             x = x.to_numpy()
             y = y.to_numpy()
@@ -1110,12 +1546,20 @@ def outlier_removal(
             row = nrows - np.ceil(i / ncols) + 1
             row = row.astype(np.int64)
             col = i % ncols
-            if col == 0: col = ncols
+            if col == 0:
+                col = ncols
             print(f"{i}_{row}_{col}")
 
             # Main scatterplot
-            ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)) + yw, xx, yy])
-            ax.plot(x, y, 'b.', markersize=ms)
+            ax = fig.add_axes(
+                [
+                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                    xx,
+                    yy,
+                ]
+            )
+            ax.plot(x, y, "b.", markersize=ms)
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
             xlim = ax.get_xlim()
@@ -1123,35 +1567,61 @@ def outlier_removal(
             ax.grid()
             if xw == 0:
                 if yi == 0:
-                    plt.text(np.mean(xlim), ylim[0] + 1.3 * (ylim[1] - ylim[0]), struct, fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.2 * (ylim[1] - ylim[0]), selected_structures_org[xi],
-                             fontsize=fs2,
-                             horizontalalignment='center')
-                    plt.text(np.mean(xlim), ylim[0] + 1.1 * (ylim[1] - ylim[0]), f"n= {len(x)}", fontsize=fs2,
-                             horizontalalignment='center')
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
+                        struct,
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
+                        selected_structures_org[xi],
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
+                    plt.text(
+                        np.mean(xlim),
+                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
+                        f"n= {len(x)}",
+                        fontsize=fs2,
+                        horizontalalignment="center",
+                    )
                 if xi == 0:
-                    plt.figtext(0.5, h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2, metric, fontsize=fs3,
-                                horizontalalignment='center')
+                    plt.figtext(
+                        0.5,
+                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
+                        metric,
+                        fontsize=fs3,
+                        horizontalalignment="center",
+                    )
             else:
                 # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
                 ax.set_title(f"n= {len(x)}", fontsize=fs2)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])
 
-            ax.spines['bottom'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['bottom'].set_linewidth(lw3)
-            ax.spines['top'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['top'].set_linewidth(lw3)
-            ax.spines['right'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['right'].set_linewidth(lw3)
-            ax.spines['left'].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines['left'].set_linewidth(lw3)
+            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["bottom"].set_linewidth(lw3)
+            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["top"].set_linewidth(lw3)
+            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["right"].set_linewidth(lw3)
+            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
+            ax.spines["left"].set_linewidth(lw3)
 
             if xw != 0:
                 # Bottom histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)) + xw, h1 + ((row - 1) * (yw + yy + h2)), xx, yw])
-                ax.hist(x, bins=nbins, color=[.5, .5, .5, 1])
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
+                        h1 + ((row - 1) * (yw + yy + h2)),
+                        xx,
+                        yw,
+                    ]
+                )
+                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
                 ax.set_xticks(xticks)
                 ax.set_yticks([])
                 ax.set_yticklabels([])
@@ -1162,8 +1632,17 @@ def outlier_removal(
                 ax.invert_yaxis()
 
                 # Side histogram
-                ax = fig.add_axes([w1 + ((col - 1) * (xw + xx + w2)), h1 + ((row - 1) * (yw + yy + h2)) + yw, xw, yy])
-                ax.hist(y, bins=nbins, color=[.5, .5, .5, 1], orientation='horizontal')
+                ax = fig.add_axes(
+                    [
+                        w1 + ((col - 1) * (xw + xx + w2)),
+                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
+                        xw,
+                        yy,
+                    ]
+                )
+                ax.hist(
+                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
+                )
                 ax.set_yticks(yticks)
                 ax.set_xticks([])
                 ax.set_xticklabels([])
