@@ -32,12 +32,14 @@ dirs.append(data_root)
 dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
+print('##################### Data preparation - Initial Parsing #####################')
 tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/expand/manifest.csv"
 tableSNIP = "Manifest_snippet_202010106.csv"
 tableOUT = "SizeScaling_20201006.csv"
 initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
+print('##################### Data preparation - Outlier Removal #####################')
 # tableIN = "SizeScaling_20200828.csv"
 # tableOUT = "SizeScaling_20200828_clean.csv"
 # outlier_removal(dirs, tableIN, tableOUT)

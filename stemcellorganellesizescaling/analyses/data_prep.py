@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 def initial_parsing(
-    dirs: list, dataset: Path, dataset_snippet, dataset_clean: Path,
+    dirs: list, dataset: Path, dataset_snippet, dataset_filtered: Path,
 ):
     """
     Parses large table to get size scaling data table which contains only a subset of features
@@ -39,7 +39,7 @@ def initial_parsing(
         absolute Path to original data table csv file
     dataset_snippet: Path
         Path to snippet of original table
-    dataset_clean: Path
+    dataset_filtered: Path
         Path to size scaling CSV file
     """
 
@@ -53,6 +53,47 @@ def initial_parsing(
 
         # Store snippet
         cells.sample(n=10).to_csv(data_root / dataset_snippet)
+
+        # %% Check out columns, keep a couple
+        keepcolumns = ['CellId', 'structure_name', 'mem_roundness_surface_area_lcc', 'mem_shape_volume_lcc',
+                       'dna_roundness_surface_area_lcc',
+                       'dna_shape_volume_lcc', 'str_connectivity_number_cc', 'str_shape_volume',
+                       'mem_position_depth_lcc', 'mem_position_height_lcc', 'mem_position_width_lcc',
+                       'dna_position_depth_lcc', 'dna_position_height_lcc', 'dna_position_width_lcc',
+                       'DNA_MEM_PC1', 'DNA_MEM_PC2', 'DNA_MEM_PC3', 'DNA_MEM_PC4',
+                       'DNA_MEM_PC5', 'DNA_MEM_PC6', 'DNA_MEM_PC7', 'DNA_MEM_PC8']
+        cells = cells[keepcolumns]
+
+        # Missing:
+        #  'WorkflowId', 'meta_fov_image_date',
+        # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
+
+        # %% Rename columns
+        cells = cells.rename(columns={
+            'mem_roundness_surface_area_lcc': 'Cell surface area',
+            'mem_shape_volume_lcc': 'Cell volume',
+            'dna_roundness_surface_area_lcc': 'Nuclear surface area',
+            'dna_shape_volume_lcc': 'Nuclear volume',
+            'str_connectivity_number_cc': 'Number of pieces',
+            'str_shape_volume': 'Structure volume',
+            'str_shape_volume_lcc': 'Structure volume alt',
+            'mem_position_depth_lcc': 'Cell height',
+            'mem_position_height_lcc': 'Cell xbox',
+            'mem_position_width_lcc': 'Cell ybox',
+            'dna_position_depth_lcc': 'Nucleus height',
+            'dna_position_height_lcc': 'Nucleus xbox',
+            'dna_position_width_lcc': 'Nucleus ybox'
+        })
+
+        # Missing:
+        # 'meta_fov_image_date': 'ImageDate'
+
+        # %% Add a column
+        cells['Cytoplasmic volume'] = cells['Cell volume'] - cells['Nuclear volume']
+
+        # %% Save
+        cells.to_csv(data_root / dataset_filtered)
+
     else:
         print("Can only be run on Linux machine at AICS")
 
