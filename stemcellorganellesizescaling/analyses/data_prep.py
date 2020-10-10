@@ -13,17 +13,24 @@ from scipy.stats import gaussian_kde
 from tqdm import tqdm
 from matplotlib import cm
 import os, platform
+import sys, importlib
 
 # Third party
 
 # Relative
 
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import splot, oplot
+importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs"])
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import splot, oplot
+
+print('Libraries loaded successfully')
 ###############################################################################
 
 log = logging.getLogger(__name__)
 
 ###############################################################################
 
+# %%
 
 def initial_parsing(
     dirs: list, dataset: Path, dataset_snippet, dataset_filtered: Path,
@@ -118,7 +125,7 @@ def initial_parsing(
 
 
 def outlier_removal(
-    dirs: list, dataset: Path, dataset_clean: Path,
+    dirs: list, dataset: Path, dataset_clean: Path, dataset_outliers: Path,
 ):
     """
     Removes outliers, generates diagnostic plots, saves cleaned feature data table
@@ -131,6 +138,8 @@ def outlier_removal(
         Path to CSV file with cell by feature data table
     dataset_clean: Path
         Path to cleaned CSV file
+    dataset_outliers: Path
+        Path to outlier annotation CSV (same number of cells as dataset)
     """
 
     # Resolve directories
@@ -145,696 +154,160 @@ def outlier_removal(
     save_flag = 1  # save plot (1) or show on screen (0)
     pic_root = pic_root / "outlier_removal"
     pic_root.mkdir(exist_ok=True)
+    data_root_extra = data_root / "outlier_removal"
+    data_root_extra.mkdir(exist_ok=True)
 
-    # %% Yep
-
-    # Load dataset
-    cells = pd.read_csv(data_root / dataset)
+    # %% Threshold for determing outliers
+    cell_dens_th_CN = 1e-20  # for cell-nucleus metrics across all cells
+    cell_dens_th_S = 1e-10  # for structure volume metrics
 
     ####### Remove outliers ########
 
-    # %% Remove some initial cells
-    print(cells.shape)
-    cells = cells[~cells["Structure volume"].isnull()]
-    print("FIX LINE 140")
-    # cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
+    # %% Remove cells that lack a Structure Volume value
     print(np.any(cells.isnull()))
+    cells_ao = cells[['CellId', 'structure_name']].copy()
+    cells_ao['Outlier annotation'] = 'Keep'
     print(cells.shape)
+    CellIds_remove = cells.loc[cells["Structure volume"].isnull(), 'CellId'].squeeze().to_numpy()
+    cells_ao.loc[cells_ao['CellId'].isin(CellIds_remove), 'Outlier annotation'] = 'Missing structure volume'
+    cells = cells.drop(cells[cells['CellId'].isin(CellIds_remove)].index)
+    cells.reset_index(drop=True)
+    print(f'Removing {len(CellIds_remove)} cells that lack a Structure Volume measurement value')
+    print(cells.shape)
+    print(np.any(cells.isnull()))
 
-    # %% Select metrics
-    selected_metricsX = [
-        "Cell volume",
-        "Cell volume",
-        "Cytoplasmic volume",
-        "Cell volume",
-        "Nuclear volume",
-        "Cytoplasmic volume",
-    ]
+    # %%
+    print("FIX LINE BELOW")
+    # cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
 
-    selected_metricsX_abb = [
-        "Cell Vol",
-        "Cell Vol",
-        "Cyt vol",
-        "Cell Vol",
-        "Nuc Vol",
-        "Cyt Vol",
-    ]
+    # %% Feature set for cell and nuclear features
+    cellnuc_metrics = ['Cell surface area', 'Cell volume', 'Cell height',
+                       'Nuclear surface area', 'Nuclear volume', 'Nucleus height',
+                       'Cytoplasmic volume']
+    cellnuc_abbs = ['Cell area', 'Cell vol', 'Cell height', 'Nuc area', 'Nuc vol', 'Nuc height', 'Cyto vol']
+    struct_metrics = ['Structure volume']
 
-    selected_metricsY = [
-        "Nuclear volume",
-        "Cytoplasmic volume",
-        "Nuclear volume",
-        "Cell surface area",
-        "Nuclear surface area",
-        "Nuclear surface area",
-    ]
-
-    selected_metricsY_abb = [
-        "Nuc Vol",
-        "Cyt Vol",
-        "Nuc Vol",
-        "Cell Area",
-        "Nuc Area",
-        "Nuc Area",
-    ]
-
-    # %% Plotting parameters
-    fac = 1000
-    ms = 0.5
-    ms2 = 3
-    fs2 = 16
-    lw2 = 1.5
-    nbins = 100
-    plt.rcParams.update({"font.size": 12})
-
-    # %% Time for a flexible scatterplot
-    nrows = 2
-    ncols = 3
-    w1 = 0.07
-    w2 = 0.07
-    w3 = 0.01
-    h1 = 0.07
-    h2 = 0.12
-    h3 = 0.07
-    xw = 0.03
-    yw = 0.03
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
+    # %% All metrics including height
+    L = len(cellnuc_metrics)
+    pairs = np.zeros((int(L * (L - 1) / 2), 2)).astype(np.int)
     i = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
+    for f1 in np.arange(L):
+        for f2 in np.arange(L):
+            if f2 > f1:
+                pairs[i, :] = [f1, f2]
+                i += 1
 
-        # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x / fac
-        y = y / fac
+    # %% The typical six scatter plots
+    xvec = [1, 1, 6, 1, 4, 6]
+    yvec = [4, 6, 4, 0, 3, 3]
+    pairs2 = np.stack((xvec, yvec)).T
 
-        # select subplot
-        i = i + 1
-        row = nrows - np.ceil(i / ncols) + 1
-        row = row.astype(np.int64)
-        col = i % ncols
-        if col == 0:
-            col = ncols
-        print(f"{i}_{row}_{col}")
-
-        # Main scatterplot
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xx,
-                yy,
-            ]
-        )
-        ax.plot(x, y, "b.", markersize=ms)
-        xticks = ax.get_xticks()
-        yticks = ax.get_yticks()
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.grid()
-        ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
-
-        # Bottom histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)),
-                xx,
-                yw,
-            ]
-        )
-        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-        ax.set_xticks(xticks)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        ax.set_xlim(left=xlim[0], right=xlim[1])
-        ax.grid()
-        ax.set_xlabel(label1, fontsize=fs2)
-        ax.invert_yaxis()
-
-        # Side histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)),
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xw,
-                yy,
-            ]
-        )
-        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
-        ax.set_yticks(yticks)
-        ax.set_xticks([])
-        ax.set_xticklabels([])
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])
-        ax.grid()
-        ax.set_ylabel(label2, fontsize=fs2)
-        ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "CellNucleus_org_fine.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # %% Time for a flexible scatterplot
-    ms = 2
-    nrows = 2
-    ncols = 3
-    w1 = 0.07
-    w2 = 0.07
-    w3 = 0.01
-    h1 = 0.07
-    h2 = 0.12
-    h3 = 0.07
-    xw = 0.03
-    yw = 0.03
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
-
-        # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x / fac
-        y = y / fac
-
-        # select subplot
-        i = i + 1
-        row = nrows - np.ceil(i / ncols) + 1
-        row = row.astype(np.int64)
-        col = i % ncols
-        if col == 0:
-            col = ncols
-        print(f"{i}_{row}_{col}")
-
-        # Main scatterplot
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xx,
-                yy,
-            ]
-        )
-        ax.plot(x, y, "b.", markersize=ms)
-        xticks = ax.get_xticks()
-        yticks = ax.get_yticks()
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.grid()
-        ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
-
-        # Bottom histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)),
-                xx,
-                yw,
-            ]
-        )
-        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-        ax.set_xticks(xticks)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        ax.set_xlim(left=xlim[0], right=xlim[1])
-        ax.grid()
-        ax.set_xlabel(label1, fontsize=fs2)
-        ax.invert_yaxis()
-
-        # Side histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)),
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xw,
-                yy,
-            ]
-        )
-        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
-        ax.set_yticks(yticks)
-        ax.set_xticks([])
-        ax.set_xticklabels([])
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])
-        ax.grid()
-        ax.set_ylabel(label2, fontsize=fs2)
-        ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "CellNucleus_org_thick.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
+    # %% Just one
+    xvec = [1]
+    yvec = [4]
+    pairs1 = np.stack((xvec, yvec)).T
 
     # %% Parameters
     nbins = 100
-    N = 5000
+    N = 10000
+    fac = 1000
     Rounds = 5
 
-    # %% Identify pairs, compute stuff and put into dicts
-    selected_metrics = [
-        "Cell volume",
-        "Cell surface area",
-        "Nuclear volume",
-        "Nuclear surface area",
-    ]
-    Q = {}
+    # %% For all pairs compute densities
+    remove_cells = cells['CellId'].to_frame().copy()
+    for i, xy_pair in tqdm(enumerate(pairs), 'Enumerate pairs of metrics'):
 
-    counter = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
-
-        print(counter)
-        counter = counter + 1
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        print(f"{metricX} vs {metricY}")
 
         # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x.to_numpy()
-        y = y.to_numpy()
-        x = x / fac
-        y = y / fac
+        x = cells[metricX].to_numpy() / fac
+        y = cells[metricY].to_numpy() / fac
+        # x = cells[metricX].sample(1000,random_state = 1117).to_numpy() / fac
+        # y = cells[metricY].sample(1000,random_state = 1117).to_numpy() / fac
 
-        # sampling on x and y
-        xii, yii = np.mgrid[
-            x.min() : x.max() : nbins * 1j, y.min() : y.max() : nbins * 1j
-        ]
-        xi = xii[:, 0]
-
-        # density estimate
-        for round in np.arange(Rounds):
-            rs = int(datetime.datetime.utcnow().timestamp())
+        # density estimate, repeat because of probabilistic nature of density estimate used here
+        for r in np.arange(Rounds):
+            remove_cells[f"{metricX} vs {metricY}_{r}"] = np.nan
+            print(f"Round {r + 1} of {Rounds}")
+            rs = int(r)
             xS, yS = resample(
                 x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
             )
-            # xS, yS = resample(x, y, replace=False, n_samples=len(x), random_state=rs)
             k = gaussian_kde(np.vstack([xS, yS]))
-            zii = k(np.vstack([xii.flatten(), yii.flatten()]))
             cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
             cell_dens = cell_dens / np.sum(cell_dens)
-            # make into cumulative sum
-            zii = zii / np.sum(zii)
-            ix = np.argsort(zii)
-            zii = zii[ix]
-            zii = np.cumsum(zii)
-            jx = np.argsort(ix)
-            zii = zii[jx]
-            zii = zii.reshape(xii.shape)
-            Q[f"{metric1}_{metric2}_dens_x_{round}"] = xii
-            Q[f"{metric1}_{metric2}_dens_y_{round}"] = yii
-            Q[f"{metric1}_{metric2}_dens_z_{round}"] = zii
-            Q[f"{metric1}_{metric2}_dens_c_{round}"] = cell_dens
+            remove_cells.loc[remove_cells.index[np.arange(len(cell_dens))], f"{metricX} vs {metricY}_{r}"] = cell_dens
 
-    # %%
-    nrows = 2
-    ncols = 3
-    w1 = 0.07
-    w2 = 0.07
-    w3 = 0.01
-    h1 = 0.07
-    h2 = 0.12
-    h3 = 0.07
-    xw = 0.03
-    yw = 0.03
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
+    remove_cells.to_csv(data_root_extra / 'cell_nucleus.csv')
+    # remove_cells = pd.read_csv(data_root_extra / 'cell_nucleus.csv')
 
-    fig = plt.figure(figsize=(16, 9))
+    # %% Summarize across repeats
+    remove_cells_summary = cells['CellId'].to_frame().copy()
+    for i, xy_pair in enumerate(pairs):
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        print(f"{metricX} vs {metricY}")
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        filter_col = [col for col in remove_cells if col.startswith(f"{metricX} vs {metricY}")]
+        x = remove_cells[filter_col].to_numpy()
+        pos = np.argwhere(np.any(x < cell_dens_th_CN, axis=1))
+        y = x[pos, :].squeeze()
 
-    dens_th = 1e-40
-    remove_cells = []
+        fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+        xr = np.log(x.flatten())
+        xr = np.delete(xr, np.argwhere(np.isinf(xr)))
+        axs[0].hist(xr, bins=100)
+        axs[0].set_title(f"Histogram of cell probabilities (log scale)")
+        axs[0].set_yscale('log')
+        im = axs[1].imshow(np.log(y), aspect='auto')
+        plt.colorbar(im)
+        axs[1].set_title(f"Heatmap with low probability cells (log scale)")
 
-    i = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
+        if save_flag:
+            plot_save_path = pic_root / f"{metricX} vs {metricY}_cellswithlowprobs.png"
+            plt.savefig(plot_save_path, format="png", dpi=1000)
+            plt.close()
+        else:
+            plt.show()
 
-        # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x / fac
-        y = y / fac
-        x = x.to_numpy()
-        y = y.to_numpy()
+        remove_cells_summary[f"{metricX} vs {metricY}"] = np.median(x, axis=1)
 
-        # select subplot
-        i = i + 1
-        row = nrows - np.ceil(i / ncols) + 1
-        row = row.astype(np.int64)
-        col = i % ncols
-        if col == 0:
-            col = ncols
-        print(f"{i}_{row}_{col}")
+    # %% Identify cells to be removed
+    CellIds_remove_dict = {}
+    CellIds_remove = np.empty(0, dtype=int)
+    for i, xy_pair in enumerate(pairs):
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        CellIds_remove_dict[f"{metricX} vs {metricY}"] = np.argwhere(
+            remove_cells_summary[f"{metricX} vs {metricY}"].to_numpy() < cell_dens_th_CN)
+        CellIds_remove = np.union1d(CellIds_remove, CellIds_remove_dict[f"{metricX} vs {metricY}"])
+        print(len(CellIds_remove))
 
-        # Main scatterplot
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xx,
-                yy,
-            ]
-        )
-        ax.plot(x, y, "b.", markersize=ms)
-        pos = []
-        for round in np.arange(Rounds):
-            cii = Q[f"{metric1}_{metric2}_dens_c_{round}"]
-            pos = np.union1d(pos, np.argwhere(cii < dens_th))
-            print(len(pos))
-        print(len(pos))
-        pos = pos.astype(int)
-        remove_cells = np.union1d(remove_cells, pos)
-        ax.plot(x[pos], y[pos], "r.", markersize=ms2)
-        xticks = ax.get_xticks()
-        yticks = ax.get_yticks()
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.grid()
-        ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
+    # %% Plot and remove outliers
+    plotname = 'CellNucleus'
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"{plotname}_6_org_fine", 0.5, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"{plotname}_6_org_thick", 2, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"{plotname}_6_outliers", 2,
+          CellIds_remove_dict)
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs, cells, True, pic_root, f"{plotname}_21_org_fine", 0.5, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs, cells, True, pic_root, f"{plotname}_21_org_thick", 2, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs, cells, True, pic_root, f"{plotname}_21_outliers", 2,
+          CellIds_remove_dict)
+    print(cells.shape)
+    CellIds_remove = cells.loc[cells.index[CellIds_remove], 'CellId'].squeeze().to_numpy()
+    cells_ao.loc[cells_ao['CellId'].isin(CellIds_remove), 'Outlier annotation'] = 'Abnormal cell or nuclear metric'
+    cells = cells.drop(cells.index[cells['CellId'].isin(CellIds_remove)])
+    print(f'Removing {len(CellIds_remove)} cells due to abnormal cell or nuclear metric')
+    print(cells.shape)
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"{plotname}_6_clean_thick", 2, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"{plotname}_6_clean_fine", 0.5, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs, cells, True, pic_root, f"{plotname}_21_clean_thick", 2, [])
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs, cells, True, pic_root, f"{plotname}_21_clean_fine", 0.5, [])
 
-        # Bottom histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)),
-                xx,
-                yw,
-            ]
-        )
-        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-        ax.set_xticks(xticks)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        ax.set_xlim(left=xlim[0], right=xlim[1])
-        ax.grid()
-        ax.set_xlabel(label1, fontsize=fs2)
-        ax.invert_yaxis()
-
-        # Side histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)),
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xw,
-                yy,
-            ]
-        )
-        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
-        ax.set_yticks(yticks)
-        ax.set_xticks([])
-        ax.set_xticklabels([])
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])
-        ax.grid()
-        ax.set_ylabel(label2, fontsize=fs2)
-        ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "CellNucleus_outliers.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    print(len(remove_cells))
-
-    # %%  Drop them
-    cells = cells.drop(cells.index[remove_cells.astype(int)])
-
-    # %% Time for a flexible scatterplot
-    nrows = 2
-    ncols = 3
-    w1 = 0.07
-    w2 = 0.07
-    w3 = 0.01
-    h1 = 0.07
-    h2 = 0.12
-    h3 = 0.07
-    xw = 0.03
-    yw = 0.03
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
-
-        # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x / fac
-        y = y / fac
-
-        # select subplot
-        i = i + 1
-        row = nrows - np.ceil(i / ncols) + 1
-        row = row.astype(np.int64)
-        col = i % ncols
-        if col == 0:
-            col = ncols
-        print(f"{i}_{row}_{col}")
-
-        # Main scatterplot
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xx,
-                yy,
-            ]
-        )
-        ax.plot(x, y, "b.", markersize=ms)
-        xticks = ax.get_xticks()
-        yticks = ax.get_yticks()
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.grid()
-        ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
-
-        # Bottom histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)),
-                xx,
-                yw,
-            ]
-        )
-        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-        ax.set_xticks(xticks)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        ax.set_xlim(left=xlim[0], right=xlim[1])
-        ax.grid()
-        ax.set_xlabel(label1, fontsize=fs2)
-        ax.invert_yaxis()
-
-        # Side histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)),
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xw,
-                yy,
-            ]
-        )
-        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
-        ax.set_yticks(yticks)
-        ax.set_xticks([])
-        ax.set_xticklabels([])
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])
-        ax.grid()
-        ax.set_ylabel(label2, fontsize=fs2)
-        ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "CellNucleus_clean_thick.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # %% Time for a flexible scatterplot
-    ms = 0.5
-    nrows = 2
-    ncols = 3
-    w1 = 0.07
-    w2 = 0.07
-    w3 = 0.01
-    h1 = 0.07
-    h2 = 0.12
-    h3 = 0.07
-    xw = 0.03
-    yw = 0.03
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-    for xi, pack in enumerate(
-        zip(
-            selected_metricsX,
-            selected_metricsY,
-            selected_metricsX_abb,
-            selected_metricsY_abb,
-        )
-    ):
-        metric1 = pack[0]
-        metric2 = pack[1]
-        label1 = pack[2]
-        label2 = pack[3]
-
-        # data
-        x = cells[metric1]
-        y = cells[metric2]
-        x = x / fac
-        y = y / fac
-
-        # select subplot
-        i = i + 1
-        row = nrows - np.ceil(i / ncols) + 1
-        row = row.astype(np.int64)
-        col = i % ncols
-        if col == 0:
-            col = ncols
-        print(f"{i}_{row}_{col}")
-
-        # Main scatterplot
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xx,
-                yy,
-            ]
-        )
-        ax.plot(x, y, "b.", markersize=ms)
-        xticks = ax.get_xticks()
-        yticks = ax.get_yticks()
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.grid()
-        ax.set_title(f"{label1} vs {label2} (n= {len(x)})", fontsize=fs2)
-
-        # Bottom histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                h1 + ((row - 1) * (yw + yy + h2)),
-                xx,
-                yw,
-            ]
-        )
-        ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-        ax.set_xticks(xticks)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        ax.set_xlim(left=xlim[0], right=xlim[1])
-        ax.grid()
-        ax.set_xlabel(label1, fontsize=fs2)
-        ax.invert_yaxis()
-
-        # Side histogram
-        ax = fig.add_axes(
-            [
-                w1 + ((col - 1) * (xw + xx + w2)),
-                h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                xw,
-                yy,
-            ]
-        )
-        ax.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal")
-        ax.set_yticks(yticks)
-        ax.set_xticks([])
-        ax.set_xticklabels([])
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])
-        ax.grid()
-        ax.set_ylabel(label2, fontsize=fs2)
-        ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "CellNucleus_clean_fine.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # %% Now to structures
-
-    # %% Select metrics
+    # %% Feature sets for structures
     selected_metrics = [
         "Cell volume",
         "Cell surface area",
@@ -847,6 +320,7 @@ def outlier_removal(
         "ST6GAL1",
         "TOMM20",
         "SEC61B",
+        "ATP2A2",
         "LAMP1",
         "RAB5A",
         "SLC25A17",
@@ -855,11 +329,13 @@ def outlier_removal(
         "NUP153",
         "FBL",
         "NPM1",
+        "SON",
     ]
     selected_structures_org = [
         "Nuclear envelope",
         "Golgi",
         "Mitochondria",
+        "ER",
         "ER",
         "Lysosome",
         "Endosomes",
@@ -869,8 +345,10 @@ def outlier_removal(
         "NPC",
         "Nucleolus F",
         "Nucleolus G",
+        "SON",
     ]
     selected_structures_cat = [
+        "Major organelle",
         "Major organelle",
         "Major organelle",
         "Major organelle",
@@ -883,327 +361,9 @@ def outlier_removal(
         "Nuclear",
         "Nuclear",
         "Nuclear",
+        "Nuclear",
     ]
     structure_metric = "Structure volume"
-
-    # %% Plotting parameters
-    fac = 1000
-    ms = 0.5
-    ms2 = 3
-    ms3 = 10
-    fs2 = 12
-    fs3 = 17
-    lw2 = 1.5
-    lw3 = 3
-    lw4 = 2.5
-    nbins = 100
-    plt.rcParams.update({"font.size": 5})
-
-    categories = np.unique(selected_structures_cat)
-    # colors = np.linspace(0, 1, len(categories))
-    colors = cm.get_cmap("viridis", len(categories))
-    colordict = dict(zip(categories, colors.colors))
-
-    # %% Initial scatterplot
-    nrows = len(selected_metrics)
-    ncols = len(selected_structures)
-    w1 = 0.027
-    w2 = 0.01
-    w3 = 0.002
-    h1 = 0.07
-    h2 = 0.08
-    h3 = 0.07
-    xw = 0
-    yw = 0
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-
-    for yi, metric in enumerate(selected_metrics):
-        for xi, struct in enumerate(selected_structures):
-
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
-            y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            selcel = (cells["structure_name"] == struct).to_numpy()
-            struct_pos = np.argwhere(selcel)
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
-
-            # select subplot
-            i = i + 1
-            row = nrows - np.ceil(i / ncols) + 1
-            row = row.astype(np.int64)
-            col = i % ncols
-            if col == 0:
-                col = ncols
-            print(f"{i}_{row}_{col}")
-
-            # Main scatterplot
-            ax = fig.add_axes(
-                [
-                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                    xx,
-                    yy,
-                ]
-            )
-            ax.plot(x, y, "b.", markersize=ms)
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            ax.grid()
-            if xw == 0:
-                if yi == 0:
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
-                        struct,
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
-                        selected_structures_org[xi],
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
-                        f"n= {len(x)}",
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                if xi == 0:
-                    plt.figtext(
-                        0.5,
-                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
-                        metric,
-                        fontsize=fs3,
-                        horizontalalignment="center",
-                    )
-            else:
-                # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
-                ax.set_title(f"n= {len(x)}", fontsize=fs2)
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
-
-            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["bottom"].set_linewidth(lw3)
-            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["top"].set_linewidth(lw3)
-            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["right"].set_linewidth(lw3)
-            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["left"].set_linewidth(lw3)
-
-            if xw != 0:
-                # Bottom histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                        h1 + ((row - 1) * (yw + yy + h2)),
-                        xx,
-                        yw,
-                    ]
-                )
-                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-                ax.set_xticks(xticks)
-                ax.set_yticks([])
-                ax.set_yticklabels([])
-                ax.set_xlim(left=xlim[0], right=xlim[1])
-                ax.grid()
-                # if yi==len(selected_metrics_abb):
-                ax.set_xlabel(selected_metrics_abb[yi], fontsize=fs2)
-                ax.invert_yaxis()
-
-                # Side histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)),
-                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                        xw,
-                        yy,
-                    ]
-                )
-                ax.hist(
-                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
-                )
-                ax.set_yticks(yticks)
-                ax.set_xticks([])
-                ax.set_xticklabels([])
-                ax.set_ylim(bottom=ylim[0], top=ylim[1])
-                ax.grid()
-                # if xi==0:
-                ax.set_ylabel(selected_structures[xi], fontsize=fs2)
-                ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "Structures_org_fine.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # %% thick
-    ms = 2
-    nrows = len(selected_metrics)
-    ncols = len(selected_structures)
-    w1 = 0.027
-    w2 = 0.01
-    w3 = 0.002
-    h1 = 0.07
-    h2 = 0.08
-    h3 = 0.07
-    xw = 0
-    yw = 0
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-
-    for yi, metric in enumerate(selected_metrics):
-        for xi, struct in enumerate(selected_structures):
-
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
-            y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            selcel = (cells["structure_name"] == struct).to_numpy()
-            struct_pos = np.argwhere(selcel)
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
-
-            # select subplot
-            i = i + 1
-            row = nrows - np.ceil(i / ncols) + 1
-            row = row.astype(np.int64)
-            col = i % ncols
-            if col == 0:
-                col = ncols
-            print(f"{i}_{row}_{col}")
-
-            # Main scatterplot
-            ax = fig.add_axes(
-                [
-                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                    xx,
-                    yy,
-                ]
-            )
-            ax.plot(x, y, "b.", markersize=ms)
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            ax.grid()
-            if xw == 0:
-                if yi == 0:
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
-                        struct,
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
-                        selected_structures_org[xi],
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
-                        f"n= {len(x)}",
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                if xi == 0:
-                    plt.figtext(
-                        0.5,
-                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
-                        metric,
-                        fontsize=fs3,
-                        horizontalalignment="center",
-                    )
-            else:
-                # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
-                ax.set_title(f"n= {len(x)}", fontsize=fs2)
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
-
-            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["bottom"].set_linewidth(lw3)
-            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["top"].set_linewidth(lw3)
-            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["right"].set_linewidth(lw3)
-            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["left"].set_linewidth(lw3)
-
-            if xw != 0:
-                # Bottom histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                        h1 + ((row - 1) * (yw + yy + h2)),
-                        xx,
-                        yw,
-                    ]
-                )
-                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-                ax.set_xticks(xticks)
-                ax.set_yticks([])
-                ax.set_yticklabels([])
-                ax.set_xlim(left=xlim[0], right=xlim[1])
-                ax.grid()
-                # if yi==len(selected_metrics_abb):
-                ax.set_xlabel(selected_metrics_abb[yi], fontsize=fs2)
-                ax.invert_yaxis()
-
-                # Side histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)),
-                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                        xw,
-                        yy,
-                    ]
-                )
-                ax.hist(
-                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
-                )
-                ax.set_yticks(yticks)
-                ax.set_xticks([])
-                ax.set_xticklabels([])
-                ax.set_ylim(bottom=ylim[0], top=ylim[1])
-                ax.grid()
-                # if xi==0:
-                ax.set_ylabel(selected_structures[xi], fontsize=fs2)
-                ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "Structures_org_thick.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
 
     # %% Parameters
     nbins = 100
@@ -1211,515 +371,124 @@ def outlier_removal(
     fac = 1000
     Rounds = 5
 
-    # %% Identify pairs, compute stuff and put into dicts
-
-    Q = {}  # 'Structure volume'
-    # structure_metric = 'Number of pieces'
-
+    # %% For all pairs compute densities
+    remove_cells = cells['CellId'].to_frame().copy()
     for xm, metric in tqdm(enumerate(selected_metrics), "Iterating metrics"):
         for ys, struct in tqdm(enumerate(selected_structures), "and structures"):
 
             # data
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
+            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze().to_numpy() / fac
             y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
+                    cells["structure_name"] == struct, [structure_metric]
+                ].squeeze().to_numpy() / fac
 
-            # density estimate
-            for round in np.arange(Rounds):
-                rs = int(datetime.datetime.utcnow().timestamp())
+            # density estimate, repeat because of probabilistic nature of density estimate used here
+            for r in np.arange(Rounds):
+                if ys == 0:
+                    remove_cells[f"{metric} vs {structure_metric}_{r}"] = np.nan
+                # print(f"Round {r+1} of {Rounds}")
+                rs = int(r)
                 xS, yS = resample(
                     x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
                 )
                 k = gaussian_kde(np.vstack([xS, yS]))
-                zii = k(np.vstack([xii.flatten(), yii.flatten()]))
                 cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
                 cell_dens = cell_dens / np.sum(cell_dens)
-                # make into cumulative sum
-                zii = zii / np.sum(zii)
-                ix = np.argsort(zii)
-                zii = zii[ix]
-                zii = np.cumsum(zii)
-                jx = np.argsort(ix)
-                zii = zii[jx]
-                zii = zii.reshape(xii.shape)
-                Q[f"{metric}_{struct}_dens_x_{round}"] = xii
-                Q[f"{metric}_{struct}_dens_y_{round}"] = yii
-                Q[f"{metric}_{struct}_dens_z_{round}"] = zii
-                Q[f"{metric}_{struct}_dens_c_{round}"] = cell_dens
+                remove_cells.loc[cells["structure_name"] == struct, f"{metric} vs {structure_metric}_{r}"] = cell_dens
 
-    # %% Initial scatterplot
-    nrows = len(selected_metrics)
-    ncols = len(selected_structures)
-    w1 = 0.027
-    w2 = 0.01
-    w3 = 0.002
-    h1 = 0.07
-    h2 = 0.08
-    h3 = 0.07
-    xw = 0
-    yw = 0
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
+    remove_cells.to_csv(data_root_extra / 'structures.csv')
+    # remove_cells = pd.read_csv(data_root_extra / 'structures.csv')
 
-    fig = plt.figure(figsize=(16, 9))
+    # %% Summarize across repeats
+    remove_cells_summary = cells['CellId'].to_frame().copy()
+    for xm, metric in enumerate(selected_metrics):
+        print(metric)
 
-    i = 0
+        filter_col = [col for col in remove_cells if col.startswith(f"{metric} vs {structure_metric}")]
+        x = remove_cells[filter_col].to_numpy()
+        pos = np.argwhere(np.any(x < cell_dens_th_S, axis=1))
+        y = x[pos, :].squeeze()
 
-    dens_th = 1e-15
-    remove_cells = []
+        fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+        xr = np.log(x.flatten())
+        xr = np.delete(xr, np.argwhere(np.isinf(xr)))
+        axs[0].hist(xr, bins=100)
+        axs[0].set_title(f"Histogram of cell probabilities (log scale)")
+        axs[0].set_yscale('log')
+        im = axs[1].imshow(np.log(y), aspect='auto')
+        plt.colorbar(im)
+        axs[1].set_title(f"Heatmap with low probability cells (log scale)")
 
-    for yi, metric in enumerate(selected_metrics):
-        for xi, struct in enumerate(selected_structures):
+        if save_flag:
+            plot_save_path = pic_root / f"{metric} vs {structure_metric}_cellswithlowprobs.png"
+            plt.savefig(plot_save_path, format="png", dpi=1000)
+            plt.close()
+        else:
+            plt.show()
 
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
-            y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            selcel = (cells["structure_name"] == struct).to_numpy()
-            struct_pos = np.argwhere(selcel)
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
+        remove_cells_summary[f"{metric} vs {structure_metric}"] = np.median(x, axis=1)
 
-            # select subplot
-            i = i + 1
-            row = nrows - np.ceil(i / ncols) + 1
-            row = row.astype(np.int64)
-            col = i % ncols
-            if col == 0:
-                col = ncols
-            print(f"{i}_{row}_{col}")
+    # %% Identify cells to be removed
+    CellIds_remove_dict = {}
+    CellIds_remove = np.empty(0, dtype=int)
+    for xm, metric in enumerate(selected_metrics):
+        print(metric)
+        CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(
+            remove_cells_summary[f"{metric} vs {structure_metric}"].to_numpy() < cell_dens_th_S)
+        CellIds_remove = np.union1d(CellIds_remove, CellIds_remove_dict[f"{metric} vs {structure_metric}"])
+        print(len(CellIds_remove))
 
-            # Main scatterplot
-            ax = fig.add_axes(
-                [
-                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                    xx,
-                    yy,
-                ]
-            )
-            ax.plot(x, y, "b.", markersize=ms)
-            pos = []
-            for round in np.arange(Rounds):
-                cii = Q[f"{metric}_{struct}_dens_c_{round}"]
-                pos = np.union1d(pos, np.argwhere(cii < dens_th))
-                print(len(pos))
-            print(len(pos))
-            pos = pos.astype(int)
-            remove_cells = np.union1d(remove_cells, struct_pos[pos])
-            ax.plot(x[pos], y[pos], "r.", markersize=ms2)
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            ax.grid()
-            if xw == 0:
-                if yi == 0:
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
-                        struct,
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
-                        selected_structures_org[xi],
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
-                        f"n= {len(x)}",
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                if xi == 0:
-                    plt.figtext(
-                        0.5,
-                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
-                        metric,
-                        fontsize=fs3,
-                        horizontalalignment="center",
-                    )
-            else:
-                # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
-                ax.set_title(f"n= {len(x)}", fontsize=fs2)
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
+    # %% Plot and remove outliers
+    plotname = 'Structures'
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"{plotname}_1_org_fine", 0.5, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"{plotname}_2_org_fine", 0.5, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"{plotname}_1_org_thick", 2, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"{plotname}_2_org_thick", 2, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"{plotname}_1_outliers", 2, CellIds_remove_dict)
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"{plotname}_2_outliers", 2, CellIds_remove_dict)
+    print(cells.shape)
+    CellIds_remove = cells.loc[cells.index[CellIds_remove], 'CellId'].squeeze().to_numpy()
+    cells_ao.loc[cells_ao['CellId'].isin(CellIds_remove), 'Outlier annotation'] = 'Abnormal structure volume metrics'
+    cells = cells.drop(cells.index[cells['CellId'].isin(CellIds_remove)])
+    print(f'Removing {len(CellIds_remove)} cells due to structure volume metrics')
+    print(cells.shape)
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"{plotname}_1_clean_fine", 0.5, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"{plotname}_2_clean_fine", 0.5, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"{plotname}_1_clean_thick", 2, [])
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"{plotname}_2_clean_thick", 2, [])
 
-            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["bottom"].set_linewidth(lw3)
-            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["top"].set_linewidth(lw3)
-            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["right"].set_linewidth(lw3)
-            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["left"].set_linewidth(lw3)
-
-            if xw != 0:
-                # Bottom histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                        h1 + ((row - 1) * (yw + yy + h2)),
-                        xx,
-                        yw,
-                    ]
-                )
-                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-                ax.set_xticks(xticks)
-                ax.set_yticks([])
-                ax.set_yticklabels([])
-                ax.set_xlim(left=xlim[0], right=xlim[1])
-                ax.grid()
-                # if yi==len(selected_metrics_abb):
-                ax.set_xlabel(selected_metrics_abb[yi], fontsize=fs2)
-                ax.invert_yaxis()
-
-                # Side histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)),
-                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                        xw,
-                        yy,
-                    ]
-                )
-                ax.hist(
-                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
-                )
-                ax.set_yticks(yticks)
-                ax.set_xticks([])
-                ax.set_xticklabels([])
-                ax.set_ylim(bottom=ylim[0], top=ylim[1])
-                ax.grid()
-                # if xi==0:
-                ax.set_ylabel(selected_structures[xi], fontsize=fs2)
-                ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "Structures_outliers.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    print(len(remove_cells))
-
-    # %%  Drop them
-    cells = cells.drop(cells.index[remove_cells.astype(int)])
-
-    # %% Initial scatterplot
-    ms = 2
-    nrows = len(selected_metrics)
-    ncols = len(selected_structures)
-    w1 = 0.027
-    w2 = 0.01
-    w3 = 0.002
-    h1 = 0.07
-    h2 = 0.08
-    h3 = 0.07
-    xw = 0
-    yw = 0
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-
-    for yi, metric in enumerate(selected_metrics):
-        for xi, struct in enumerate(selected_structures):
-
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
-            y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            selcel = (cells["structure_name"] == struct).to_numpy()
-            struct_pos = np.argwhere(selcel)
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
-
-            # select subplot
-            i = i + 1
-            row = nrows - np.ceil(i / ncols) + 1
-            row = row.astype(np.int64)
-            col = i % ncols
-            if col == 0:
-                col = ncols
-            print(f"{i}_{row}_{col}")
-
-            # Main scatterplot
-            ax = fig.add_axes(
-                [
-                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                    xx,
-                    yy,
-                ]
-            )
-            ax.plot(x, y, "b.", markersize=ms)
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            ax.grid()
-            if xw == 0:
-                if yi == 0:
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
-                        struct,
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
-                        selected_structures_org[xi],
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
-                        f"n= {len(x)}",
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                if xi == 0:
-                    plt.figtext(
-                        0.5,
-                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
-                        metric,
-                        fontsize=fs3,
-                        horizontalalignment="center",
-                    )
-            else:
-                # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
-                ax.set_title(f"n= {len(x)}", fontsize=fs2)
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
-
-            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["bottom"].set_linewidth(lw3)
-            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["top"].set_linewidth(lw3)
-            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["right"].set_linewidth(lw3)
-            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["left"].set_linewidth(lw3)
-
-            if xw != 0:
-                # Bottom histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                        h1 + ((row - 1) * (yw + yy + h2)),
-                        xx,
-                        yw,
-                    ]
-                )
-                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-                ax.set_xticks(xticks)
-                ax.set_yticks([])
-                ax.set_yticklabels([])
-                ax.set_xlim(left=xlim[0], right=xlim[1])
-                ax.grid()
-                # if yi==len(selected_metrics_abb):
-                ax.set_xlabel(selected_metrics_abb[yi], fontsize=fs2)
-                ax.invert_yaxis()
-
-                # Side histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)),
-                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                        xw,
-                        yy,
-                    ]
-                )
-                ax.hist(
-                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
-                )
-                ax.set_yticks(yticks)
-                ax.set_xticks([])
-                ax.set_xticklabels([])
-                ax.set_ylim(bottom=ylim[0], top=ylim[1])
-                ax.grid()
-                # if xi==0:
-                ax.set_ylabel(selected_structures[xi], fontsize=fs2)
-                ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "Structures_clean_thick.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # %% Initial scatterplot
-    ms = 0.5
-    nrows = len(selected_metrics)
-    ncols = len(selected_structures)
-    w1 = 0.027
-    w2 = 0.01
-    w3 = 0.002
-    h1 = 0.07
-    h2 = 0.08
-    h3 = 0.07
-    xw = 0
-    yw = 0
-    xx = (1 - w1 - ((ncols - 1) * w2) - w3 - (ncols * xw)) / ncols
-    yy = (1 - h1 - ((nrows - 1) * h2) - h3 - (nrows * yw)) / nrows
-
-    fig = plt.figure(figsize=(16, 9))
-
-    i = 0
-
-    for yi, metric in enumerate(selected_metrics):
-        for xi, struct in enumerate(selected_structures):
-
-            x = cells.loc[cells["structure_name"] == struct, [metric]].squeeze()
-            y = cells.loc[
-                cells["structure_name"] == struct, [structure_metric]
-            ].squeeze()
-            selcel = (cells["structure_name"] == struct).to_numpy()
-            struct_pos = np.argwhere(selcel)
-            x = x.to_numpy()
-            y = y.to_numpy()
-            x = x / fac
-            y = y / fac
-
-            # select subplot
-            i = i + 1
-            row = nrows - np.ceil(i / ncols) + 1
-            row = row.astype(np.int64)
-            col = i % ncols
-            if col == 0:
-                col = ncols
-            print(f"{i}_{row}_{col}")
-
-            # Main scatterplot
-            ax = fig.add_axes(
-                [
-                    w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                    h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                    xx,
-                    yy,
-                ]
-            )
-            ax.plot(x, y, "b.", markersize=ms)
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-            ax.grid()
-            if xw == 0:
-                if yi == 0:
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.3 * (ylim[1] - ylim[0]),
-                        struct,
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.2 * (ylim[1] - ylim[0]),
-                        selected_structures_org[xi],
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                    plt.text(
-                        np.mean(xlim),
-                        ylim[0] + 1.1 * (ylim[1] - ylim[0]),
-                        f"n= {len(x)}",
-                        fontsize=fs2,
-                        horizontalalignment="center",
-                    )
-                if xi == 0:
-                    plt.figtext(
-                        0.5,
-                        h1 + ((row - 1) * (yw + yy + h2)) - h2 / 2,
-                        metric,
-                        fontsize=fs3,
-                        horizontalalignment="center",
-                    )
-            else:
-                # ax.set_title(f"{selected_structures[xi]} vs {selected_metrics_abb[yi]} (n= {len(x)})", fontsize=fs2)
-                ax.set_title(f"n= {len(x)}", fontsize=fs2)
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
-
-            ax.spines["bottom"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["bottom"].set_linewidth(lw3)
-            ax.spines["top"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["top"].set_linewidth(lw3)
-            ax.spines["right"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["right"].set_linewidth(lw3)
-            ax.spines["left"].set_color(colordict[selected_structures_cat[xi]])
-            ax.spines["left"].set_linewidth(lw3)
-
-            if xw != 0:
-                # Bottom histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)) + xw,
-                        h1 + ((row - 1) * (yw + yy + h2)),
-                        xx,
-                        yw,
-                    ]
-                )
-                ax.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 1])
-                ax.set_xticks(xticks)
-                ax.set_yticks([])
-                ax.set_yticklabels([])
-                ax.set_xlim(left=xlim[0], right=xlim[1])
-                ax.grid()
-                # if yi==len(selected_metrics_abb):
-                ax.set_xlabel(selected_metrics_abb[yi], fontsize=fs2)
-                ax.invert_yaxis()
-
-                # Side histogram
-                ax = fig.add_axes(
-                    [
-                        w1 + ((col - 1) * (xw + xx + w2)),
-                        h1 + ((row - 1) * (yw + yy + h2)) + yw,
-                        xw,
-                        yy,
-                    ]
-                )
-                ax.hist(
-                    y, bins=nbins, color=[0.5, 0.5, 0.5, 1], orientation="horizontal"
-                )
-                ax.set_yticks(yticks)
-                ax.set_xticks([])
-                ax.set_xticklabels([])
-                ax.set_ylim(bottom=ylim[0], top=ylim[1])
-                ax.grid()
-                # if xi==0:
-                ax.set_ylabel(selected_structures[xi], fontsize=fs2)
-                ax.invert_xaxis()
-
-    if save_flag:
-        plot_save_path = pic_root / "Structures_clean_fine.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
-
-    # Save cleaned dataset
+    # %% Saving
     cells.to_csv(data_root / dataset_clean)
+    cells_ao.to_csv(data_root / dataset_outliers)
+
+    # %% Final diagnostic plot
+    cells = pd.read_csv(data_root / dataset)
+    CellIds_remove_dict = {}
+
+    for i, xy_pair in enumerate(pairs):
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        CellIds_remove_dict[f"{metricX} vs {metricY}"] = np.argwhere(
+            (cells_ao['Outlier annotation'] == 'Abnormal cell or nuclear metric').to_numpy())
+    oplot(cellnuc_metrics, cellnuc_abbs, pairs2, cells, True, pic_root, f"Check_cellnucleus", 2, CellIds_remove_dict)
+
+    CellIds_remove_dict = {}
+    for xm, metric in enumerate(selected_metrics):
+        CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(((cells_ao[
+                                                                                   'Outlier annotation'] == 'Abnormal structure volume metrics') | (
+                                                                                      cells_ao[
+                                                                                          'Outlier annotation'] == 'Abnormal cell or nuclear metric')).to_numpy())
+    splot(selected_metrics, selected_metrics_abb, selected_structures[0:7], structure_metric, cells, True, pic_root,
+          f"Check_structures_1", 2, CellIds_remove_dict)
+    splot(selected_metrics, selected_metrics_abb, selected_structures[7:14], structure_metric, cells, True, pic_root,
+          f"Check_structures_2", 2, CellIds_remove_dict)

@@ -8,11 +8,12 @@ import sys, importlib
 import os, platform
 
 # Third party
+
+# Relative
 from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing
 from stemcellorganellesizescaling.analyses.compute_stats import compensate
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.compute_stats"])
 from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats
-# Relative
 
 print("Libraries loaded succesfully")
 ###############################################################################
@@ -43,7 +44,8 @@ dirs.append(pic_root)
 # print('##################### Data preparation - Outlier Removal #####################')
 tableIN = "SizeScaling_20201006.csv"
 tableOUT = "SizeScaling_20201006_clean.csv"
-outlier_removal(dirs, tableIN, tableOUT)
+tableOUTL = "SizeScaling_20201006_outliers.csv"
+outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
 # print('##################### Data preparation - Diagnostic violins #####################')
