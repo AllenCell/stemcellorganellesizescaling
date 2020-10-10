@@ -41,9 +41,9 @@ dirs.append(pic_root)
 #
 # #%% Data preparation - Outlier Removal
 # print('##################### Data preparation - Outlier Removal #####################')
-# tableIN = "SizeScaling_20201006.csv"
-# tableOUT = "SizeScaling_20201006_clean.csv"
-# outlier_removal(dirs, tableIN, tableOUT)
+tableIN = "SizeScaling_20201006.csv"
+tableOUT = "SizeScaling_20201006_clean.csv"
+outlier_removal(dirs, tableIN, tableOUT)
 
 #%% Data preparation - Diagnostic violins
 # print('##################### Data preparation - Diagnostic violins #####################')
@@ -51,9 +51,9 @@ dirs.append(pic_root)
 # outlier_removal(dirs, tableIN)
 
 #%% Computing statistics
-tableIN = "SizeScaling_20201006_clean.csv"
-tableOUT = "SizeScaling_20201006_comp.csv"
-compensate(dirs, tableIN, tableOUT)
+# tableIN = "SizeScaling_20201006_clean.csv"
+# tableOUT = "SizeScaling_20201006_comp.csv"
+# compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics
 # tableIN = "SizeScaling_20201006_clean.csv"
