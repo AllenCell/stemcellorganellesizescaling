@@ -113,15 +113,15 @@ for f1 in np.arange(L):
             pairs[i,:] = [f1, f2]
             i += 1
 
-# %% The typical six scatter plots
-xvec = [1, 1, 6, 1, 4, 6]
-yvec = [4, 6, 4, 0, 3, 3]
-pairs = np.stack((xvec, yvec)).T
-
-# %% Just one
-xvec = [1]
-yvec = [4]
-pairs = np.stack((xvec, yvec)).T
+# # %% The typical six scatter plots
+# xvec = [1, 1, 6, 1, 4, 6]
+# yvec = [4, 6, 4, 0, 3, 3]
+# pairs = np.stack((xvec, yvec)).T
+#
+# # %% Just one
+# xvec = [1]
+# yvec = [4]
+# pairs = np.stack((xvec, yvec)).T
 
 
 # %% Parameters
