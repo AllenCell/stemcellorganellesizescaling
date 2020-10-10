@@ -126,9 +126,9 @@ pairs = np.stack((xvec, yvec)).T
 
 # %% Parameters
 nbins = 100
-N = 100
+N = 10000
 fac = 1000
-Rounds = 2
+Rounds = 5
 
 # %% For all pairs compute densities
 # dens_th = 1e-40
@@ -140,10 +140,10 @@ for i, xy_pair in tqdm(enumerate(pairs),'Enumerate pairs of metrics'):
     print(f"{metricX} vs {metricY}")
 
     # data
-    # x = cells[metricX].to_numpy()/fac
-    # y = cells[metricY].to_numpy()/fac
-    x = cells[metricX].sample(1000,random_state = 1117).to_numpy() / fac
-    y = cells[metricY].sample(1000,random_state = 1117).to_numpy() / fac
+    x = cells[metricX].to_numpy()/fac
+    y = cells[metricY].to_numpy()/fac
+    # x = cells[metricX].sample(1000,random_state = 1117).to_numpy() / fac
+    # y = cells[metricY].sample(1000,random_state = 1117).to_numpy() / fac
 
     # sampling on x and y
     xii, yii = np.mgrid[
