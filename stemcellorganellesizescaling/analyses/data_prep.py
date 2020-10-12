@@ -85,11 +85,12 @@ def initial_parsing(
             "DNA_MEM_PC6",
             "DNA_MEM_PC7",
             "DNA_MEM_PC8",
+            "WorkflowId",
+            "meta_fov_image_date",
         ]
         cells = cells[keepcolumns]
 
         # Missing:
-        #  'WorkflowId', 'meta_fov_image_date',
         # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
 
         # %% Rename columns
@@ -108,11 +109,9 @@ def initial_parsing(
                 "dna_position_depth_lcc": "Nucleus height",
                 "dna_position_height_lcc": "Nucleus xbox",
                 "dna_position_width_lcc": "Nucleus ybox",
+                "meta_fov_image_date": "ImageDate",
             }
         )
-
-        # Missing:
-        # 'meta_fov_image_date': 'ImageDate'
 
         # %% Add a column
         cells["Cytoplasmic volume"] = cells["Cell volume"] - cells["Nuclear volume"]
