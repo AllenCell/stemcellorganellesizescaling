@@ -56,12 +56,12 @@ dirs.append(pic_root)
 # diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics
-tableIN = "SizeScaling_20201012.csv"
-tableOUT = "SizeScaling_20201012_comp.csv"
-compensate(dirs, tableIN, tableOUT)
+# tableIN = "SizeScaling_20201012.csv"
+# tableOUT = "SizeScaling_20201012_comp.csv"
+# compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics
-# tableIN = "SizeScaling_20201006_clean.csv"
-# table_compIN = "SizeScaling_20201006_comp.csv"
-# statsOUTdir = "Stats_20201006"
-# pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+tableIN = "SizeScaling_20201012.csv"
+table_compIN = "SizeScaling_20201012_comp.csv"
+statsOUTdir = "Stats_20201012"
+pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
