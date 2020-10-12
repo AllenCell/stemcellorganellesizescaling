@@ -38,10 +38,10 @@ dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
 # print('##################### Data preparation - Initial Parsing #####################')
-tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_PRODUCTION/expand/manifest.csv"
-tableSNIP = "Manifest_snippet_202010112.csv"
-tableOUT = "SizeScaling_20201012.csv"
-initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
+# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_PRODUCTION/expand/manifest.csv"
+# tableSNIP = "Manifest_snippet_202010112.csv"
+# tableOUT = "SizeScaling_20201012.csv"
+# initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
 
 # #%% Data preparation - Outlier Removal
 # print('##################### Data preparation - Outlier Removal #####################')
@@ -51,14 +51,14 @@ initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
 # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
-print('##################### Data preparation - Diagnostic violins #####################')
-tableIN = "SizeScaling_20201012.csv"
-diagnostic_violins(dirs, tableIN)
+# print('##################### Data preparation - Diagnostic violins #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics
-# tableIN = "SizeScaling_20201006_clean.csv"
-# tableOUT = "SizeScaling_20201006_comp.csv"
-# compensate(dirs, tableIN, tableOUT)
+tableIN = "SizeScaling_20201012.csv"
+tableOUT = "SizeScaling_20201012_comp.csv"
+compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics
 # tableIN = "SizeScaling_20201006_clean.csv"
