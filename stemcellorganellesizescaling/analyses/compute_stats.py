@@ -272,7 +272,7 @@ def pairwisestats(
                             x = np.expand_dims(x, axis=1)
                             y = cells_COMP.loc[cells_COMP["structure_name"] == struct, col1].squeeze().to_numpy()
                             y = np.expand_dims(y, axis=1)
-                            D.update(calculate_pairwisestats(x, y, xlabel, ylabel, struct))
+                            D.update(calculate_pairwisestats(x, y, col2, col1, struct))
     # prepare directory
     save_dir = (data_root / statsOUTdir / 'cellnuc_struct_COMP_metrics')
     save_dir.mkdir(exist_ok=True)
