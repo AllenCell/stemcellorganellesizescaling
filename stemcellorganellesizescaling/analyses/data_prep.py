@@ -18,10 +18,25 @@ import sys, importlib
 # Third party
 
 # Relative
+# Third party
+from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
+    organelle_scatter,
+    fscatter,
+    compensated_scatter,
+    organelle_scatterT,
+    compensated_scatter_t
+)
 
-from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import splot, oplot
-importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs"])
-from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import splot, oplot
+importlib.reload(
+    sys.modules["stemcellorganellesizescaling.analyses.utils.scatter_plotting_func"]
+)
+from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
+    organelle_scatter,
+    fscatter,
+    compensated_scatter,
+    organelle_scatterT,
+    compensated_scatter_t
+)
 
 print('Libraries loaded successfully')
 ###############################################################################

@@ -7,16 +7,29 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
-import seaborn as sns
-from datetime import datetime
 import os, platform
+import sys, importlib
 
 # Third party
-# from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing
-# from stemcellorganellesizescaling.analyses.compute_stats import compensate
-# importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.compute_stats"])
-# from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats
+from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
+    organelle_scatter,
+    fscatter,
+    compensated_scatter,
+    organelle_scatterT,
+    compensated_scatter_t
+)
+
+importlib.reload(
+    sys.modules["stemcellorganellesizescaling.analyses.utils.scatter_plotting_func"]
+)
+from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
+    organelle_scatter,
+    fscatter,
+    compensated_scatter,
+    organelle_scatterT,
+    compensated_scatter_t
+)
+
 # Relative
 
 print("Libraries loaded succesfully")
@@ -43,161 +56,448 @@ dirs.append(pic_root)
 data_root = dirs[0]
 pic_root = dirs[1]
 
-dataset = "SizeScaling_20201012.csv"
-
+tableIN = "SizeScaling_20201012.csv"
+table_compIN = "SizeScaling_20201012_comp.csv"
+statsIN = "Stats_20201012"
 # Load dataset
-cells = pd.read_csv(data_root / dataset)
+cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
+cells_COMP = pd.read_csv(data_root / table_compIN)
+np.any(cells_COMP.isnull())
 
 # Remove outliers
 # %% Parameters, updated directories
-save_flag = 1  # save plot (1) or show on screen (0)
-pic_root = pic_root / "diagnostic violins"
+save_flag = 0  # save plot (1) or show on screen (0)
+plt.rcParams.update({"font.size": 12})
+pic_root = pic_root / "scatter_plots"
 pic_root.mkdir(exist_ok=True)
 
+# %% Feature sets
+FS = {}
+FS["cell_metrics_AVH"] = ["Cell surface area", "Cell volume", "Cell height"]
+FS["nuc_metrics_AVH"] = ["Nuclear surface area", "Nuclear volume", "Nucleus height"]
+FS["cell_metrics_AV"] = ["Cell surface area", "Cell volume"]
+FS["nuc_metrics_AV"] = ["Nuclear surface area", "Nuclear volume"]
+FS["cell_metrics_H"] = ["Cell height"]
+FS["nuc_metrics_H"] = ["Nucleus height"]
+FS["cellnuc_metrics"] = [
+    "Cell surface area",
+    "Cell volume",
+    "Cell height",
+    "Nuclear surface area",
+    "Nuclear volume",
+    "Nucleus height",
+    "Cytoplasmic volume",
+]
+FS["cellnuc_abbs"] = [
+    "Cell area",
+    "Cell vol",
+    "Cell height",
+    "Nuclear area",
+    "Nuclear vol",
+    "Nucleus height",
+    "Cyto vol",
+]
+FS["cellnuc_COMP_metrics"] = [
+    "Cell surface area",
+    "Cell volume",
+    "Cell height",
+    "Nuclear surface area",
+    "Nuclear volume",
+    "Nucleus height",
+]
+
+FS["cellnuc_COMP_abbs"] = [
+    "Cell area",
+    "Cell vol",
+    "Cell height",
+    "Nuclear area",
+    "Nuclear vol",
+    "Nucleus height",
+]
+
+FS["selected_structures"] = [
+    "LMNB1",
+    "ST6GAL1",
+    "TOMM20",
+    "SEC61B",
+    "ATP2A2",
+    "LAMP1",
+    "RAB5A",
+    "SLC25A17",
+    "TUBA1B",
+    "TJP1",
+    "NUP153",
+    "FBL",
+    "NPM1",
+    "SON",
+]
+FS["other_structures"] = list(
+    set(cells["structure_name"].unique()) - set(FS["selected_structures"])
+)
+# struct_metrics = [
+#     "Structure volume",
+#     "Number of pieces",
+#     "Piece average",
+#     "Piece std",
+#     "Piece CoV",
+#     "Piece sum",
+# ]
+FS["struct_metrics"] = ["Structure volume", "Number of pieces"]
+FS["COMP_types"] = ["AVH","AV","H"]
+
+
 # %%
-# %% Time vs. structure
-timestr = cells["ImageDate"]
-time = np.zeros((len(timestr), 1))
-for i, val in tqdm(enumerate(timestr)):
-    date_time_obj = datetime.strptime(val, "%Y-%m-%d %H:%M:%S.%f")
-    # time[i] = int(date_time_obj.strftime("%Y%m%d%H%M%S"))
-    time[i] = int(date_time_obj.timestamp())
-cells["int_acquisition_time"] = time
+xvec = [1]
+yvec = [4]
+pair1 = np.stack((xvec, yvec)).T
 
-# %% Plot time
-fig, axes = plt.subplots(figsize=(10, 5), dpi=100)
-axes.hist(cells["int_acquisition_time"], bins=200)
-locs, labels = plt.xticks()
-for i, val in enumerate(locs):
-    date_time_obj = datetime.fromtimestamp(val)
-    labels[i] = date_time_obj.strftime("%b%y")
-plt.xticks(locs, labels)
+# %%
+xvec = [1, 1, 6, 1, 4, 6]
+yvec = [4, 6, 4, 0, 3, 3]
+pair6 = np.stack((xvec, yvec)).T
 
-axes.set_title("Cells over time")
-axes.grid(True, which="major", axis="y")
-axes.set_axisbelow(True)
+# %%
+N = 13
+xvec = np.random.choice(len(FS["cellnuc_metrics"]), N)
+yvec = np.random.choice(len(FS["cellnuc_metrics"]), N)
+pairN = np.stack((xvec, yvec)).T
 
-if save_flag:
-    plot_save_path = pic_root / "HISTOGRAM_CellsOverTime.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
-    plt.close()
-else:
-    plt.show()
+# %%
+L = len(FS["cellnuc_metrics"])
+pair21 = np.zeros((int(L * (L - 1) / 2), 2)).astype(np.int)
+i = 0
+for f1 in np.arange(L):
+    for f2 in np.arange(L):
+        if f2 > f1:
+            pair21[i, :] = [f1, f2]
+            i += 1
 
-# %% Order of structures and FOVs
-table = pd.pivot_table(
-    cells, index="structure_name", values="int_acquisition_time", aggfunc="min"
+
+#%%
+bcells = pd.read_csv(data_root / 'babycells' / 'babybump_20201016.csv')
+plotname = "test"
+ps = data_root / statsIN / "cell_nuc_metrics"
+fscatter(
+    FS["cellnuc_metrics"],
+    FS["cellnuc_abbs"],
+    pair6,
+    cells,
+    ps,
+    False,
+    pic_root,
+    f"{plotname}_plain",
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=1000,
+    plotcells=bcells
 )
-table = table.sort_values(by=["int_acquisition_time"])
-sortedStructures = table.index.values
 
-# %% Plot structures over time
-fig, axes = plt.subplots(figsize=(10, 5), dpi=100)
-sns.violinplot(
-    y="structure_name",
-    x="int_acquisition_time",
-    data=cells,
-    ax=axes,
-    order=sortedStructures,
+#%% Plot some more
+pic_rootT = pic_root / "cell_nuc_metrics"
+pic_rootT.mkdir(exist_ok=True)
+ps = data_root / statsIN / "cell_nuc_metrics"
+
+kde_flagL = [False, False, False, True, True, True, True, True, True]
+fourcolors_flagL = [False, False, False, False, True, False, False, True, False]
+colorpoints_flagL = [False, False, False, False, False, True, False, False, True]
+rollingavg_flagL = [False, True, True, False, False, False, True, True, True]
+ols_flagL = [False, False, True, False, False, False, True, True, True]
+Name = [
+    "plain",
+    "roll",
+    "ols",
+    "galaxy",
+    "arch",
+    "color",
+    "galaxy_ro",
+    "arch_ro",
+    "color_ro",
+]
+
+PS = {}
+PS["pair1"] = pair1
+PS["pair6"] = pair6
+PS["pair21"] = pair21
+
+for key in PS:
+    pair = PS[key]
+    for (
+        i,
+        (kde_flag, fourcolors_flag, colorpoints_flag, rollingavg_flag, ols_flag, name),
+    ) in enumerate(
+        zip(
+            kde_flagL,
+            fourcolors_flagL,
+            colorpoints_flagL,
+            rollingavg_flagL,
+            ols_flagL,
+            Name,
+        )
+    ):
+        plotname = f"{key}_{name}"
+        print(plotname)
+        fscatter(
+            FS["cellnuc_metrics"],
+            FS["cellnuc_abbs"],
+            pair,
+            cells,
+            ps,
+            True,
+            pic_rootT,
+            plotname,
+            kde_flag=kde_flag,
+            fourcolors_flag=fourcolors_flag,
+            colorpoints_flag=colorpoints_flag,
+            rollingavg_flag=rollingavg_flag,
+            ols_flag=ols_flag,
+            N2=1000,
+        )
+
+#%%
+plotname = "test"
+ps = data_root / statsIN / "cellnuc_struct_metrics"
+organelle_scatter(
+    FS["cellnuc_metrics"],
+    FS["cellnuc_abbs"],
+    FS["selected_structures"],
+    "Structure volume",
+    cells,
+    ps,
+    False,
+    pic_root,
+    plotname,
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=100,
+    plotcells=bcells,
 )
-locs, labels = plt.xticks()
-for i, val in enumerate(locs):
-    date_time_obj = datetime.fromtimestamp(val)
-    labels[i] = date_time_obj.strftime("%b%y")
-plt.xticks(locs, labels)
 
-axes.set_title("Structures over time")
-axes.grid(True, which="major", axis="both")
-axes.set_axisbelow(True)
-axes.set_ylabel(None)
-axes.set_xlabel(None)
+#%% Plot some more
+pic_rootT = pic_root / "cellnuc_struct_metrics"
+pic_rootT.mkdir(exist_ok=True)
+ps = data_root / statsIN / "cellnuc_struct_metrics"
 
-if save_flag:
-    plot_save_path = pic_root / "VIOLIN_structure_vs_time.png"
-    plt.savefig(plot_save_path, format="png", dpi=300)
-    plt.close()
-else:
-    plt.show()
+kde_flagL = [False, False, False, True, True, True, True, True, True]
+fourcolors_flagL = [False, False, False, False, True, False, False, True, False]
+colorpoints_flagL = [False, False, False, False, False, True, False, False, True]
+rollingavg_flagL = [False, True, True, False, False, False, True, True, True]
+ols_flagL = [False, False, True, False, False, False, True, True, True]
+Name = [
+    "plain",
+    "roll",
+    "ols",
+    "galaxy",
+    "arch",
+    "color",
+    "galaxy_ro",
+    "arch_ro",
+    "color_ro",
+]
 
-#%% Bars with numbers of cells for each of the structures
-table = pd.pivot_table(cells, index="structure_name", aggfunc="size")
-table = table.reindex(sortedStructures)
-fig, axes = plt.subplots(figsize=(10, 5), dpi=100)
 
-table.plot.barh(ax=axes)
-# x_pos = range(len(table))
-# plt.barh(x_pos, table)
-# plt.yticks(x_pos, table.keys())
+for i in np.arange(2):
+    if i == 0:
+        sel_struct = FS["selected_structures"]
+        key = "sel"
+    elif i == 1:
+        sel_struct = FS["other_structures"]
+        key = "other"
+    for sm, struct_metric in enumerate(FS["struct_metrics"]):
+        for (
+            j,
+            (
+                kde_flag,
+                fourcolors_flag,
+                colorpoints_flag,
+                rollingavg_flag,
+                ols_flag,
+                name,
+            ),
+        ) in enumerate(
+            zip(
+                kde_flagL,
+                fourcolors_flagL,
+                colorpoints_flagL,
+                rollingavg_flagL,
+                ols_flagL,
+                Name,
+            )
+        ):
+            plotname = f"{key}_{struct_metric}_{name}"
+            print(plotname)
+            organelle_scatter(
+                FS["cellnuc_metrics"],
+                FS["cellnuc_abbs"],
+                sel_struct,
+                struct_metric,
+                cells,
+                ps,
+                True,
+                pic_rootT,
+                plotname,
+                kde_flag=kde_flag,
+                fourcolors_flag=fourcolors_flag,
+                colorpoints_flag=colorpoints_flag,
+                rollingavg_flag=rollingavg_flag,
+                ols_flag=ols_flag,
+                N2=100,
+            )
 
-for j, val in enumerate(table):
-    axes.text(
-        val, j, str(val), ha="right", va="center", color="white", size=6, weight="bold"
-    )
-
-axes.set_title("Number of cells per structure")
-axes.set_ylabel(None)
-axes.grid(True, which="major", axis="x")
-axes.set_axisbelow(True)
-axes.invert_yaxis()
-
-if save_flag:
-    plot_save_path = pic_root / "BAR_StructureCounts.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
-    plt.close()
-else:
-    plt.show()
-
-#%% Stacked bars comparing stuctures and imaging mode
-table = pd.pivot_table(
-    cells, index="structure_name", columns="WorkflowId", aggfunc="size"
+# %%
+ps = data_root / statsIN / "cellnuc_struct_COMP_metrics"
+compensated_scatter(
+    FS["cellnuc_COMP_metrics"],
+    FS["cellnuc_COMP_abbs"],
+    FS["selected_structures"],
+    "AVH",
+    'Linear',
+    "Structure volume",
+    cells_COMP,
+    ps,
+    False,
+    pic_root,
+    plotname,
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=100,
 )
-table = table.reindex(sortedStructures)
-fig, axes = plt.subplots(figsize=(10, 5), dpi=100)
-table.plot.barh(stacked=True, ax=axes)
+# %% OK plots
+pic_rootT = pic_root / "cellnuc_struct_COMP_metrics"
+pic_rootT.mkdir(exist_ok=True)
+ps = data_root / statsIN / "cellnuc_struct_COMP_metrics"
 
-axes.set_ylabel(None)
-axes.set_title("Structures and Image Mode")
-axes.grid(True, which="major", axis="x")
-axes.set_axisbelow(True)
-axes.invert_yaxis()
+kde_flagL = [False, False, False, True, True, True, True, True, True]
+fourcolors_flagL = [False, False, False, False, True, False, False, True, False]
+colorpoints_flagL = [False, False, False, False, False, True, False, False, True]
+rollingavg_flagL = [False, True, True, False, False, False, True, True, True]
+ols_flagL = [False, False, True, False, False, False, True, True, True]
+Name = [
+    "plain",
+    "roll",
+    "ols",
+    "galaxy",
+    "arch",
+    "color",
+    "galaxy_ro",
+    "arch_ro",
+    "color_ro",
+]
 
-if save_flag:
-    plot_save_path = pic_root / "BAR_StructureVsImageMode.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
-    plt.close()
-else:
-    plt.show()
+for c, comp_type, in enumerate(FS["COMP_types"]):
+    for ti, lin_type in enumerate(["Linear", "Complex"]):
+        for i in np.arange(2):
+            if i == 0:
+                sel_struct = FS["selected_structures"]
+                key = "sel"
+            elif i == 1:
+                sel_struct = FS["other_structures"]
+                key = "other"
+            for sm, struct_metric in enumerate(FS["struct_metrics"]):
+                for (
+                    j,
+                    (
+                        kde_flag,
+                        fourcolors_flag,
+                        colorpoints_flag,
+                        rollingavg_flag,
+                        ols_flag,
+                        name,
+                    ),
+                ) in enumerate(
+                    zip(
+                        kde_flagL,
+                        fourcolors_flagL,
+                        colorpoints_flagL,
+                        rollingavg_flagL,
+                        ols_flagL,
+                        Name,
+                    )
+                ):
+                    plotname = f"{key}_{struct_metric}_{lin_type}_{comp_type}_{name}"
+                    print(plotname)
 
-# %% Plot structure over FOVids
-# Still missing:
-# 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2', 'Piece average', 'Piece max', 'Piece min',
-#        'Piece std', 'Piece sum'
+                    compensated_scatter(
+                        FS["cellnuc_COMP_metrics"],
+                        FS["cellnuc_COMP_abbs"],
+                        FS["selected_structures"],
+                        comp_type,
+                        lin_type,
+                        struct_metric,
+                        cells_COMP,
+                        ps,
+                        True,
+                        pic_rootT,
+                        plotname,
+                        kde_flag=kde_flag,
+                        fourcolors_flag=fourcolors_flag,
+                        colorpoints_flag=colorpoints_flag,
+                        rollingavg_flag=rollingavg_flag,
+                        ols_flag=ols_flag,
+                        N2=100,
+                    )
 
-selected_metrics = ['Cell surface area', 'Cell volume', 'Nuclear surface area',
-       'Nuclear volume', 'Cytoplasmic volume', 'Number of pieces', 'Structure volume', 'Cell height',
-       'Cell xbox', 'Cell ybox', 'Nucleus height', 'Nucleus xbox',
-       'Nucleus ybox','DNA_MEM_PC1', 'DNA_MEM_PC2',
-       'DNA_MEM_PC3', 'DNA_MEM_PC4', 'DNA_MEM_PC5', 'DNA_MEM_PC6',
-       'DNA_MEM_PC7', 'DNA_MEM_PC8',
-       ]
+#%%
+plotname = "x"
+ps = data_root / statsIN / "cellnuc_struct_metrics"
+pic_rootT = pic_root / "forpres"
+pic_rootT.mkdir(exist_ok=True)
+organelle_scatterT(
+    FS["cellnuc_metrics"],
+    FS["cellnuc_abbs"],
+    ['ST6GAL1','SON'],
+    "Structure volume",
+    cells,
+    ps,
+    True,
+    pic_rootT,
+    plotname,
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=100,
+    plotcells=bcells,
+)
 
-for i, metric in enumerate(selected_metrics):
+#%%
+plotname = "x_c"
+pic_rootT = pic_root / "forpres"
+pic_rootT.mkdir(exist_ok=True)
+ps = data_root / statsIN / "cellnuc_struct_COMP_metrics"
+compensated_scatter_t(
+    FS["cellnuc_COMP_metrics"],
+    FS["cellnuc_COMP_abbs"],
+    ['ST6GAL1','SON'],
+    "AVH",
+    'Linear',
+    "Structure volume",
+    cells_COMP,
+    ps,
+    True,
+    pic_rootT,
+    plotname,
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=100,
+)
 
-    fig, axes = plt.subplots(figsize=(10, 5), dpi=100)
-    sns.violinplot(
-        y="structure_name", x=metric, color='black', data=cells, scale='width', ax=axes, order=sortedStructures
-    )
+# %%
 
-    axes.set_title(f"{metric} across cell lines")
-    axes.grid(True, which="major", axis="both")
-    axes.set_axisbelow(True)
-    axes.set_ylabel(None)
-    axes.set_xlabel(None)
 
-    if save_flag:
-        plot_save_path = pic_root / f"VIOLIN_{metric}.png"
-        plt.savefig(plot_save_path, format="png", dpi=300)
-        plt.close()
-    else:
-        plt.show()
+
+
+
