@@ -55,22 +55,22 @@ dirs.append(pic_root)
 # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
-print('##################### Data preparation - Diagnostic violins #####################')
-tableIN = "SizeScaling_20201012.csv"
-diagnostic_violins(dirs, tableIN)
+# print('##################### Data preparation - Diagnostic violins #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics - Compensation analysis
-print('##################### Computing statistics - Compensation analysis #####################')
-tableIN = "SizeScaling_20201012.csv"
-tableOUT = "SizeScaling_20201012_comp.csv"
-compensate(dirs, tableIN, tableOUT)
+# print('##################### Computing statistics - Compensation analysis #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# tableOUT = "SizeScaling_20201012_comp.csv"
+# compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics - Pairwise statistics
-print('##################### Computing statistics - Pairwise statistics #####################')
-tableIN = "SizeScaling_20201012.csv"
-table_compIN = "SizeScaling_20201012_comp.csv"
-statsOUTdir = "Stats_20201012"
-pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+# print('##################### Computing statistics - Pairwise statistics #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# table_compIN = "SizeScaling_20201012_comp.csv"
+# statsOUTdir = "Stats_20201012"
+# pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
@@ -80,7 +80,7 @@ cellnuc_scatter_plots(dirs, tableIN, statsIN)
 
 #%% Plotting scatterplots - Organelle scatter plots
 print('##################### Plotting scatterplots - Organelle scatter plots #####################')
-tableIN = "SizeScaling.csv"
+tableIN = "SizeScaling_20201012.csv"
 statsIN = "Stats_20201012"
 organelle_scatter_plots(dirs, tableIN, statsIN)
 

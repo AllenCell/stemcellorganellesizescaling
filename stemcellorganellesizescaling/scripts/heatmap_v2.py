@@ -226,6 +226,8 @@ keepcolumns = ['structure_name']
 for xi, xlabel in enumerate(HM['cellnuc_heatmap']):
     struct_metric = HM["struct_heatmap_metrics"]
     keepcolumns.append(f"{xlabel}_{struct_metric}")
+    keepcolumns.append(f"{xlabel}_{struct_metric}_min")
+    keepcolumns.append(f"{xlabel}_{struct_metric}_max")
 
 HeatMap = StructGrow[keepcolumns]
 
@@ -376,7 +378,7 @@ axOrgGrow.set_xticklabels(xlabels,rotation=rot,horizontalalignment='left')
 
 # Cell Growth rates
 axCellGrow = fig.add_axes([w6+x4+w7, yh+h3+y4, x5, y5])
-axCellGrow.imshow(growvecC, aspect='auto', cmap='viridis',vmin=0, vmax=100)
+axCellGrow.imshow(growvecC, aspect='auto', cmap='plasma',vmin=0, vmax=100)
 for i in range(len(growvecC)):
         val = np.int(growvecC[i, 0])
         text = axCellGrow.text(0, i, val,
@@ -472,11 +474,11 @@ axGrowBar.set_title('Growth rate (%)')
 
 
 
-plot_save_path = pic_root / f"heatmap.png"
-plt.savefig(plot_save_path, format="png", dpi=1000)
-plt.close()
+# plot_save_path = pic_root / f"heatmap.png"
+# plt.savefig(plot_save_path, format="png", dpi=1000)
+# plt.close()
 
-# plt.show()
+plt.show()
 
 # %%
 

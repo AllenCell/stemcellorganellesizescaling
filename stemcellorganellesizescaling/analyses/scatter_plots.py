@@ -237,8 +237,8 @@ def cellnuc_scatter_plots(
 
     PS = {}
     PS["pair1"] = pair1
-    # PS["pair6"] = pair6
-    # PS["pair21"] = pair21
+    PS["pair6"] = pair6
+    PS["pair21"] = pair21
 
     for key in PS:
         pair = PS[key]
