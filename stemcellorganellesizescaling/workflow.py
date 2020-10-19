@@ -62,7 +62,7 @@ diagnostic_violins(dirs, tableIN)
 #%% Computing statistics - Compensation analysis
 print('##################### Computing statistics - Compensation analysis #####################')
 tableIN = "SizeScaling_20201012.csv"
-tableOUT = "SizeScaling_20201012.csv"
+tableOUT = "SizeScaling_20201012_comp.csv"
 compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics - Pairwise statistics
