@@ -34,8 +34,8 @@ if platform.system() == "Windows":
     data_root = Path("E:/DA/Data/scoss/Data/")
     pic_root = Path("E:/DA/Data/scoss/Pics/")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/SS_20201012_nobaby/")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/SS_20201012_nobaby/")
+    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/SS_20201012_onlybaby/")
+    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/SS_20201012_onlybaby/")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
