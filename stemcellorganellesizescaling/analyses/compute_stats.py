@@ -175,16 +175,15 @@ def pairwisestats(
         "Cytoplasmic volume",
     ]
     # struct_metrics = [
-    #     "Structure volume",
-    #     "Number of pieces",
-    #     "Piece average",
-    #     "Piece std",
     #     "Piece CoV",
-    #     "Piece sum",
+    #     "Piece sum/min/max",
     # ]
+
     FS['struct_metrics'] = [
         "Structure volume",
-        "Number of pieces"
+        "Number of pieces",
+        "Piece average",
+        "Piece std",
     ]
 
     # %% Part 1 pairwise stats cell and nucleus measurement

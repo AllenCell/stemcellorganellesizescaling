@@ -25,7 +25,7 @@ from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
     fscatter,
     compensated_scatter,
     organelle_scatterT,
-    compensated_scatter_t
+    compensated_scatter_t,
 )
 
 importlib.reload(
@@ -36,10 +36,10 @@ from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
     fscatter,
     compensated_scatter,
     organelle_scatterT,
-    compensated_scatter_t
+    compensated_scatter_t,
 )
 
-print('Libraries loaded successfully')
+print("Libraries loaded successfully")
 ###############################################################################
 
 log = logging.getLogger(__name__)
@@ -48,8 +48,8 @@ log = logging.getLogger(__name__)
 
 # %%
 
-def get_feature_sets(cells,
-):
+
+def get_feature_sets(cells,):
     """
     Return feature sets for all plotting functions
     Parameters
@@ -130,15 +130,20 @@ def get_feature_sets(cells,
     #     "Piece CoV",
     #     "Piece sum",
     # ]
-    FS["struct_metrics"] = ["Structure volume", "Number of pieces"]
+
+    FS["struct_metrics"] = [
+        "Structure volume",
+        "Number of pieces",
+        "Piece average",
+        "Piece std",
+    ]
     FS["COMP_types"] = ["AVH", "AV", "H"]
 
     return FS
 
+
 # %% Cell and nucleus scatter plots
-def cellnuc_scatter_plots(
-    dirs: list, dataset: Path, statsIN: Path
-):
+def cellnuc_scatter_plots(dirs: list, dataset: Path, statsIN: Path):
     """
     Plotting cell and nucleus metrics as scatter plots
 
@@ -244,7 +249,14 @@ def cellnuc_scatter_plots(
         pair = PS[key]
         for (
             i,
-            (kde_flag, fourcolors_flag, colorpoints_flag, rollingavg_flag, ols_flag, name),
+            (
+                kde_flag,
+                fourcolors_flag,
+                colorpoints_flag,
+                rollingavg_flag,
+                ols_flag,
+                name,
+            ),
         ) in enumerate(
             zip(
                 kde_flagL,
@@ -272,13 +284,12 @@ def cellnuc_scatter_plots(
                 rollingavg_flag=rollingavg_flag,
                 ols_flag=ols_flag,
                 N2=1000,
-                plotcells=[]
+                plotcells=[],
             )
 
+
 # %% Organelle scatter plots
-def organelle_scatter_plots(
-    dirs: list, dataset: Path, statsIN: Path
-):
+def organelle_scatter_plots(dirs: list, dataset: Path, statsIN: Path):
     """
     Plotting cell and nucleus metrics vs organelle metrics
 
@@ -399,6 +410,7 @@ def organelle_scatter_plots(
                     plotcells=[],
                 )
 
+
 # %% Organelle scatter plots
 def organelle_compensated_scatter_plots(
     dirs: list, dataset: Path, dataset_comp: Path, statsIN: Path
@@ -508,7 +520,9 @@ def organelle_compensated_scatter_plots(
                             Name,
                         )
                     ):
-                        plotname = f"{key}_{struct_metric}_{lin_type}_{comp_type}_{name}"
+                        plotname = (
+                            f"{key}_{struct_metric}_{lin_type}_{comp_type}_{name}"
+                        )
                         print(plotname)
 
                         compensated_scatter(
@@ -530,6 +544,7 @@ def organelle_compensated_scatter_plots(
                             ols_flag=ols_flag,
                             N2=100,
                         )
+
 
 # %% Extra
 #%%

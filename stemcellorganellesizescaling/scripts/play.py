@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/")
+    data_root = Path("E:/DA/Data/scoss/Data/Nov2020/")
     pic_root = Path("E:/DA/Data/scoss/Pics/")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/")
@@ -57,10 +57,14 @@ dirs.append(pic_root)
 data_root = dirs[0]
 pic_root = dirs[1]
 
-tableIN = "SizeScaling_20201012.csv"
+tableIN = "SizeScaling_20201102.csv"
+tableIN_alt = "SizeScaling_20201102_alt.csv"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
+cells_alt = pd.read_csv(data_root / tableIN_alt)
+np.any(cells_alt.isnull())
+
 
 
 # %% Add feature pieces
