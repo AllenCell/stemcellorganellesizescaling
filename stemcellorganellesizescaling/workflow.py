@@ -34,24 +34,19 @@ if platform.system() == "Windows":
     data_root = Path("E:/DA/Data/scoss/Data/")
     pic_root = Path("E:/DA/Data/scoss/Pics/")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/SS_20201012_nobaby/")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/SS_20201012_nobaby/")
+    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020/")
+    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Nov2020/")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
-# print('##################### Data preparation - Initial Parsing #####################')
-# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_PRODUCTION/expand/manifest.csv"
-# tableSNIP = "Manifest_snippet_202010112.csv"
-# tableOUT = "SizeScaling_20201012.csv"
-# initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
-
-#%% Data preparation - Parsing feature stats
-# print('##################### Data preparation - More feature statistics #####################')
-# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature_pieces"
-# tableOUT = "SizeScaling_20201012.csv"
-# feature_parsing(dirs, tableIN, tableSNIP, tableOUT)
+print('##################### Data preparation - Initial Parsing #####################')
+tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_PRODUCTION/expand/manifest.csv"
+featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
+tableSNIP = "Manifest_snippet_20201102.csv"
+tableOUT = "SizeScaling_20201102.csv"
+initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
 # print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################'
@@ -62,9 +57,9 @@ dirs.append(pic_root)
 # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
-# print('##################### Data preparation - Diagnostic violins #####################')
-# tableIN = "SizeScaling_20201012.csv"
-# diagnostic_violins(dirs, tableIN)
+print('##################### Data preparation - Diagnostic violins #####################')
+tableIN = "SizeScaling_20201102.csv"
+diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics - Compensation analysis
 # print('##################### Computing statistics - Compensation analysis #####################')
@@ -80,21 +75,21 @@ dirs.append(pic_root)
 # pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
-print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
-tableIN = "SizeScaling_20201012.csv"
-statsIN = "Stats_20201012"
-cellnuc_scatter_plots(dirs, tableIN, statsIN)
+# print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# statsIN = "Stats_20201012"
+# cellnuc_scatter_plots(dirs, tableIN, statsIN)
 
 #%% Plotting scatterplots - Organelle scatter plots
-print('##################### Plotting scatterplots - Organelle scatter plots #####################')
-tableIN = "SizeScaling_20201012.csv"
-statsIN = "Stats_20201012"
-organelle_scatter_plots(dirs, tableIN, statsIN)
+# print('##################### Plotting scatterplots - Organelle scatter plots #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# statsIN = "Stats_20201012"
+# organelle_scatter_plots(dirs, tableIN, statsIN)
 
 #%% Plotting scatterplots - Organelle scatter plots
-print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
-tableIN = "SizeScaling_20201012.csv"
-table_compIN = "SizeScaling_20201012_comp.csv"
-statsIN = "Stats_20201012"
-organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
+# print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
+# tableIN = "SizeScaling_20201012.csv"
+# table_compIN = "SizeScaling_20201012_comp.csv"
+# statsIN = "Stats_20201012"
+# organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
