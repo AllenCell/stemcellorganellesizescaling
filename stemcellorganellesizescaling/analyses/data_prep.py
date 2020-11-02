@@ -48,7 +48,7 @@ log = logging.getLogger(__name__)
 # %%
 
 def initial_parsing(
-    dirs: list, dataset: Path, dataset_snippet, dataset_filtered: Path,
+    dirs: list, dataset: Path, piecedir: Path, dataset_snippet: Path, dataset_filtered: Path,
 ):
     """
     Parses large table to get size scaling data table which contains only a subset of features
@@ -59,6 +59,8 @@ def initial_parsing(
         Lists data and plotting dir
     dataset: Path
         absolute Path to original data table csv file
+    piecedir: Path
+        absolute Path (folder) to original piece stats
     dataset_snippet: Path
         Path to snippet of original table
     dataset_filtered: Path
@@ -132,11 +134,60 @@ def initial_parsing(
         # %% Add a column
         cells["Cytoplasmic volume"] = cells["Cell volume"] - cells["Nuclear volume"]
 
+        # %% Adding feature pieces
+        paths = Path(piecedir).glob('**/*.csv')
+        cells['Piece average'] = np.nan
+        cells['Piece max'] = np.nan
+        cells['Piece min'] = np.nan
+        cells['Piece std'] = np.nan
+        cells['Piece sum'] = np.nan
+        cells.set_index('CellId', drop=False, inplace=True)
+        for csvf in paths:
+            print(csvf)
+            pieces = pd.read_csv(csvf)
+            keepcolumns = [
+                "CellId",
+                "str_shape_volume_pcc_avg",
+                "str_shape_volume_pcc_max",
+                "str_shape_volume_pcc_min",
+                "str_shape_volume_pcc_std",
+                "str_shape_volume_pcc_sum",
+            ]
+            pieces = pieces[keepcolumns]
+            pieces = pieces.rename(
+                columns={
+                    "str_shape_volume_pcc_avg": "Piece average",
+                    "str_shape_volume_pcc_max": "Piece max",
+                    "str_shape_volume_pcc_min": "Piece min",
+                    "str_shape_volume_pcc_std": "Piece std",
+                    "str_shape_volume_pcc_sum": "Piece sum",
+                }
+            )
+            pieces.set_index('CellId', drop=False, inplace=True)
+            cells.update(pieces)
+
+        # %% Post-processing and checking
+        sv = cells['Structure volume'].to_numpy()
+        ps = cells['Piece sum'].to_numpy()
+        sn = cells['structure_name'].to_numpy()
+        pos = np.argwhere(np.divide(abs(ps - sv), sv) > 0)
+        print(f"{len(pos)} mismatches in {np.unique(sn[pos])}")
+        posS = np.argwhere(np.divide(abs(ps - sv), sv) > 0.01)
+        print(f"{len(posS)} larger than 1%")
+        posT = np.argwhere(np.divide(abs(ps - sv), sv) > 0.1)
+        print(f"{len(posT)} larger than 10%")
+        cells.drop(labels='Unnamed: 0', axis=1, inplace=True)
+        cells.reset_index(drop=True, inplace=True)
+        print(np.any(cells.isnull()))
+        cells.loc[cells['Piece std'].isnull(), 'Piece std'] = 0
+        print(np.any(cells.isnull()))
+
         # %% Save
         cells.to_csv(data_root / dataset_filtered)
 
     else:
         print("Can only be run on Linux machine at AICS")
+
 
 def diagnostic_violins(
     dirs: list, dataset: Path,

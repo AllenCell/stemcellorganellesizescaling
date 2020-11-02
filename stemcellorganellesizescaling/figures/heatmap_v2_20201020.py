@@ -32,8 +32,8 @@ log = logging.getLogger(__name__)
 ###############################################################################
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/")
-    pic_root = Path("E:/DA/Data/scoss/Pics/")
+    data_root = Path("E:/DA/Data/scoss/Data/SS_20201012_onlybaby")
+    pic_root = Path("E:/DA/Data/scoss/Pics/SS_20201012_onlybaby")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/")
     pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/")
@@ -58,7 +58,7 @@ cells = pd.read_csv(data_root / tableIN)
 print(np.any(cells.isnull()))
 cells_COMP = pd.read_csv(data_root / table_compIN)
 print(np.any(cells_COMP.isnull()))
-structures = pd.read_csv(data_root / 'annotation' / "structure_annotated_20201015.csv")
+structures = pd.read_csv(data_root / 'annotation' / "structure_annotated_20201019.csv")
 Grow = pd.read_csv(data_root / 'growing' / "Growthstats_20201012.csv")
 print(np.any(cells_COMP.isnull()))
 
@@ -223,13 +223,17 @@ HM["LIN_type"] = "Linear"
 
 # %% Make heatmap by selecting columns
 keepcolumns = ['structure_name']
+keepcolumns_min = ['structure_name']
+keepcolumns_max = ['structure_name']
 for xi, xlabel in enumerate(HM['cellnuc_heatmap']):
     struct_metric = HM["struct_heatmap_metrics"]
     keepcolumns.append(f"{xlabel}_{struct_metric}")
-    keepcolumns.append(f"{xlabel}_{struct_metric}_min")
-    keepcolumns.append(f"{xlabel}_{struct_metric}_max")
+    keepcolumns_min.append(f"{xlabel}_{struct_metric}_min")
+    keepcolumns_max.append(f"{xlabel}_{struct_metric}_max")
 
 HeatMap = StructGrow[keepcolumns]
+HeatMap_min = StructGrow[keepcolumns_min]
+HeatMap_max = StructGrow[keepcolumns_max]
 
 keepcolumns = ['structure_name']
 for xi, xlabel in enumerate(HM['cellnuc_heatmap_COMP_metrics']):
@@ -312,6 +316,18 @@ plot_array = plot_array.drop(['structure_name'],axis=1)
 plot_array = plot_array.reindex(list(ann_st[:,-1]))
 pan = plot_array.to_numpy()
 
+plot_array_min = HeatMap_min
+plot_array_min = plot_array_min.set_index(plot_array_min['structure_name'],drop=True)
+plot_array_min = plot_array_min.drop(['structure_name'],axis=1)
+plot_array_min = plot_array_min.reindex(list(ann_st[:,-1]))
+pan_min = plot_array_min.to_numpy()
+
+plot_array_max = HeatMap_max
+plot_array_max = plot_array_max.set_index(plot_array_max['structure_name'],drop=True)
+plot_array_max = plot_array_max.drop(['structure_name'],axis=1)
+plot_array_max = plot_array_max.reindex(list(ann_st[:,-1]))
+pan_max = plot_array_max.to_numpy()
+
 plot_arrayComp = HeatMapComp
 plot_arrayComp = plot_arrayComp.set_index(plot_arrayComp['structure_name'],drop=True)
 plot_arrayComp = plot_arrayComp.drop(['structure_name'],axis=1)
@@ -333,9 +349,11 @@ for i in np.arange(panCN.shape[0]):
 
 # %% Pull in Grow numbers
 struct_metric = HM["struct_heatmap_metrics"]
-growvec = np.zeros((pan.shape[0], 1))
+growvec = np.zeros((pan.shape[0], 3))
 for i, struct in enumerate(list(ann_st[:,-1])):
-    growvec[i] = Grow.loc[50, f"{struct_metric}_{struct}_mean"]
+    growvec[i,0] = Grow.loc[50, f"{struct_metric}_{struct}_50"]
+    growvec[i, 1] = Grow.loc[51, f"{struct_metric}_{struct}_25"]
+    growvec[i, 2] = Grow.loc[51, f"{struct_metric}_{struct}_75"]
 
 growvecC = np.zeros((len(HM["cellnuc_heatmap"]), 1))
 for i, struct in enumerate(HM["cellnuc_heatmap"]):
@@ -344,11 +362,13 @@ growvecC[0]=100
 
 # %% other parameters
 rot = -20
+alpha = 0.5
+lw=5
 
 
 # %%layout
 fig = plt.figure(figsize=(16, 9))
-#
+plt.rcParams.update({"font.size": 10})
 
 # Annotation
 axAnn = fig.add_axes([w6, yh+h3, x4, y4])
@@ -365,8 +385,8 @@ axAnn.axis('off')
 
 # Organelle Growth rates
 axOrgGrow = fig.add_axes([w6+x4+w7, yh+h3, x5, y4])
-axOrgGrow.imshow(growvec, aspect='auto', cmap='viridis',vmin=0, vmax=100)
-for i in range(len(growvec)):
+axOrgGrow.imshow(np.expand_dims(growvec[:,0],axis=0).T, aspect='auto', cmap='viridis',vmin=0, vmax=100)
+for i in range(len(growvec[:,0])):
         val = np.int(growvec[i, 0])
         text = axOrgGrow.text(0, i, val,
                           ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
@@ -378,7 +398,7 @@ axOrgGrow.set_xticklabels(xlabels,rotation=rot,horizontalalignment='left')
 
 # Cell Growth rates
 axCellGrow = fig.add_axes([w6+x4+w7, yh+h3+y4, x5, y5])
-axCellGrow.imshow(growvecC, aspect='auto', cmap='plasma',vmin=0, vmax=100)
+axCellGrow.imshow(growvecC, aspect='auto', cmap='viridis',vmin=0, vmax=100)
 for i in range(len(growvecC)):
         val = np.int(growvecC[i, 0])
         text = axCellGrow.text(0, i, val,
@@ -434,16 +454,22 @@ axCompVar.set_title('Residual variance')
 # GrowVarS
 axGrowVarS= fig.add_axes([w6+x4+w7+x5+w8+x6+w9+x7+w10, yh+h4, x8, y6])
 for i in np.arange(len(growvec)):
-    growval = growvec[i]
-    if growval>120:
-        growval=120
+    growval = growvec[i,0]
+    growmin = growvec[i, 1]
+    growmax = growvec[i, 2]
     struct = ann_st[i, 2]
-    if (struct == 'LAMP1') or (struct == 'TUBA1B') or (struct == 'ATP2A2') or (struct == 'TOMM20'):
+    if (struct == 'SON') or (struct == 'ATP2A2'):
         va = 'top'
     else:
         va = 'baseline'
+    if (struct == 'HIST1H2BJ'):
+        ha = 'right'
+    else:
+        ha = 'left'
     axGrowVarS.plot(pan[i,0],growval,'.',markersize=10,color=color_st.loc[i,'Color'])
-    axGrowVarS.text(pan[i, 0],growval, struct, fontsize=16, color=color_st.loc[i, 'Color'], verticalalignment=va)
+    axGrowVarS.plot([pan_min[i, 0], pan_max[i, 0]], [growval, growval], color=color_st.loc[i, 'Color'], alpha=alpha,linewidth=lw)
+    axGrowVarS.plot([pan[i, 0], pan[i, 0]], [growmin, growmax], color=color_st.loc[i, 'Color'], alpha=alpha,linewidth=lw)
+    axGrowVarS.text(pan[i, 0],growval, struct, fontsize=16, color=color_st.loc[i, 'Color'], verticalalignment=va,fontweight='bold',horizontalalignment=ha)
 axGrowVarS.set_ylim(bottom=0,top=125)
 axGrowVarS.set_xlim(left=0, right=100)
 axGrowVarS.set_xlabel('Variance of structure volume explained by cell volume (%)')
@@ -472,13 +498,11 @@ axGrowBar.set_xticks([])
 axGrowBar.set_xticklabels([])
 axGrowBar.set_title('Growth rate (%)')
 
+plot_save_path = pic_root / f"heatmap_20201020_onlybabies.png"
+plt.savefig(plot_save_path, format="png", dpi=1000)
+plt.close()
 
-
-# plot_save_path = pic_root / f"heatmap.png"
-# plt.savefig(plot_save_path, format="png", dpi=1000)
-# plt.close()
-
-plt.show()
+# plt.show()
 
 # %%
 

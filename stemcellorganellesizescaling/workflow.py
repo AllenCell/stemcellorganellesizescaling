@@ -47,7 +47,14 @@ dirs.append(pic_root)
 # tableOUT = "SizeScaling_20201012.csv"
 # initial_parsing(dirs, tableIN, tableSNIP, tableOUT)
 
+#%% Data preparation - Parsing feature stats
+# print('##################### Data preparation - More feature statistics #####################')
+# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature_pieces"
+# tableOUT = "SizeScaling_20201012.csv"
+# feature_parsing(dirs, tableIN, tableSNIP, tableOUT)
+
 #%% Data preparation - Outlier Removal
+# print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################'
 # print('##################### Data preparation - Outlier Removal #####################')
 # tableIN = "SizeScaling_20201006.csv"
 # tableOUT = "SizeScaling_20201006_clean.csv"

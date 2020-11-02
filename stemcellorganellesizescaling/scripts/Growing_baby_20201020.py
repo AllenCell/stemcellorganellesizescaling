@@ -33,8 +33,8 @@ log = logging.getLogger(__name__)
 ###############################################################################
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/")
-    pic_root = Path("E:/DA/Data/scoss/Pics/")
+    data_root = Path("E:/DA/Data/scoss/Data/SS_20201012_onlybaby")
+    pic_root = Path("E:/DA/Data/scoss/Pics/SS_20201012_onlybaby")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/")
     pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/")
@@ -57,7 +57,7 @@ np.any(cells.isnull())
 
 # Remove outliers
 # %% Parameters, updated directories
-save_flag = 0  # save plot (1) or show on screen (0)
+save_flag = 1  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
 pic_root = pic_root / "growing"
 pic_root.mkdir(exist_ok=True)
@@ -152,15 +152,8 @@ for i, metric in tqdm(enumerate(struct_metrics), 'Organelles'):
         Grow.loc[51, f"{metric}_{struct}_{75}"] = f75 * Grow.loc[50, f"{metric}_{struct}_{50}"]
 save_dir = data_root / "growing"
 save_dir.mkdir(exist_ok=True)
-# Grow.to_csv(save_dir / "Growthstats_20201012.csv")
+Grow.to_csv(save_dir / "Growthstats_20201012.csv")
 
-
-# %% Add bincenters as well
-Grow.loc[np.arange(len(xbincenter)),'bins'] = xbincenter.squeeze()
-Grow.loc[50,'bins'] = start_bin
-Grow.loc[51,'bins'] = end_bin
-
-Grow.to_csv(save_dir / "Growthstats_20201030.csv")
 
 # %% Select metrics to plot
 selected_structures = cells['structure_name'].unique()
@@ -169,98 +162,98 @@ selected_structures = cells['structure_name'].unique()
 
 struct_metrics = ['Structure volume']
 # %%
-
-for i, struct in enumerate(cellnuc_metrics):
-    dus = struct
+#
+# # for i, struct in enumerate(cellnuc_metrics):
+# #     dus = struct
 # for i, metric in enumerate(struct_metrics):
 #     for j, struct in enumerate(selected_structures):
 #         dus = f"{metric}_{struct}"
-
-
-    # %% Growth plot
-    w1 = 0.1
-    w2 = 0.01
-    h1 = 0.05
-    h2 = 0.01
-    y0 = 0.07
-    y1 = 0.3
-    y2 = 1-y0-y1-h1-h2
-    x1 = 1 - w1 - w2
-    lw = 1
-
-    fig = plt.figure(figsize=(10, 10))
-
-    # Zoom
-    axZoom = fig.add_axes([w1,h1+y2,x1,y0])
-    axZoom.plot(5,5)
-    axZoom.set_xlim(left=x.min(), right=x.max())
-    axZoom.set_ylim(bottom=0, top=ylm)
-    axZoom.plot([x.min(), xbincenter[start_bin]], [0, ylm],'r',linewidth=lw)
-    axZoom.plot([x.max(), xbincenter[end_bin]], [0, ylm],'r',linewidth=lw)
-    axZoom.axis('off')
-
-    # Cell Size
-    axSize = fig.add_axes([w1,h1+y2+y0,x1,y1])
-    # axSize.stem(x, max(xc)/10*np.ones(x.shape), linefmt='g-', markerfmt=None, basefmt=None)
-    axSize.hist(x, bins=nbins, color=[.5, .5, .5, .5])
-    axSize.grid()
-    axSize.set_xlim(left=x.min(), right=x.max())
-    axSize.set_ylim(bottom=0, top=ylm)
-    axSize.plot(xbincenter[[start_bin, start_bin]], [0, ylm],'r',linewidth=lw)
-    axSize.plot(xbincenter[[end_bin, end_bin]], [0, ylm],'r',linewidth=lw)
-    axSize.set_xlabel('Cell size')
-
-    # Grow
-    axGrow = fig.add_axes([w1,h1,x1,y2])
-    xd = Grow['Cell volume_mean'].to_numpy()
-    xd = xd[start_bin:(end_bin+1)]
-    xd = xd/xd[0]
-    xd = np.log2(xd)
-    yd = Grow['Cell volume_mean'].to_numpy()
-    yd = yd[start_bin:(end_bin+1)]
-    yd = yd/yd[0]
-    yd = np.log2(yd)
-    axGrow.plot(xd,yd,'k--')
-
-    ym = Grow[f"{dus}_mean"].to_numpy()
-    ym = ym[start_bin:(end_bin+1)]
-    ym = ym/ym[0]
-    ym = np.log2(ym)
-
-    ymat = np.zeros((len(ym),len(perc_values)))
-    for i, n in enumerate(perc_values):
-        yi = Grow[f"{dus}_{n}"].to_numpy()
-        yi = yi[start_bin:(end_bin + 1)]
-        ymat[:,i] = yi
-    ymat = ymat / ymat[0,2]
-    ymat = np.log2(ymat)
-
-
-    yv = [0,4]
-    xf = np.concatenate((np.expand_dims(xd,axis=1),np.flipud(np.expand_dims(xd,axis=1))))
-    yf = np.concatenate((np.expand_dims(ymat[:,yv[0]],axis=1),np.flipud(np.expand_dims(ymat[:,yv[1]],axis=1))))
-    axGrow.fill(xf,yf,color=[0.95, 0.95, 1, 0.8])
-    yv = [1,3]
-    xf = np.concatenate((np.expand_dims(xd,axis=1),np.flipud(np.expand_dims(xd,axis=1))))
-    yf = np.concatenate((np.expand_dims(ymat[:,yv[0]],axis=1),np.flipud(np.expand_dims(ymat[:,yv[1]],axis=1))))
-    axGrow.fill(xf,yf,color=[0.5, 0.5, 1, 0.8])
-
-
-    axGrow.plot(xd,ymat[:,2],color=[0, 0, 1, 1])
-    axGrow.grid()
-    axGrow.set_xlabel('Cell growth (log 2)')
-    axGrow.set_ylabel('Organnele growth (log 2)')
-    axGrow.set_xlim(left=0,right=np.log2(growfac))
-    axGrow.set_ylim(bottom=-0.5, top=1.5)
-    axGrow.text(np.log2(growfac)/2,1.5,dus,fontsize=20,color=[0, 0, 1, 1],verticalalignment='top',horizontalalignment='center')
-
-
-    if save_flag:
-        plot_save_path = pic_root / f"{dus}.png"
-        plt.savefig(plot_save_path, format="png", dpi=1000)
-        plt.close()
-    else:
-        plt.show()
+#
+#
+#             # %% Growth plot
+#             w1 = 0.1
+#             w2 = 0.01
+#             h1 = 0.05
+#             h2 = 0.01
+#             y0 = 0.07
+#             y1 = 0.3
+#             y2 = 1-y0-y1-h1-h2
+#             x1 = 1 - w1 - w2
+#             lw = 1
+#
+#             fig = plt.figure(figsize=(10, 10))
+#
+#             # Zoom
+#             axZoom = fig.add_axes([w1,h1+y2,x1,y0])
+#             axZoom.plot(5,5)
+#             axZoom.set_xlim(left=x.min(), right=x.max())
+#             axZoom.set_ylim(bottom=0, top=ylm)
+#             axZoom.plot([x.min(), xbincenter[start_bin]], [0, ylm],'r',linewidth=lw)
+#             axZoom.plot([x.max(), xbincenter[end_bin]], [0, ylm],'r',linewidth=lw)
+#             axZoom.axis('off')
+#
+#             # Cell Size
+#             axSize = fig.add_axes([w1,h1+y2+y0,x1,y1])
+#             # axSize.stem(x, max(xc)/10*np.ones(x.shape), linefmt='g-', markerfmt=None, basefmt=None)
+#             axSize.hist(x, bins=nbins, color=[.5, .5, .5, .5])
+#             axSize.grid()
+#             axSize.set_xlim(left=x.min(), right=x.max())
+#             axSize.set_ylim(bottom=0, top=ylm)
+#             axSize.plot(xbincenter[[start_bin, start_bin]], [0, ylm],'r',linewidth=lw)
+#             axSize.plot(xbincenter[[end_bin, end_bin]], [0, ylm],'r',linewidth=lw)
+#             axSize.set_xlabel('Cell size')
+#
+#             # Grow
+#             axGrow = fig.add_axes([w1,h1,x1,y2])
+#             xd = Grow['Cell volume_mean'].to_numpy()
+#             xd = xd[start_bin:(end_bin+1)]
+#             xd = xd/xd[0]
+#             xd = np.log2(xd)
+#             yd = Grow['Cell volume_mean'].to_numpy()
+#             yd = yd[start_bin:(end_bin+1)]
+#             yd = yd/yd[0]
+#             yd = np.log2(yd)
+#             axGrow.plot(xd,yd,'k--')
+#
+#             ym = Grow[f"{dus}_mean"].to_numpy()
+#             ym = ym[start_bin:(end_bin+1)]
+#             ym = ym/ym[0]
+#             ym = np.log2(ym)
+#
+#             ymat = np.zeros((len(ym),len(perc_values)))
+#             for i, n in enumerate(perc_values):
+#                 yi = Grow[f"{dus}_{n}"].to_numpy()
+#                 yi = yi[start_bin:(end_bin + 1)]
+#                 ymat[:,i] = yi
+#             ymat = ymat / ymat[0,2]
+#             ymat = np.log2(ymat)
+#
+#
+#             yv = [0,4]
+#             xf = np.concatenate((np.expand_dims(xd,axis=1),np.flipud(np.expand_dims(xd,axis=1))))
+#             yf = np.concatenate((np.expand_dims(ymat[:,yv[0]],axis=1),np.flipud(np.expand_dims(ymat[:,yv[1]],axis=1))))
+#             axGrow.fill(xf,yf,color=[0.95, 0.95, 1, 0.8])
+#             yv = [1,3]
+#             xf = np.concatenate((np.expand_dims(xd,axis=1),np.flipud(np.expand_dims(xd,axis=1))))
+#             yf = np.concatenate((np.expand_dims(ymat[:,yv[0]],axis=1),np.flipud(np.expand_dims(ymat[:,yv[1]],axis=1))))
+#             axGrow.fill(xf,yf,color=[0.5, 0.5, 1, 0.8])
+#
+#
+#             axGrow.plot(xd,ymat[:,2],color=[0, 0, 1, 1])
+#             axGrow.grid()
+#             axGrow.set_xlabel('Cell growth (log 2)')
+#             axGrow.set_ylabel('Organnele growth (log 2)')
+#             axGrow.set_xlim(left=0,right=np.log2(growfac))
+#             axGrow.set_ylim(bottom=-0.5, top=1.5)
+#             axGrow.text(np.log2(growfac)/2,1.5,dus,fontsize=20,color=[0, 0, 1, 1],verticalalignment='top',horizontalalignment='center')
+#
+#
+#             if save_flag:
+#                 plot_save_path = pic_root / f"{dus}.png"
+#                 plt.savefig(plot_save_path, format="png", dpi=1000)
+#                 plt.close()
+#             else:
+#                 plt.show()
 
 # %%
 

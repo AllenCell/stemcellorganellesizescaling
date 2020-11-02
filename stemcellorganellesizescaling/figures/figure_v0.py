@@ -55,7 +55,7 @@ cells = pd.read_csv(data_root / tableIN)
 print(np.any(cells.isnull()))
 cells_COMP = pd.read_csv(data_root / table_compIN)
 print(np.any(cells_COMP.isnull()))
-structures = pd.read_csv(data_root / "structure_annotated_20201014.csv")
+structures = pd.read_csv(data_root / 'annotation' / "structure_annotated_20201014.csv")
 Grow = pd.read_csv(data_root / 'growing' / "Growthstats_20201012.csv")
 print(np.any(cells_COMP.isnull()))
 
@@ -236,98 +236,98 @@ axGrowVarS= fig.add_axes([w6+x4+w7+x5+w8+x6+w9+x7+w10, yh+h4, x8, y6])
 axGrowVarS.text(0.5,0.5,'GrowVarS',horizontalalignment='center')
 axGrowVarS.set_xticks([]),axGrowVarS.set_yticks([])
 
-plot_save_path = pic_root / f"test.png"
-plt.savefig(plot_save_path, format="png", dpi=1000)
-plt.close()
-
-
-# %%
-
-
-
-
-
-
-
-
-
-w2 = 0
-w3 = 0.01
-h1 = 0.08
-h2 = 0.05
-y = 1 - h1 - h2
-x1 = 0.3
-x2 = 1 - w1 - w2 - w3 - x1
-
+# plot_save_path = pic_root / f"test.png"
+# plt.savefig(plot_save_path, format="png", dpi=1000)
+# plt.close()
+plt.show()
 
 # %%
-lw = 1
-mstrlength = 10
-fs = 10
-
-#%% Plot Array
-plot_array = HeatMap
-plot_array = plot_array.set_index(plot_array['structure_name'],drop=True)
-plot_array = plot_array.drop(['structure_name'],axis=1)
-plot_array = plot_array.reindex(list(ann_st[:,-1]))
-pan = plot_array.to_numpy()
-
-# %% Pull in Grow numbers
-struct_metric = HM["struct_heatmap_metrics"]
-growvec = np.zeros((pan.shape[0], 1))
-for i, struct in enumerate(list(ann_st[:,-1])):
-    growvec[i] = Grow.loc[50, f"{struct_metric}_{struct}_mean"]
-pan = np.concatenate((growvec,pan),axis=1)
-
-#%%
-
-fig = plt.figure(figsize=(16, 7))
-
-# Annotation
-axAnn = fig.add_axes([w1, h1, x1, y])
-axAnn.imshow(num_st, aspect='auto', cmap='Pastel1')
-for i in range(len(num_st)):
-    for j in range(len(num_st.columns)):
-        string = ann_st[i, j]
-        if len(string) > mstrlength:
-            string = string[0:mstrlength]
-        text = axAnn.text(j, i, string,
-                          ha="center", va="center", color="k", fontsize=fs)
-axAnn.axis('off')
-
-# Fits
-axFit = fig.add_axes([w1 + x1 + w2, h1, x2, y])
-axFit.imshow(pan, aspect='auto', cmap='seismic',vmin=-100, vmax=100)
-for i in range(len(plot_array)):
-    for j in range(len(plot_array.columns)):
-        val = np.int(pan[i, j])
-        text = axFit.text(j, i, val,
-                          ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
-        # if abs(val) > 70:
-        #     text = axFit.text(j, i, pan[i, j],
-        #                       ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
-        # elif abs(val) > 5:
-        #     text = axFit.text(j, i, pan[i, j],
-        #                       ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
 
 
 
 
-axFit.set_yticks([])
-axFit.set_yticklabels([])
-xlabels = ['Grow %'] + HM["cellnuc_heatmap_abbs"] + HM["cellnuc_COMP_abbs"]
-axFit.set_xticks(range(len(xlabels)))
-axFit.set_xticklabels(xlabels,rotation=-10)
-struct_metric = HM["struct_heatmap_metrics"]
-lin_type = HM["LIN_type"]
-comp_type = HM["COMP_type"]
-titlestring = f"{struct_metric}, COMP:{lin_type}_{comp_type}"
-axFit.set_title(titlestring)
-
-if save_flag:
-    plot_save_path = pic_root / f"{titlestring}.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
-    plt.close()
-else:
-    plt.show()
-
+#
+#
+#
+#
+#
+# w2 = 0
+# w3 = 0.01
+# h1 = 0.08
+# h2 = 0.05
+# y = 1 - h1 - h2
+# x1 = 0.3
+# x2 = 1 - w1 - w2 - w3 - x1
+#
+#
+# # %%
+# lw = 1
+# mstrlength = 10
+# fs = 10
+#
+# #%% Plot Array
+# plot_array = HeatMap
+# plot_array = plot_array.set_index(plot_array['structure_name'],drop=True)
+# plot_array = plot_array.drop(['structure_name'],axis=1)
+# plot_array = plot_array.reindex(list(ann_st[:,-1]))
+# pan = plot_array.to_numpy()
+#
+# # %% Pull in Grow numbers
+# struct_metric = HM["struct_heatmap_metrics"]
+# growvec = np.zeros((pan.shape[0], 1))
+# for i, struct in enumerate(list(ann_st[:,-1])):
+#     growvec[i] = Grow.loc[50, f"{struct_metric}_{struct}_mean"]
+# pan = np.concatenate((growvec,pan),axis=1)
+#
+# #%%
+#
+# fig = plt.figure(figsize=(16, 7))
+#
+# # Annotation
+# axAnn = fig.add_axes([w1, h1, x1, y])
+# axAnn.imshow(num_st, aspect='auto', cmap='Pastel1')
+# for i in range(len(num_st)):
+#     for j in range(len(num_st.columns)):
+#         string = ann_st[i, j]
+#         if len(string) > mstrlength:
+#             string = string[0:mstrlength]
+#         text = axAnn.text(j, i, string,
+#                           ha="center", va="center", color="k", fontsize=fs)
+# axAnn.axis('off')
+#
+# # Fits
+# axFit = fig.add_axes([w1 + x1 + w2, h1, x2, y])
+# axFit.imshow(pan, aspect='auto', cmap='seismic',vmin=-100, vmax=100)
+# for i in range(len(plot_array)):
+#     for j in range(len(plot_array.columns)):
+#         val = np.int(pan[i, j])
+#         text = axFit.text(j, i, val,
+#                           ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+#         # if abs(val) > 70:
+#         #     text = axFit.text(j, i, pan[i, j],
+#         #                       ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+#         # elif abs(val) > 5:
+#         #     text = axFit.text(j, i, pan[i, j],
+#         #                       ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+#
+#
+#
+#
+# axFit.set_yticks([])
+# axFit.set_yticklabels([])
+# xlabels = ['Grow %'] + HM["cellnuc_heatmap_abbs"] + HM["cellnuc_COMP_abbs"]
+# axFit.set_xticks(range(len(xlabels)))
+# axFit.set_xticklabels(xlabels,rotation=-10)
+# struct_metric = HM["struct_heatmap_metrics"]
+# lin_type = HM["LIN_type"]
+# comp_type = HM["COMP_type"]
+# titlestring = f"{struct_metric}, COMP:{lin_type}_{comp_type}"
+# axFit.set_title(titlestring)
+#
+# if save_flag:
+#     plot_save_path = pic_root / f"{titlestring}.png"
+#     plt.savefig(plot_save_path, format="png", dpi=1000)
+#     plt.close()
+# else:
+#     plt.show()
+#
