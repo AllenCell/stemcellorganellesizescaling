@@ -120,7 +120,6 @@ def initial_parsing(
                 "dna_shape_volume_lcc": "Nuclear volume",
                 "str_connectivity_number_cc": "Number of pieces",
                 "str_shape_volume": "Structure volume",
-                "str_shape_volume_lcc": "Structure volume alt",
                 "mem_position_depth_lcc": "Cell height",
                 "mem_position_height_lcc": "Cell xbox",
                 "mem_position_width_lcc": "Cell ybox",
@@ -176,7 +175,7 @@ def initial_parsing(
         print(f"{len(posS)} larger than 1%")
         posT = np.argwhere(np.divide(abs(ps - sv), sv) > 0.1)
         print(f"{len(posT)} larger than 10%")
-        cells.drop(labels='Unnamed: 0', axis=1, inplace=True)
+        # cells.drop(labels='Unnamed: 0', axis=1, inplace=True)
         cells.reset_index(drop=True, inplace=True)
         print(np.any(cells.isnull()))
         cells.loc[cells['Piece std'].isnull(), 'Piece std'] = 0
