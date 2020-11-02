@@ -329,12 +329,13 @@ def diagnostic_violins(
 
     # %% Plot structure over FOVids
     # Still missing:
-    # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2', 'Piece average', 'Piece max', 'Piece min',
-    #        'Piece std', 'Piece sum'
+    # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2',
+    #
 
     selected_metrics = ['Cell surface area', 'Cell volume', 'Nuclear surface area',
                         'Nuclear volume', 'Cytoplasmic volume', 'Number of pieces', 'Structure volume', 'Cell height',
                         'Cell xbox', 'Cell ybox', 'Nucleus height', 'Nucleus xbox',
+                        'Piece average', 'Piece max', 'Piece min', 'Piece std', 'Piece sum',
                         'Nucleus ybox', 'DNA_MEM_PC1', 'DNA_MEM_PC2',
                         'DNA_MEM_PC3', 'DNA_MEM_PC4', 'DNA_MEM_PC5', 'DNA_MEM_PC6',
                         'DNA_MEM_PC7', 'DNA_MEM_PC8',
