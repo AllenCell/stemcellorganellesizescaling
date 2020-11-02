@@ -65,16 +65,15 @@ def compensate(
         "Cytoplasmic volume",
     ]
     # struct_metrics = [
-    #     "Structure volume",
-    #     "Number of pieces",
-    #     "Piece average",
-    #     "Piece std",
     #     "Piece CoV",
-    #     "Piece sum",
+    #     "Piece sum/min/max",
     # ]
+
     FS['struct_metrics'] = [
         "Structure volume",
-        "Number of pieces"
+        "Number of pieces",
+        "Piece average",
+        "Piece std",
     ]
     # %% Compensate
     cells_COMP = cells[["CellId", "structure_name"]]
