@@ -11,6 +11,7 @@ from scipy.ndimage.morphology import distance_transform_edt
 import vtk
 from aicsshparam import shtools
 from tqdm import tqdm
+import statsmodels.api as sm
 
 # Third party
 from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
@@ -46,8 +47,8 @@ if platform.system() == "Windows":
     data_root = Path("E:/DA/Data/scoss/Data/Nov2020")
     pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/")
+    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020")
+    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Nov2020")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
@@ -331,111 +332,86 @@ ax.set_xlabel('Nuclear volume')
 ax.set_ylabel('Nuclear surface area')
 plt.show()
 
-# %% Loop
-column_names = ['Vol. analytically', 'Vol. sum voxels','Vol. mesh', 'Area analytically', 'Area sum contour voxels', 'Area pixelate', 'Area mesh']
-plot_array = pd.DataFrame(columns = column_names)
-r_range = np.linspace(0.25,0.5,10)
-for i, r in tqdm(enumerate(r_range),'Looping over various radii'):
-    rest = compute_areas_and_volumes(r=r, stretch_factor=1, cylinder_flag=False)
-    plot_array = plot_array.append(rest, ignore_index=True)
-
-
 #%%
+nobins = 250
+pval = 10
+x = cells['Nuclear volume'].to_numpy()
+y = cells['Nuclear surface area'].to_numpy()
+hist,bins = np.histogram(x,nobins)
+xi = np.digitize(x, bins, right=False)
+z = np.zeros(x.shape)
+for i, bin in enumerate(np.unique(xi)):
+    pos = np.argwhere(xi==bin)
+    posS = np.argwhere(np.all((
+        y[pos].squeeze() < np.percentile(y[pos].squeeze(), pval),
+        y[pos].squeeze() < np.percentile(y[pos].squeeze(), pval)),axis=0))
+    if bins[i]>2e5 and bins[i]<8e5:
+            z[pos[posS]] = 1
+
+xs = x[z==1]
+ys = y[z==1]
+
+fig, ax = plt.subplots(figsize=(16, 9))
+ax.plot(x,y,'.',markersize=.5,color = 'gray')
+ax.plot(xs,ys,'b.',markersize=5)
+ax.grid()
+
+
+# %
+
+
+#% Fitting
+xL = xs.copy()
+xL = sm.add_constant(xL)
+modelL = sm.OLS(ys, xL)
+fittedmodelL = modelL.fit()
+rsL = fittedmodelL.rsquared
+yL = fittedmodelL.predict(xL)
+ax.plot(xs,yL,'r.',markersize=1)
+
+xC = xs.copy()
+xC = xC**(2/3)
+xC = sm.add_constant(xC)
+modelC = sm.OLS(ys, xC)
+fittedmodelC = modelC.fit()
+rsC = fittedmodelC.rsquared
+yC = fittedmodelC.predict(xC)
+ax.plot(xs,yC,'w.',markersize=1)
+
+plt.show()
+
+# %% Loop
+
+xL = x.copy()
+xL = sm.add_constant(xL)
+modelL = sm.OLS(y, xL)
+fittedmodelL = modelL.fit()
+rsL = fittedmodelL.rsquared
+print(rsL)
+
+xC = x.copy()
+xC = xC**(2/3)
+xC = sm.add_constant(xC)
+modelC = sm.OLS(y, xC)
+fittedmodelC = modelC.fit()
+rsC = fittedmodelC.rsquared
+print(rsC)
+
+# %% Loop
 x = cells['Cell volume']
 y = cells['Cell surface area']
-fig, ax = plt.subplots(figsize=(16, 9))
-ax.plot(x,y,'r.',markersize=5)
-ax.grid()
-ax.plot(plot_array['Vol. analytically'],plot_array['Area analytically'],'b',linewidth=5)
-ax.plot(plot_array['Vol. sum voxels'],plot_array['Area pixelate'],'g',linewidth=5)
-ax.plot(plot_array['Vol. mesh'],plot_array['Area mesh'],'m',linewidth=5)
-ax.legend(['Cells','Analytically','Current metrics','Mesh'])
-ax.set_title('Sphere')
-ax.set_xlabel('Cell volume')
-ax.set_ylabel('Cell surface area')
-plt.show()
 
-# %% Loop
-column_names = ['Vol. analytically', 'Vol. sum voxels','Vol. mesh', 'Area analytically', 'Area sum contour voxels', 'Area pixelate', 'Area mesh']
-plot_array = pd.DataFrame(columns = column_names)
-r_range = np.linspace(0.05,0.2,10)
-for i, r in tqdm(enumerate(r_range),'Looping over various radii'):
-    rest = compute_areas_and_volumes(r=r, stretch_factor=1, cylinder_flag=True)
-    plot_array = plot_array.append(rest, ignore_index=True)
+xL = x.copy()
+xL = sm.add_constant(xL)
+modelL = sm.OLS(y, xL)
+fittedmodelL = modelL.fit()
+rsL = fittedmodelL.rsquared
+print(rsL)
 
-#%%
-x = cells['Nuclear volume']
-y = cells['Nuclear surface area']
-fig, ax = plt.subplots(figsize=(16, 9))
-ax.plot(x,y,'r.',markersize=5)
-ax.grid()
-ax.plot(plot_array['Vol. analytically'],plot_array['Area analytically'],'b',linewidth=5)
-ax.plot(plot_array['Vol. sum voxels'],plot_array['Area pixelate'],'g',linewidth=5)
-ax.plot(plot_array['Vol. mesh'],plot_array['Area mesh'],'m',linewidth=5)
-ax.legend(['Cells','Analytically','Current metrics','Mesh'])
-ax.set_title('Cylinder')
-ax.set_xlabel('Nuclear volume')
-ax.set_ylabel('Nuclear surface area')
-plt.show()
-
-# %% Loop
-column_names = ['Vol. analytically', 'Vol. sum voxels','Vol. mesh', 'Area analytically', 'Area sum contour voxels', 'Area pixelate', 'Area mesh']
-plot_array = pd.DataFrame(columns = column_names)
-r_range = np.linspace(0.2,0.5,10)
-for i, r in tqdm(enumerate(r_range),'Looping over various radii'):
-    rest = compute_areas_and_volumes(r=r, stretch_factor=2, cylinder_flag=False)
-    plot_array = plot_array.append(rest, ignore_index=True)
-
-#%%
-x = cells['Nuclear volume']
-y = cells['Nuclear surface area']
-fig, ax = plt.subplots(figsize=(16, 9))
-ax.plot(x,y,'r.',markersize=5)
-ax.grid()
-ax.plot(plot_array['Vol. analytically'],plot_array['Area analytically'],'b',linewidth=5)
-ax.plot(plot_array['Vol. sum voxels'],plot_array['Area pixelate'],'g',linewidth=5)
-ax.plot(plot_array['Vol. mesh'],plot_array['Area mesh'],'m',linewidth=5)
-ax.legend(['Cells','Analytically','Current metrics','Mesh'])
-ax.set_title('Ellipsoid (flat cell)')
-ax.set_xlabel('Nuclear volume')
-ax.set_ylabel('Nuclear surface area')
-plt.show()
-
-
-
-#%%
-import statsmodels.api as sm
-x = sm.add_constant(x)
-model = sm.OLS(y, x)
-fittedmodel = model.fit()
-fittedmodel.params
-b = fittedmodel.params[0]
-a = fittedmodel.params[1]
-
-
-area_growth_when_volume_doubles = (2**(1/3))**2
-height_growth_when_volume_doubles = (2**(1/3))
-
-
-
-# # %%
-# x = cells['Cytoplasmic volume']/fac
-# y = cells['Nuclear volume']/fac
-# fig, ax = plt.subplots(figsize=(16, 9))
-# ax.plot(x,y,'r.',markersize=.5)
-# offset = -120
-# ax.plot([min(x), max(x)],[offset+b+a*min(x), offset+b+a*max(x)])
-# ax.grid()
-# cond = ((y<(offset+b+a*x)) & (x>500) & (x<1500) & (y>100) & (y<350))
-# ax.plot(x[cond],y[cond],'.',markersize=.5,color='deepskyblue')
-# plt.show()
-# babycells = cells.loc[cond,'CellId'].values
-# len(babycells)
-# # %%
-# bcells = pd.DataFrame()
-# bcells['CellId'] = babycells
-# bcells.to_csv(data_root / 'babycells' / 'babybump_20201016.csv')
-#
-# # %% Save part without babycells and only babycells
-# cells.loc[~cond].to_csv(data_root / 'babycells' / 'SizeScaling_20201012_nobaby.csv')
-# cells.loc[cond].to_csv(data_root / 'babycells' / 'SizeScaling_20201012_onlybaby.csv')
+xC = x.copy()
+xC = xC**(2/3)
+xC = sm.add_constant(xC)
+modelC = sm.OLS(y, xC)
+fittedmodelC = modelC.fit()
+rsC = fittedmodelC.rsquared
+print(rsC)

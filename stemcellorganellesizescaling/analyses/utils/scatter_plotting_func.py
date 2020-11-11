@@ -2399,7 +2399,31 @@ def ascatter(
     N2=1000,
     fs2=10,
     fs=5,
+    typ = ['vol','vol'],
 ):
+
+    #%% Change labels
+    if typ[0]=='vol':
+        abbX = f"{abbX} (\u03BCm\u00b3)"
+    elif typ[0]=='area':
+        abbX = f"{abbX} (\u03BCm\u00b2)"
+    if typ[1]=='vol':
+        abbY = f"{abbY} (\u03BCm\u00b3)"
+    elif typ[1]=='area':
+        abbY = f"{abbY} (\u03BCm\u00b2)"
+    if typ[0] == 'vol':
+        facX = 1 / ((0.108333) ** 3)
+    elif typ[0] == 'area':
+        facX = 1 / ((0.108333) ** 2)
+    else:
+        facX = 1000
+    if typ[1] == 'vol':
+        facY = 1 / ((0.108333) ** 3)
+    elif typ[1] == 'area':
+        facY = 1 / ((0.108333) ** 2)
+    else:
+        facY = 1000
+
 
     #%% Archery new colormap
     white = np.array([1, 1, 1, 1])
@@ -2422,7 +2446,6 @@ def ascatter(
     cpmap = ListedColormap(cpmap)
 
     #%% Plotting parameters
-    fac = 1000
     ms = 0.5
     lw2 = 2
     nbins = 100
@@ -2431,13 +2454,13 @@ def ascatter(
     # data
     x = cells[metricX]
     y = cells[metricY]
-    x = x / fac
-    y = y / fac
+    x = x / facX
+    y = y / facY
 
     # plot
     if kde_flag is True:
-        xii = loadps(stats_root, f"{metricX}_{metricY}_xii") / fac
-        yii = loadps(stats_root, f"{metricX}_{metricY}_yii") / fac
+        xii = loadps(stats_root, f"{metricX}_{metricY}_xii") / facX
+        yii = loadps(stats_root, f"{metricX}_{metricY}_yii") / facY
         zii = loadps(stats_root, f"{metricX}_{metricY}_zii")
         cii = loadps(stats_root, f"{metricX}_{metricY}_cell_dens")
         ax.set_ylim(top=np.max(yii))
@@ -2497,14 +2520,14 @@ def ascatter(
             horizontalalignment="right",
         )
     if rollingavg_flag is True:
-        rollavg_x = loadps(stats_root, f"{metricX}_{metricY}_x_ra") / fac
-        rollavg_y = loadps(stats_root, f"{metricX}_{metricY}_y_ra") / fac
+        rollavg_x = loadps(stats_root, f"{metricX}_{metricY}_x_ra") / facX
+        rollavg_y = loadps(stats_root, f"{metricX}_{metricY}_y_ra") / facY
         ax.plot(rollavg_x, rollavg_y[:, 0], "lime", linewidth=lw2)
 
     if ols_flag is True:
-        xii = loadps(stats_root, f"{metricX}_{metricY}_xii") / fac
-        pred_yL = loadps(stats_root, f"{metricX}_{metricY}_pred_matL") / fac
-        pred_yC = loadps(stats_root, f"{metricX}_{metricY}_pred_matC") / fac
+        xii = loadps(stats_root, f"{metricX}_{metricY}_xii") / facX
+        pred_yL = loadps(stats_root, f"{metricX}_{metricY}_pred_matL") / facY
+        pred_yC = loadps(stats_root, f"{metricX}_{metricY}_pred_matC") / facY
         if kde_flag is True:
             if fourcolors_flag is True:
                 ax.plot(xii, pred_yL, "gray")
@@ -2748,7 +2771,29 @@ def oscatter(
     N2=1000,
     fs2=10,
     fs=5,
+    typ=['vol', 'vol'],
 ):
+    # %% Change labels
+    if typ[0] == 'vol':
+        abbX = f"{abbX} (\u03BCm\u00b3)"
+    elif typ[0] == 'area':
+        abbX = f"{abbX} (\u03BCm\u00b2)"
+    if typ[1] == 'vol':
+        abbY = f"{abbY} (\u03BCm\u00b3)"
+    elif typ[1] == 'area':
+        abbY = f"{abbY} (\u03BCm\u00b2)"
+    if typ[0] == 'vol':
+        facX = 1 / ((0.108333) ** 3)
+    elif typ[0] == 'area':
+        facX = 1 / ((0.108333) ** 2)
+    else:
+        facX = 1000
+    if typ[1] == 'vol':
+        facY = 1 / ((0.108333) ** 3)
+    elif typ[1] == 'area':
+        facY = 1 / ((0.108333) ** 2)
+    else:
+        facY = 1000
 
     # %% Archery new colormap
     white = np.array([1, 1, 1, 1])
@@ -2771,7 +2816,6 @@ def oscatter(
     cpmap = ListedColormap(cpmap)
 
     # %% Plotting parameters
-    fac = 1000
     ms = 0.5
     lw2 = 1.5
     nbins = 100
@@ -2784,8 +2828,8 @@ def oscatter(
 
     x = x.to_numpy()
     y = y.to_numpy()
-    x = x / fac
-    y = y / fac
+    x = x / facX
+    y = y / facY
 
     metricX = metric
     metricY = struct
@@ -2793,11 +2837,11 @@ def oscatter(
     if kde_flag is True:
         xii = (
             loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_xii")
-            / fac
+            / facX
         )
         yii = (
             loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_yii")
-            / fac
+            / facY
         )
         zii = loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_zii")
         cii = loadps(
@@ -2863,30 +2907,30 @@ def oscatter(
     if rollingavg_flag is True:
         rollavg_x = (
             loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_x_ra")
-            / fac
+            / facX
         )
         rollavg_y = (
             loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_y_ra")
-            / fac
+            / facY
         )
         ax.plot(rollavg_x, rollavg_y[:, 0], "lime", linewidth=lw2)
 
     if ols_flag is True:
         xii = (
             loadps(stats_root, f"{metricX}_{structure_metric}_{metricY}_xii")
-            / fac
+            / facX
         )
         pred_yL = (
             loadps(
                 stats_root, f"{metricX}_{structure_metric}_{metricY}_pred_matL"
             )
-            / fac
+            / facY
         )
         pred_yC = (
             loadps(
                 stats_root, f"{metricX}_{structure_metric}_{metricY}_pred_matC"
             )
-            / fac
+            / facY
         )
         if kde_flag is True:
             if fourcolors_flag is True:
@@ -3137,7 +3181,29 @@ def ocscatter(
     N2=1000,
     fs2=10,
     fs=5,
+    typ=['vol', 'vol'],
 ):
+    # %% Change labels
+    if typ[0] == 'vol':
+        abbX = f"{abbX} (\u03BCm\u00b3)"
+    elif typ[0] == 'area':
+        abbX = f"{abbX} (\u03BCm\u00b2)"
+    if typ[1] == 'vol':
+        abbY = f"{abbY} (\u03BCm\u00b3)"
+    elif typ[1] == 'area':
+        abbY = f"{abbY} (\u03BCm\u00b2)"
+    if typ[0] == 'vol':
+        facX = 1 / ((0.108333) ** 3)
+    elif typ[0] == 'area':
+        facX = 1 / ((0.108333) ** 2)
+    else:
+        facX = 1000
+    if typ[1] == 'vol':
+        facY = 1 / ((0.108333) ** 3)
+    elif typ[1] == 'area':
+        facY = 1 / ((0.108333) ** 2)
+    else:
+        facY = 1000
 
     #%% Archery new colormap
     white = np.array([1, 1, 1, 1])
@@ -3160,7 +3226,6 @@ def ocscatter(
     cpmap = ListedColormap(cpmap)
 
     #%% Plotting parameters
-    fac = 1000
     ms = 0.5
     lw2 = 1.5
     nbins = 100
@@ -3185,18 +3250,18 @@ def ocscatter(
 
     x = x.to_numpy()
     y = y.to_numpy()
-    x = x / fac
-    y = y / fac
+    x = x / facX
+    y = y / facY
 
     # Main scatterplot
     if kde_flag is True:
         xii = (
             loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_xii")
-            / fac
+            / facX
         )
         yii = (
             loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_yii")
-            / fac
+            / facY
         )
         zii = loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_zii")
         cii = loadps(
@@ -3262,30 +3327,30 @@ def ocscatter(
     if rollingavg_flag is True:
         rollavg_x = (
             loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_x_ra")
-            / fac
+            / facX
         )
         rollavg_y = (
             loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_y_ra")
-            / fac
+            / facY
         )
         ax.plot(rollavg_x, rollavg_y[:, 0], "lime", linewidth=lw2)
 
     if ols_flag is True:
         xii = (
             loadps(stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_xii")
-            / fac
+            / facX
         )
         pred_yL = (
             loadps(
                 stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_pred_matL"
             )
-            / fac
+            / facY
         )
         pred_yC = (
             loadps(
                 stats_root, f"{metric_COMP}_{struct_COMP}_{struct}_pred_matC"
             )
-            / fac
+            / facY
         )
         if kde_flag is True:
             if fourcolors_flag is True:

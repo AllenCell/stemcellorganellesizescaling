@@ -47,12 +47,13 @@ def growplot(
     growfac,
     structures,
     side,
+    fs,
 ):
     # Parameters
     lw = 3
     xlim = [0, 1]
     xticks = [0, 0.25, 0.5, 0.75, 1]
-    xticklabels = ["0", "0.25", "0.5", "0.75", "1"]
+    xticklabels = ["0", "0.25", "0.5", "0.75", "1 0"]
     xticklabelsR = ["", "0.25", "0.5", "0.75", "1"]
     ylim = [-0.25, 1.25]
     yticks = [-0.25, 0, 0.25, 0.5, 0.75, 1, 1.25]
@@ -92,7 +93,7 @@ def growplot(
         # color1 = tuple(color1)
         # color2 = tuple(color2)
 
-        ym = Grow[f"Structure volume_{metric2}_mean"].to_numpy()
+        ym = Grow[f"Structure volume_{metric2}_50"].to_numpy()
         ym = ym[start_bin : (end_bin + 1)]
         ym = ym / ym[0]
         ym = np.log2(ym)
@@ -127,19 +128,19 @@ def growplot(
             xlim[0],
             ylim[1] - (j * fac * (ylim[1] - ylim[0])),
             metric2,
-            fontsize=20,
+            fontsize=fs,
             color=color1,
             verticalalignment="top",
             horizontalalignment="left",
         )
 
     axGrow.grid()
-    axGrow.set_xlabel("Cell growth (log 2)")
     axGrow.set_xlim(left=xlim[0], right=xlim[1])
     axGrow.set_xticks(xticks)
     if side == "left":
+        axGrow.text(1, ylim[0]-0.17*(ylim[1]-ylim[0]), "Cell volume doublings (log 2)",fontsize=fs-2,horizontalalignment = 'center')
         axGrow.set_xticklabels(xticklabels)
-        axGrow.set_ylabel("Organnele growth (log 2)")
+        axGrow.set_ylabel("Organelle volume doublings (log 2)")
         axGrow.set_ylim(bottom=ylim[0], top=ylim[1])
         axGrow.set_yticks(yticks)
         axGrow.set_yticklabels(yticklabels)

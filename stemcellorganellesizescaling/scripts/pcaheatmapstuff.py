@@ -45,8 +45,8 @@ log = logging.getLogger(__name__)
 ###############################################################################
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/")
-    pic_root = Path("E:/DA/Data/scoss/Pics/")
+    data_root = Path("E:/DA/Data/scoss/Data/Nov2020/")
+    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/")
     pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/")
@@ -62,7 +62,7 @@ pic_root = dirs[1]
 pic_rootT = pic_root / "pca"
 pic_rootT.mkdir(exist_ok=True)
 
-tableIN = "SizeScaling_20201012.csv"
+tableIN = "SizeScaling_20201102.csv"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
@@ -260,7 +260,12 @@ for j, metric in enumerate(selected_metrics):
         plt.show()
 
 # %% Heatmap of correlations between
+structures = pd.read_csv(data_root / 'annotation' / "structure_annotated_20201019.csv")
+sortedStructures = structures['Gene'].to_numpy()
+
+
 plt.rcParams.update({"font.size": 7})
+fs = 10
 FS={}
 xvec = []
 yvec = []
@@ -276,7 +281,15 @@ FS["cellnuc_metrics"] = [
 FS["pca_components"] = ['DNA_MEM_PC1', 'DNA_MEM_PC2',
        'DNA_MEM_PC3', 'DNA_MEM_PC4', 'DNA_MEM_PC5', 'DNA_MEM_PC6',
        'DNA_MEM_PC7', 'DNA_MEM_PC8']
-
+FS['struct_metrics'] = [
+        "Structure volume",
+        "Number of pieces",
+        "Piece average",
+        "Piece std",
+    ]
+# FS['struct_metrics'] = [
+#         "Structure volume",
+#     ]
 
 X = cells[FS["cellnuc_metrics"]].to_numpy()
 Y = cells[FS["pca_components"]].to_numpy()
@@ -284,23 +297,76 @@ CM = np.zeros((X.shape[1],Y.shape[1]))
 for x in np.arange(X.shape[1]):
     for y in np.arange(Y.shape[1]):
         CM[x,y],_ = pearsonr(X[:,x],Y[:,y])
+CMT = np.zeros((len(sortedStructures)+len(FS["cellnuc_metrics"]),len(FS["pca_components"])))
+CMT[0:len(FS["cellnuc_metrics"]),:] = CM
+
+for m, metric in enumerate(FS['struct_metrics']):
+    print(metric)
+    ylabels = FS["cellnuc_metrics"].copy()
+    for s, struct in enumerate(sortedStructures):
+        X = cells.loc[cells['structure_name']==struct,metric].to_numpy()
+        Y = cells.loc[cells['structure_name'] == struct, FS["pca_components"]].to_numpy()
+        for y in np.arange(Y.shape[1]):
+            CMT[s+len(FS["cellnuc_metrics"]), y], _ = pearsonr(X, Y[:, y])
+        ylabels.append(f"{metric}_{struct}")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    xlabels = FS["pca_components"]
+    ax.imshow(CMT, aspect='auto', cmap='seismic', vmin=-1, vmax=1)
+    for i in range(CMT.shape[0]):
+        for j in range(CMT.shape[1]):
+            val = CMT[i, j]
+            if abs(val) > .7:
+                text = ax.text(j, i, np.round(CMT[i, j],2),
+                                  ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+            elif abs(val) > .1:
+                text = ax.text(j, i, np.round(CMT[i, j],2),
+                                  ha="center", va="center", color="k", fontsize=fs, fontweight='bold')
+
+    ax.set_yticks(range(len(ylabels)))
+    ax.set_yticklabels(ylabels)
+    ax.set_xticks(range(len(xlabels)))
+    ax.set_xticklabels(xlabels)
+
+    if save_flag:
+        plot_save_path = pic_rootT / f"HEATMAP_{metric}VSPCAcomps.png"
+        plt.savefig(plot_save_path, format="png", dpi=300)
+        plt.close()
+    else:
+        plt.show()
+
+
+# %%
+from scipy.stats import chi2_contingency
+
+def calc_MI(x, y, bins):
+    c_xy = np.histogram2d(x, y, bins)[0]
+    g, p, dof, expected = chi2_contingency(c_xy, lambda_="log-likelihood")
+    mi = 0.5 * g / c_xy.sum()
+    return mi
+
+# %% Heatmaps of PCA components themselves
+Y = cells[FS["pca_components"]].to_numpy()
+CM = np.zeros((Y.shape[1],Y.shape[1]))
+for x in np.arange(Y.shape[1]):
+    for y in np.arange(Y.shape[1]):
+        CM[x,y],_ = pearsonr(Y[:,x],Y[:,y])
 
 fig, ax = plt.subplots(figsize=(12, 8))
-ylabels = FS["cellnuc_metrics"]
+
 xlabels = FS["pca_components"]
-ax.imshow(CM, aspect='auto', cmap='plasma', vmin=0, vmax=1)
-for i in range(X.shape[1]):
-    for j in range(Y.shape[1]):
+ylabels = FS["pca_components"]
+ax.imshow(CM, aspect='auto', cmap='seismic', vmin=-1, vmax=1)
+for i in range(CM.shape[0]):
+    for j in range(CM.shape[1]):
         val = CM[i, j]
-        if val>.3:
-            xvec.append(i)
-            yvec.append(j)
-        if val > .7:
-            text = ax.text(j, i, np.round(CM[i, j],2),
-                              ha="center", va="center", color="k", fontsize=fs, fontweight='bold')
-        elif val > .1:
+        if abs(val) > .7:
             text = ax.text(j, i, np.round(CM[i, j],2),
                               ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+        elif abs(val) > 0:
+            text = ax.text(j, i, np.round(CM[i, j],2),
+                              ha="center", va="center", color="k", fontsize=fs, fontweight='bold')
 
 ax.set_yticks(range(len(ylabels)))
 ax.set_yticklabels(ylabels)
@@ -308,50 +374,92 @@ ax.set_xticks(range(len(xlabels)))
 ax.set_xticklabels(xlabels)
 
 if save_flag:
-    plot_save_path = pic_rootT / f"HEATMAP_CellNucMetricsVSPCAcomps.png"
+    plot_save_path = pic_rootT / f"HEATMAP_PCAcompsVSPCAcomps_PC.png"
+    plt.savefig(plot_save_path, format="png", dpi=300)
+    plt.close()
+else:
+    plt.show()
+
+# %% Heatmaps of PCA components themselves
+bins = 20
+xrange = [2, 98]
+Y = cells[FS["pca_components"]].to_numpy()
+CM = np.zeros((Y.shape[1],Y.shape[1]))
+for x in np.arange(Y.shape[1]):
+    for y in np.arange(Y.shape[1]):
+        v1 = Y[:,y]
+        v2 = Y[:,x]
+        vp = np.zeros(v1.shape)
+        v1r = np.percentile(v1, xrange)
+        v2r = np.percentile(v2, xrange)
+        vp[v1 > v1r[1]] = np.nan
+        vp[v1 < v1r[0]] = np.nan
+        vp[v2 > v2r[1]] = np.nan
+        vp[v2 < v2r[0]] = np.nan
+        v1p = np.delete(v1,np.argwhere(np.isnan(vp)))
+        v2p = np.delete(v2, np.argwhere(np.isnan(vp)))
+        CM[x,y] = calc_MI(v1,v2,bins)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
+xlabels = FS["pca_components"]
+ylabels = FS["pca_components"]
+ax.imshow(CM, aspect='auto', cmap='seismic', vmin=-1, vmax=1)
+for i in range(CM.shape[0]):
+    for j in range(CM.shape[1]):
+        val = CM[i, j]
+        if abs(val) > .7:
+            text = ax.text(j, i, np.round(CM[i, j],2),
+                              ha="center", va="center", color="w", fontsize=fs, fontweight='bold')
+        elif abs(val) > 0:
+            text = ax.text(j, i, np.round(CM[i, j],2),
+                              ha="center", va="center", color="k", fontsize=fs, fontweight='bold')
+
+ax.set_yticks(range(len(ylabels)))
+ax.set_yticklabels(ylabels)
+ax.set_xticks(range(len(xlabels)))
+ax.set_xticklabels(xlabels)
+
+if save_flag:
+    plot_save_path = pic_rootT / f"HEATMAP_PCAcompsVSPCAcomps_MI.png"
+    plt.savefig(plot_save_path, format="png", dpi=300)
+    plt.close()
+else:
+    plt.show()
+
+# %% Heatmaps of PCA components themselves
+
+from mpl_toolkits.axes_grid1 import Grid
+nrows = len(FS["pca_components"])
+ncols = len(FS["pca_components"])
+
+plt.close('all')
+
+fig = plt.figure(figsize=(15, 9))
+grid = Grid(fig, rect=111, nrows_ncols=(nrows, ncols),
+            axes_pad=0.05, label_mode='L',
+            )
+
+for i, ax in enumerate(grid):
+    row = nrows - np.ceil((i + 1) / ncols) + 1
+    row = row.astype(np.int64)
+    col = (i + 1) % ncols
+    if col == 0:
+        col = ncols
+    # col = col.astype(np.int64)
+    ax.plot(Y[:,row-1],Y[:,col-1],'b.',markersize=.5)
+    ax.text(0,0,f"{row} vs {col}",fontsize=20,horizontalalignment='center',color='red')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_aspect('equal', adjustable='box')
+ax.title.set_visible(False)
+
+plt.tight_layout()
+if save_flag:
+    plot_save_path = pic_rootT / f"SCATTER_PCAcompsVSPCAcomps.png"
     plt.savefig(plot_save_path, format="png", dpi=300)
     plt.close()
 else:
     plt.show()
 
 # %%
-yvec = np.array(yvec)+X.shape[1]
-pair = np.stack((xvec, yvec)).T
-FS["plot_metrics"] = FS["cellnuc_metrics"] + FS["pca_components"]
-FS["plot_abbs"] = [
-    "Cell area",
-    "Cell vol",
-    "Cell height",
-    "Nuclear area",
-    "Nuclear vol",
-    "Nucleus height",
-    "Cyto vol",
-    "PCA 1",
-    "PCA 2",
-    "PCA 3",
-    "PCA 4",
-    "PCA 5",
-    "PCA 6",
-    "PCA 7",
-    "PCA 8",
-]
-
-
-#%%
-plotname = 'PCAscatter'
-fscatter(
-    FS["plot_metrics"],
-    FS["plot_abbs"],
-    pair,
-    cells,
-    [],
-    True,
-    pic_rootT,
-    plotname,
-    kde_flag=False,
-    fourcolors_flag=False,
-    colorpoints_flag=False,
-    rollingavg_flag=False,
-    ols_flag=False,
-    N2=1000,
-)
