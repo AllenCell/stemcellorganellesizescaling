@@ -68,17 +68,17 @@ dirs.append(pic_root)
 # compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics - Pairwise statistics
-# print('##################### Computing statistics - Pairwise statistics #####################')
-# tableIN = "SizeScaling_20201102.csv"
-# table_compIN = "SizeScaling_20201102_comp.csv"
-# statsOUTdir = "Stats_20201102"
-# pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+print('##################### Computing statistics - Pairwise statistics #####################')
+tableIN = "SizeScaling_20201102.csv"
+table_compIN = "SizeScaling_20201102_comp.csv"
+statsOUTdir = "Stats_20201102"
+pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
 
 #%% Computing statistics - Explained variance of composite models
-print('##################### Computing statistics - Composite models #####################')
-tableIN = "SizeScaling_20201102.csv"
-statsOUTdir = "Stats_20201102"
-compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
+# print('##################### Computing statistics - Composite models #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# statsOUTdir = "Stats_20201102"
+# compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')

@@ -306,8 +306,8 @@ def pairwisestats(
     # %% Part 4 pairwise stats cell and nucleus measurement and PCA components
     print('Cell and nucleus metrics VS PCA components')
     D = {}
-    for xi, xlabel in enumerate(FS['cellnuc_metrics']):
-        for yi, ylabel in enumerate(FS['pca_components']):
+    for xi, xlabel in enumerate(FS['pca_components']):
+        for yi, ylabel in enumerate(FS['cellnuc_metrics']):
             print(f"{xlabel} vs {ylabel}")
             x = cells[xlabel].squeeze().to_numpy()
             x = np.expand_dims(x, axis=1)
