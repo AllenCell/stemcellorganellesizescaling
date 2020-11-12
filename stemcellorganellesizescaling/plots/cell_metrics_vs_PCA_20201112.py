@@ -44,7 +44,7 @@ np.any(cells_COMP.isnull())
 # %% Parameters, updated directories
 save_flag = 1  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
-pic_root = pic_root / "plot_heightnucvscell"
+pic_root = pic_root / "plot_cellmetrics_vs_PCA"
 pic_root.mkdir(exist_ok=True)
 
 # %% Feature sets
@@ -269,6 +269,7 @@ def scatter(
                     f"R\u00b2={cim[0]}",
                     fontsize=fs,
                     verticalalignment="top",
+                    horizontalalignment="left",
                     color="black",
                 )
             else:
@@ -475,7 +476,7 @@ axScatterB = fig.add_axes([w1+xs, h1, x, ys])
 axScatterS = fig.add_axes([w1, h1+ys, xs, y])
 
 plotname = "test"
-ps = data_root / statsIN / "cell_nuc_metrics"
+ps = data_root / statsIN / "cell_nuc_PCA_metrics"
 scatter(
     axScatter,
     axScatterB,
@@ -486,11 +487,11 @@ scatter(
     'PC1',
     cells,
     ps,
-    kde_flag=False,
+    kde_flag=True,
     fourcolors_flag=False,
-    colorpoints_flag=False,
-    rollingavg_flag=False,
-    ols_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -512,7 +513,7 @@ axScatterB = fig.add_axes([w1+xs, h1, x, ys])
 axScatterS = fig.add_axes([w1, h1+ys, xs, y])
 
 plotname = "test"
-ps = data_root / statsIN / "cell_nuc_metrics"
+ps = data_root / statsIN / "cell_nuc_PCA_metrics"
 scatter(
     axScatter,
     axScatterB,
@@ -523,11 +524,11 @@ scatter(
     'PC2',
     cells,
     ps,
-    kde_flag=False,
+    kde_flag=True,
     fourcolors_flag=False,
-    colorpoints_flag=False,
-    rollingavg_flag=False,
-    ols_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
     N2=1000,
     fs2=fs,
     fs=fs,

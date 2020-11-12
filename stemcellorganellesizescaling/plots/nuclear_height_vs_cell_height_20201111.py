@@ -151,6 +151,10 @@ def scatter(
     y = cells[metricY]
     x = x / facX
     y = y / facY
+    x = np.log10(x)
+    y = np.log10(y)
+
+
 
     # plot
     if kde_flag is True:
@@ -490,7 +494,7 @@ scatter(
     fourcolors_flag=False,
     colorpoints_flag=False,
     rollingavg_flag=False,
-    ols_flag=True,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
