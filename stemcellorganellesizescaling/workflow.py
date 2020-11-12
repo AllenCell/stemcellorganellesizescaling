@@ -41,12 +41,12 @@ dirs.append(data_root)
 dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
-print('##################### Data preparation - Initial Parsing #####################')
-tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/shapemode/manifest.csv"
-featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
-tableSNIP = "Manifest_snippet_20201102.csv"
-tableOUT = "SizeScaling_20201102.csv"
-initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
+# print('##################### Data preparation - Initial Parsing #####################')
+# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/shapemode/manifest.csv"
+# featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
+# tableSNIP = "Manifest_snippet_20201102.csv"
+# tableOUT = "SizeScaling_20201102.csv"
+# initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
 # print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################'
@@ -57,15 +57,15 @@ initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
-print('##################### Data preparation - Diagnostic violins #####################')
-tableIN = "SizeScaling_20201102.csv"
-diagnostic_violins(dirs, tableIN)
+# print('##################### Data preparation - Diagnostic violins #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics - Compensation analysis
-print('##################### Computing statistics - Compensation analysis #####################')
-tableIN = "SizeScaling_20201102.csv"
-tableOUT = "SizeScaling_20201102_comp.csv"
-compensate(dirs, tableIN, tableOUT)
+# print('##################### Computing statistics - Compensation analysis #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# tableOUT = "SizeScaling_20201102_comp.csv"
+# compensate(dirs, tableIN, tableOUT)
 
 #%% Computing statistics - Pairwise statistics
 print('##################### Computing statistics - Pairwise statistics #####################')
@@ -75,27 +75,27 @@ statsOUTdir = "Stats_20201102"
 pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
 
 #%% Computing statistics - Explained variance of composite models
-print('##################### Computing statistics - Composite models #####################')
-tableIN = "SizeScaling_20201102.csv"
-statsOUTdir = "Stats_20201102"
-compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
+# print('##################### Computing statistics - Composite models #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# statsOUTdir = "Stats_20201102"
+# compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
-print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
-tableIN = "SizeScaling_20201102.csv"
-statsIN = "Stats_20201102"
-cellnuc_scatter_plots(dirs, tableIN, statsIN)
+# print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# statsIN = "Stats_20201102"
+# cellnuc_scatter_plots(dirs, tableIN, statsIN)
 
 #%% Plotting scatterplots - Organelle scatter plots
-print('##################### Plotting scatterplots - Organelle scatter plots #####################')
-tableIN = "SizeScaling_20201102.csv"
-statsIN = "Stats_20201102"
-organelle_scatter_plots(dirs, tableIN, statsIN)
+# print('##################### Plotting scatterplots - Organelle scatter plots #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# statsIN = "Stats_20201102"
+# organelle_scatter_plots(dirs, tableIN, statsIN)
 
 #%% Plotting scatterplots - Organelle scatter plots
-print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
-tableIN = "SizeScaling_20201102.csv"
-table_compIN = "SizeScaling_20201102_comp.csv"
-statsIN = "Stats_20201102"
-organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
+# print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
+# tableIN = "SizeScaling_20201102.csv"
+# table_compIN = "SizeScaling_20201102_comp.csv"
+# statsIN = "Stats_20201102"
+# organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
