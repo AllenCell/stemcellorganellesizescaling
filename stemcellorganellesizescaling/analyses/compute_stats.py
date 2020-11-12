@@ -333,9 +333,6 @@ def pairwisestats(
 
     print('done')
 
-
-
-
 # %% function defintion of regression model compensation
 def compositemodels_explainedvariance(
     dirs: list, dataset: Path, statsOUTdir: Path
@@ -366,21 +363,13 @@ def compositemodels_explainedvariance(
 
     # %% Select feature sets
     FS = {}
-    FS['cell_metrics_AVH'] = ["Cell surface area", "Cell volume", "Cell height"]
-    FS['nuc_metrics_AVH'] = ["Nuclear surface area", "Nuclear volume", "Nucleus height"]
-    FS['cell_metrics_AV'] = ["Cell surface area", "Cell volume"]
-    FS['nuc_metrics_AV'] = ["Nuclear surface area", "Nuclear volume"]
-    FS['cell_metrics_H'] = ["Cell height"]
-    FS['nuc_metrics_H'] = ["Nucleus height"]
-    FS['cellnuc_metrics'] = [
-        "Cell surface area",
-        "Cell volume",
-        "Cell height",
-        "Nuclear surface area",
-        "Nuclear volume",
-        "Nucleus height",
-        "Cytoplasmic volume",
-    ]
+    FS['cellnuc_AV'] = ["Cell surface area", "Cell volume", "Nuclear surface area", "Nuclear volume"]
+    FS['cell_A'] = ["Cell volume", "Nuclear surface area", "Nuclear volume"]
+    FS['cell_V'] = ["Cell surface area", "Nuclear surface area", "Nuclear volume"]
+    FS['cell_AV'] = ["Nuclear surface area", "Nuclear volume"]
+    FS['nuc_A'] = ["Cell surface area", "Cell volume", "Nuclear volume"]
+    FS['nuc_V'] = ["Cell surface area", "Cell volume", "Nuclear surface area"]
+    FS['nuc_AV'] = ["Cell surface area", "Cell volume"]
 
     FS['struct_metrics'] = [
         "Structure volume",
@@ -393,8 +382,8 @@ def compositemodels_explainedvariance(
     print('Computed explained variance statistics for composite models')
     D = {}
     for xi, xlabel in enumerate(
-        ['nuc_metrics_AVH', 'nuc_metrics_AV', 'nuc_metrics_H', 'cell_metrics_AVH', 'cell_metrics_AV',
-         'cell_metrics_H']):
+        ['cellnuc_AV', 'cell_A', 'cell_V', 'cell_AV', 'nuc_A', 'nuc_V',
+         'nuc_AV']):
         features_4_comp = FS[xlabel]
         for yi, ylabel in enumerate(FS['struct_metrics']):
             selected_structures = cells["structure_name"].unique()
