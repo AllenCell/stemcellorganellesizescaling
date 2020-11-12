@@ -532,7 +532,7 @@ scatter(
     N2=1000,
     fs2=fs,
     fs=fs,
-    typ = ['height','pca'],
+    typ = ['vol','pca'],
 )
 
 if save_flag==1:
