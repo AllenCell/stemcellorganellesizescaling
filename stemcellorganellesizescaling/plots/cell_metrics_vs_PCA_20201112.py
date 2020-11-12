@@ -42,7 +42,7 @@ cells_COMP = pd.read_csv(data_root / table_compIN)
 np.any(cells_COMP.isnull())
 
 # %% Parameters, updated directories
-save_flag = 0  # save plot (1) or show on screen (0)
+save_flag = 1  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
 pic_root = pic_root / "plot_heightnucvscell"
 pic_root.mkdir(exist_ok=True)
@@ -110,7 +110,7 @@ def scatter(
     elif typ[0] == 'height':
         facX = 1 / ((0.108333) ** 1)
     else:
-        facX = 1000
+        facX = 1
     if typ[1] == 'vol':
         facY = 1 / ((0.108333) ** 3)
     elif typ[1] == 'area':
@@ -118,7 +118,7 @@ def scatter(
     elif typ[1] == 'height':
         facY = 1 / ((0.108333) ** 1)
     else:
-        facY = 1000
+        facY = 1
 
     #%% Archery new colormap
     white = np.array([1, 1, 1, 1])
@@ -467,7 +467,7 @@ y = 1-h1-h2-ys
 # %% fontsize
 fs = 20
 
-# %%layout
+# %% Cell height vs dna_mem_pc1
 fig = plt.figure(figsize=(5, 5))
 plt.rcParams.update({"font.size": fs})
 axScatter = fig.add_axes([w1+xs, h1+ys, x, y])
@@ -480,25 +480,62 @@ scatter(
     axScatter,
     axScatterB,
     axScatterS,
-    FS['cellnuc_metrics'][5],
-    FS['cellnuc_metrics'][2],
-    FS['cellnuc_abbs'][5],
-    FS['cellnuc_abbs'][2],
+    'Cell height',
+    'DNA_MEM_PC1',
+    'Cell height',
+    'PC1',
     cells,
     ps,
     kde_flag=False,
     fourcolors_flag=False,
     colorpoints_flag=False,
     rollingavg_flag=False,
-    ols_flag=True,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
-    typ = ['height','height'],
+    typ = ['height','pca'],
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"heightnucvscell_20201111.png"
+    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201112.png"
+    plt.savefig(plot_save_path, format="png", dpi=1000)
+    plt.close()
+else:
+    plt.show()
+
+# %% cell volume vs dna_mem_pc2
+fig = plt.figure(figsize=(5, 5))
+plt.rcParams.update({"font.size": fs})
+axScatter = fig.add_axes([w1+xs, h1+ys, x, y])
+axScatterB = fig.add_axes([w1+xs, h1, x, ys])
+axScatterS = fig.add_axes([w1, h1+ys, xs, y])
+
+plotname = "test"
+ps = data_root / statsIN / "cell_nuc_metrics"
+scatter(
+    axScatter,
+    axScatterB,
+    axScatterS,
+    'Cell volume',
+    'DNA_MEM_PC2',
+    'Cell volume',
+    'PC2',
+    cells,
+    ps,
+    kde_flag=False,
+    fourcolors_flag=False,
+    colorpoints_flag=False,
+    rollingavg_flag=False,
+    ols_flag=False,
+    N2=1000,
+    fs2=fs,
+    fs=fs,
+    typ = ['height','pca'],
+)
+
+if save_flag==1:
+    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201112.png"
     plt.savefig(plot_save_path, format="png", dpi=1000)
     plt.close()
 else:

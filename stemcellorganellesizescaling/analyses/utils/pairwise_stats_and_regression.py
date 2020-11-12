@@ -251,3 +251,50 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
         D[f"{xlabel}_{ylabel}_{struct}_y_ra"] = y_ra
 
     return D
+
+# %% function defintion of regression model compensation
+def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
+    """
+       Calculate residual values
+
+       Parameters
+       ----------
+       x: S*N numpy array
+       y: S*1 numpy array
+       xlabel: label of x array
+       ylabel: label of y array
+       struct: Name of structure of 'None' if across all structures
+
+       Output
+       ----------
+       D: dictionary with the following values:
+           rs_vecL: Nbootstrap*1 r-squared values simple linear model
+           rs_vecC: Nbootstrap*1 r-squared values complex design matrix model
+
+    """
+    # Parameters
+    Nbootstrap = 100
+    # Nbootstrap = 3
+
+    # bootstrap regression - make arrays
+    rs_vecL = np.zeros([Nbootstrap, 1])
+    rs_vecC = np.zeros([Nbootstrap, 1])
+
+    for i in tqdm(range(Nbootstrap), "Bootstrapping"):
+        # bootstrap and prepare design matrices
+        xx, yy = resample(x, y)
+        modelL, _ = fit_ols(xx, yy, "Linear")
+        rs_vecL[i] = modelL.rsquared
+        modelC, _ = fit_ols(xx, yy, "Complex")
+        rs_vecC[i] = modelC.rsquared
+
+    # Fill dictionary
+    D = {}
+    if struct == "None":
+        D[f"{xlabel}_{ylabel}_rs_vecL"] = rs_vecL
+        D[f"{xlabel}_{ylabel}_rs_vecC"] = rs_vecC
+    else:
+        D[f"{xlabel}_{ylabel}_{struct}_rs_vecL"] = rs_vecL
+        D[f"{xlabel}_{ylabel}_{struct}_rs_vecC"] = rs_vecC
+
+    return D

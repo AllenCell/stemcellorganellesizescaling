@@ -14,9 +14,9 @@ from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, ini
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.data_prep"])
 from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing, diagnostic_violins
 
-from stemcellorganellesizescaling.analyses.compute_stats import compensate
+from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.compute_stats"])
-from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats
+from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance
 
 from stemcellorganellesizescaling.analyses.scatter_plots import cellnuc_scatter_plots, organelle_scatter_plots, organelle_compensated_scatter_plots
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.scatter_plots"])
@@ -31,8 +31,8 @@ log = logging.getLogger(__name__)
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/")
-    pic_root = Path("E:/DA/Data/scoss/Pics/")
+    data_root = Path("E:/DA/Data/scoss/Data/Nov2020/")
+    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020/")
     pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Nov2020/")
@@ -73,6 +73,12 @@ tableIN = "SizeScaling_20201102.csv"
 table_compIN = "SizeScaling_20201102_comp.csv"
 statsOUTdir = "Stats_20201102"
 pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+
+#%% Computing statistics - Explained variance of composite models
+print('##################### Computing statistics - Composite models #####################')
+tableIN = "SizeScaling_20201102.csv"
+statsOUTdir = "Stats_20201102"
+compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
