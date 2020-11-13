@@ -499,8 +499,8 @@ scatter(
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201112.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
+    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201112.svg"
+    plt.savefig(plot_save_path, format="svg")
     plt.close()
 else:
     plt.show()
@@ -525,8 +525,8 @@ scatter(
     cells,
     ps,
     kde_flag=True,
-    fourcolors_flag=False,
-    colorpoints_flag=True,
+    fourcolors_flag=True,
+    colorpoints_flag=False,
     rollingavg_flag=True,
     ols_flag=True,
     N2=1000,
@@ -536,8 +536,8 @@ scatter(
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201112.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
+    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201112.svg"
+    plt.savefig(plot_save_path, format="svg")
     plt.close()
 else:
     plt.show()

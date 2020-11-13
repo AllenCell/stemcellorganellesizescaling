@@ -298,3 +298,45 @@ def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
         D[f"{xlabel}_{ylabel}_{struct}_rs_vecC"] = rs_vecC
 
     return D
+
+# %% function defintion of bootstrapping the regression model
+def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, struct):
+    """
+       Calculate residual values
+
+       Parameters
+       ----------
+       x: S*1 numpy array
+       y: S*1 numpy array
+       xlabel: label of x array
+       ylabel: label of y array
+       type: Linear or Complex model
+       cell_doubling: cell volume in voxels of cell doubling
+       struct: Name of structure of 'None' if across all structures
+
+       Output
+       ----------
+       Scale_rates: N (no of bootstraps) by 2 (linear and log-log model)
+       Scale_plot_data - dictionary
+
+
+    """
+    # Parameters
+    Nbootstrap = 100
+    # Nbootstrap = 5
+
+    # bootstrap regression - make arrays
+    Scale_rates = np.zeros([Nbootstrap, 2])
+
+    for i in tqdm(range(Nbootstrap), "Bootstrapping"):
+        # bootstrap and prepare design matrices
+        xx, yy = resample(x, y)
+        model, _ = fit_ols(xx, yy, type)
+        xC = cell_doubling.copy()
+        xC = sm.add_constant(xC)
+        yC = model.predict(xC)
+        Scale_rates[i, 0] = np.round(100 * (yC[1] - yC[0]) / yC[0], 2)
+        model_ll, _ = fit_ols(np.log2(xx), np.log2(yy), type)
+        Scale_rates[i, 1] = np.round(100 * model_ll.params[1], 2)
+
+    return Scale_rates

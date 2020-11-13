@@ -67,7 +67,7 @@ yC = fittedmodel_lin.predict(xC_lin)
 xD = [1e6, 2e6]
 xD_lin = sm.add_constant(xD)
 yD = fittedmodel_lin.predict(xD_lin)
-sf = np.round(yD[1]/yD[0],2)
+sf = np.round((yD[1]-yD[0])/yD[0],2)
 ax1.plot(xC,yC,'b')
 ax1.set_xlabel('Cell Vol')
 ax1.set_ylabel(f"{struct} vol")
@@ -85,7 +85,7 @@ ax2.plot(x,y,'r.',markersize=5)
 xC = [np.amin(x), np.amax(x)]
 xC_lin = sm.add_constant(xC)
 yC = fittedmodel_lin.predict(xC_lin)
-xD = [1e6, 2e6]
+xD = [9e5, 18e5]
 xD_lin = sm.add_constant(xD)
 yD = fittedmodel_lin.predict(xD_lin)
 sf = np.round(fittedmodel_lin.params[1],2)
