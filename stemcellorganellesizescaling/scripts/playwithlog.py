@@ -49,7 +49,7 @@ pic_root = pic_root / "plotwithlog"
 pic_root.mkdir(exist_ok=True)
 
 # %%
-struct = 'TOMM20'
+struct = 'LMNB1'
 
 # %%
 f, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 9))

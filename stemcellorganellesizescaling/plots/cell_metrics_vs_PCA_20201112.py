@@ -481,10 +481,10 @@ scatter(
     axScatter,
     axScatterB,
     axScatterS,
-    'Cell height',
     'DNA_MEM_PC1',
     'Cell height',
     'PC1',
+    'Cell height',
     cells,
     ps,
     kde_flag=True,
@@ -495,7 +495,7 @@ scatter(
     N2=1000,
     fs2=fs,
     fs=fs,
-    typ = ['height','pca'],
+    typ = ['pca','height'],
 )
 
 if save_flag==1:
@@ -518,10 +518,10 @@ scatter(
     axScatter,
     axScatterB,
     axScatterS,
-    'Cell volume',
     'DNA_MEM_PC2',
     'Cell volume',
     'PC2',
+    'Cell volume',
     cells,
     ps,
     kde_flag=True,
@@ -532,7 +532,7 @@ scatter(
     N2=1000,
     fs2=fs,
     fs=fs,
-    typ = ['vol','pca'],
+    typ = ['pca','vol'],
 )
 
 if save_flag==1:
