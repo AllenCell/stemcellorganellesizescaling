@@ -186,15 +186,16 @@ def scatter(
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
         if (fourcolors_flag is True) or (colorpoints_flag is True):
-            ax.text(
-                xlim[1],
-                ylim[1],
-                f"n= {len(x)}",
-                fontsize=fs,
-                verticalalignment="top",
-                horizontalalignment="right",
-                color="black",
-            )
+            # ax.text(
+            #     xlim[1],
+            #     ylim[1],
+            #     f"n= {len(x)}",
+            #     fontsize=fs,
+            #     verticalalignment="top",
+            #     horizontalalignment="right",
+            #     color="black",
+            # )
+            1+1
         else:
             ax.text(
                 xlim[1],
@@ -262,16 +263,17 @@ def scatter(
                     color="gray",
                 )
             elif colorpoints_flag is True:
-                plt.text(
-                    xlim[0],
-                    ylim[1],
-                    # f"rs={cim[0]}, pc={pc[0]}",
-                    f"R\u00b2={cim[0]}",
-                    fontsize=fs,
-                    verticalalignment="top",
-                    horizontalalignment="left",
-                    color="black",
-                )
+                # plt.text(
+                #     xlim[0],
+                #     ylim[1],
+                #     # f"rs={cim[0]}, pc={pc[0]}",
+                #     f"R\u00b2={cim[0]}",
+                #     fontsize=fs,
+                #     verticalalignment="top",
+                #     horizontalalignment="left",
+                #     color="black",
+                # )
+                1 + 1
             else:
                 plt.text(
                     xlim[0],
@@ -379,14 +381,14 @@ def scatter(
                     color=[0.5, 0.5, 0.5, 0.5],
                 )
 
-    axB.text(
-        np.mean(xlim),
-        np.mean(ylimBH),
-        f"{abbX}",
-        fontsize=fs2,
-        horizontalalignment="center",
-        verticalalignment="center",
-    )
+    # axB.text(
+    #     np.mean(xlim),
+    #     np.mean(ylimBH),
+    #     f"{abbX}",
+    #     fontsize=fs2,
+    #     horizontalalignment="center",
+    #     verticalalignment="center",
+    # )
     axB.axis("off")
 
     # Side histogram
@@ -437,15 +439,15 @@ def scatter(
                     color=[0.5, 0.5, 0.5, 0.5],
                 )
 
-    axS.text(
-        np.mean(xlimSH),
-        np.mean(ylim),
-        f"{abbY}",
-        fontsize=fs2,
-        horizontalalignment="center",
-        verticalalignment="center",
-        rotation=90,
-    )
+    # axS.text(
+    #     np.mean(xlimSH),
+    #     np.mean(ylim),
+    #     f"{abbY}",
+    #     fontsize=fs2,
+    #     horizontalalignment="center",
+    #     verticalalignment="center",
+    #     rotation=90,
+    # )
     axS.axis("off")
 
 # %% Simple function to load statistics
@@ -499,8 +501,8 @@ scatter(
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201112.svg"
-    plt.savefig(plot_save_path, format="svg")
+    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201119.png"
+    plt.savefig(plot_save_path, format="png")
     plt.close()
 else:
     plt.show()
@@ -525,8 +527,8 @@ scatter(
     cells,
     ps,
     kde_flag=True,
-    fourcolors_flag=True,
-    colorpoints_flag=False,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
     rollingavg_flag=True,
     ols_flag=True,
     N2=1000,
@@ -536,8 +538,8 @@ scatter(
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201112.svg"
-    plt.savefig(plot_save_path, format="svg")
+    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201119.png"
+    plt.savefig(plot_save_path, format="png")
     plt.close()
 else:
     plt.show()
