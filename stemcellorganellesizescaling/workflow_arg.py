@@ -76,49 +76,49 @@ def workflow_arg(n_sample,n_try):
     tableIN = "SizeScaling_20201102.csv"
     diagnostic_violins(dirs, tableIN)
 
-    # #%% Computing statistics - Compensation analysis
-    # # print('##################### Computing statistics - Compensation analysis #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # tableOUT = "SizeScaling_20201102_comp.csv"
-    # compensate(dirs, tableIN, tableOUT)
-    #
-    # #%% Computing statistics - Pairwise statistics
-    # # print('##################### Computing statistics - Pairwise statistics #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # table_compIN = "SizeScaling_20201102_comp.csv"
-    # statsOUTdir = "Stats_20201102"
-    # pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
-    #
-    # #%% Computing statistics - Explained variance of composite models
-    # print('##################### Computing statistics - Composite models #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # statsOUTdir = "Stats_20201102"
-    # compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
-    #
-    # #%% Computing statistics - Scaling statistics
-    # print('##################### Computing statistics - Scaling statistics #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # statsOUTdir = "Stats_20201102"
-    # scaling_stats(dirs, tableIN, statsOUTdir)
-    #
-    # #%% Plotting scatterplots - Cell and nuclear metrics
-    # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # statsIN = "Stats_20201102"
-    # cellnuc_scatter_plots(dirs, tableIN, statsIN)
-    #
-    # #%% Plotting scatterplots - Organelle scatter plots
-    # print('##################### Plotting scatterplots - Organelle scatter plots #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # statsIN = "Stats_20201102"
-    # organelle_scatter_plots(dirs, tableIN, statsIN)
-    #
-    # #%% Plotting scatterplots - Organelle scatter plots
-    # print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
-    # tableIN = "SizeScaling_20201102.csv"
-    # table_compIN = "SizeScaling_20201102_comp.csv"
-    # statsIN = "Stats_20201102"
-    # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
+    #%% Computing statistics - Compensation analysis
+    # print('##################### Computing statistics - Compensation analysis #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    tableOUT = "SizeScaling_20201102_comp.csv"
+    compensate(dirs, tableIN, tableOUT)
+
+    #%% Computing statistics - Pairwise statistics
+    # print('##################### Computing statistics - Pairwise statistics #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    table_compIN = "SizeScaling_20201102_comp.csv"
+    statsOUTdir = "Stats_20201102"
+    pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+
+    #%% Computing statistics - Explained variance of composite models
+    print('##################### Computing statistics - Composite models #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    statsOUTdir = "Stats_20201102"
+    compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
+
+    #%% Computing statistics - Scaling statistics
+    print('##################### Computing statistics - Scaling statistics #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    statsOUTdir = "Stats_20201102"
+    scaling_stats(dirs, tableIN, statsOUTdir)
+
+    #%% Plotting scatterplots - Cell and nuclear metrics
+    print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    statsIN = "Stats_20201102"
+    cellnuc_scatter_plots(dirs, tableIN, statsIN)
+
+    #%% Plotting scatterplots - Organelle scatter plots
+    print('##################### Plotting scatterplots - Organelle scatter plots #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    statsIN = "Stats_20201102"
+    organelle_scatter_plots(dirs, tableIN, statsIN)
+
+    #%% Plotting scatterplots - Organelle scatter plots
+    print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
+    tableIN = "SizeScaling_20201102.csv"
+    table_compIN = "SizeScaling_20201102_comp.csv"
+    statsIN = "Stats_20201102"
+    organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
 if __name__ == '__main__':
     # Map command line arguments to function arguments.
