@@ -42,7 +42,7 @@ def workflow_arg(n_sample,n_try):
     elif platform.system() == "Linux":
         data_root = Path(f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Nov2020/{datastr}")
         pic_root =  Path(f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Nov2020/{datastr}")
-        org_root =  Path('/allen/aics/modeling/theok/Projects/Data/Nov2020')
+        org_root =  Path('/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020')
     print(data_root)
     data_root.mkdir(exist_ok=True)
     pic_root.mkdir(exist_ok=True)
