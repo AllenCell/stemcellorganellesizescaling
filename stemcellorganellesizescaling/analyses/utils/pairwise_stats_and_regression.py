@@ -156,8 +156,8 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
            y_ra: (nbins-1)*6 mean and 5,25,50,75,95 percentile values on y
     """
     # Parameters
-    # Nbootstrap = 100
-    Nbootstrap = 5
+    Nbootstrap = 100
+    # Nbootstrap = 5
     nbins = 100
     N = 10000
     # N = 1000
@@ -273,8 +273,8 @@ def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
 
     """
     # Parameters
-    # Nbootstrap = 100
-    Nbootstrap = 5
+    Nbootstrap = 100
+    # Nbootstrap = 5
 
     # bootstrap regression - make arrays
     rs_vecL = np.zeros([Nbootstrap, 1])

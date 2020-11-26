@@ -537,7 +537,7 @@ def scaling_stats(
     for yi, ylabel in enumerate(FS['cellnuc_metrics']):
         x = cells['Cell volume'].squeeze().to_numpy()
         y = cells[ylabel].squeeze().to_numpy()
-        scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, 'None', Nbootstrap=5)
+        scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, 'None', Nbootstrap=100)
         ScaleMat[f"{ylabel}_prc"] = scaling_stats[:,0]
         ScaleMat[f"{ylabel}_log"] = scaling_stats[:,1]
         if yi==0:
@@ -576,7 +576,7 @@ def scaling_stats(
                     .squeeze()
                     .to_numpy()
             )
-            scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, struct, Nbootstrap=5)
+            scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, struct, Nbootstrap=100)
             ScaleMat[f"{ylabel}_{struct}prc"] = scaling_stats[:, 0]
             ScaleMat[f"{ylabel}_{struct}log"] = scaling_stats[:, 1]
             PM = np.concatenate((PM, scaling_stats), axis=0)
