@@ -156,8 +156,8 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
            y_ra: (nbins-1)*6 mean and 5,25,50,75,95 percentile values on y
     """
     # Parameters
-    Nbootstrap = 100
-    # Nbootstrap = 5
+    # Nbootstrap = 100
+    Nbootstrap = 5
     nbins = 100
     N = 10000
     # N = 1000
@@ -273,8 +273,8 @@ def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
 
     """
     # Parameters
-    Nbootstrap = 100
-    # Nbootstrap = 3
+    # Nbootstrap = 100
+    Nbootstrap = 5
 
     # bootstrap regression - make arrays
     rs_vecL = np.zeros([Nbootstrap, 1])
@@ -300,7 +300,7 @@ def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
     return D
 
 # %% function defintion of bootstrapping the regression model
-def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, struct):
+def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, struct, Nbootstrap=100):
     """
        Calculate residual values
 
@@ -313,6 +313,7 @@ def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, st
        type: Linear or Complex model
        cell_doubling: cell volume in voxels of cell doubling
        struct: Name of structure of 'None' if across all structures
+       Nbootstrap: Number of bootstraps (default is 100)
 
        Output
        ----------
@@ -322,7 +323,6 @@ def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, st
 
     """
     # Parameters
-    Nbootstrap = 100
     # Nbootstrap = 5
 
     # bootstrap regression - make arrays

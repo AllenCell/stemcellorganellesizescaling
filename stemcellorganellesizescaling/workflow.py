@@ -14,9 +14,9 @@ from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, ini
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.data_prep"])
 from stemcellorganellesizescaling.analyses.data_prep import outlier_removal, initial_parsing, diagnostic_violins
 
-from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance
+from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance, scaling_stats
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.compute_stats"])
-from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance
+from stemcellorganellesizescaling.analyses.compute_stats import compensate, pairwisestats, compositemodels_explainedvariance, scaling_stats
 
 from stemcellorganellesizescaling.analyses.scatter_plots import cellnuc_scatter_plots, organelle_scatter_plots, organelle_compensated_scatter_plots
 importlib.reload(sys.modules["stemcellorganellesizescaling.analyses.scatter_plots"])
@@ -83,8 +83,8 @@ dirs.append(pic_root)
 #%% Computing statistics - Scaling statistics
 print('##################### Computing statistics - Scaling statistics #####################')
 tableIN = "SizeScaling_20201102.csv"
-statsOUTdir = "Stats_20201102"
-scaling_stats(dirs, tableIN, statsOUTdir)
+scaleOUTdir = "Scale_20201102"
+scaling_stats(dirs, tableIN, scaleOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
@@ -105,3 +105,8 @@ scaling_stats(dirs, tableIN, statsOUTdir)
 # statsIN = "Stats_20201102"
 # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
+#%% Downsampling analysis
+print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
+tableIN = "SizeScaling_20201102.csv"
+sampleOUTdir = "Sample_20201102"
+sampling_stats(dirs, tableIN, sampleOUTdir)

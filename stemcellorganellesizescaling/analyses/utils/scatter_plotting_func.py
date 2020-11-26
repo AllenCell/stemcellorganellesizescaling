@@ -11,7 +11,7 @@ import numpy as np
 import pickle
 import locale
 locale.setlocale(locale.LC_ALL, '')
-
+from scipy import interpolate
 
 # Third party
 
@@ -2446,6 +2446,8 @@ def ascatter(
     cpmap = cpmap(np.linspace(0, 1, 100) ** 0.4)
     cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
     cpmap = ListedColormap(cpmap)
+    darkgreen = [0., 0.26666667, 0.10588235, 1.]
+    darkgreen_t = [0., 0.26666667, 0.10588235, .5]
 
     #%% Plotting parameters
     ms = 0.5
@@ -2536,6 +2538,33 @@ def ascatter(
                 ax.plot(xii, pred_yL, "gray")
             elif colorpoints_flag is True:
                 ax.plot(xii, pred_yL, "gray")
+                if len(cell_doubling) > 0:
+                    cd0 = cell_doubling[0] / facX
+                    cd1 = cell_doubling[1] / facX
+                    f = interpolate.interp1d(xii[:,0], pred_yL)
+                    y0 = f(cd0)
+                    y1 = f(cd1)
+                    ax.plot([xlim[0], cd1+1950], [y1, y1], color=darkgreen, linewidth=1,linestyle='dashdot')
+                    ax.plot([xlim[0], cd0+1950], [y0, y0], color=darkgreen, linewidth=1, linestyle='dashdot')
+                    ax.plot([cd0, cd0],[ylim[0], y0],color=darkgreen,linewidth=2)
+                    ax.plot([cd1, cd1], [ylim[0], y1], color=darkgreen, linewidth=2)
+                    ax.plot([xlim[0], cd0], [y0, y0], color=darkgreen, linewidth=2)
+                    ax.plot([xlim[0], cd1], [y1, y1], color=darkgreen, linewidth=2)
+                    ax.text(cd0+2000, y0, f"{int(np.round(y0))} \u03BCm\u00b3",color=darkgreen,verticalalignment='center_baseline')
+                    ax.text(cd1 + 2000, y1, f"{int(np.round(y1))} \u03BCm\u00b3", color=darkgreen,
+                            verticalalignment='center_baseline')
+                    ax.text((cd1+cd0)/2 + 2200, (y1+y0)/2, f"{int(np.floor(100*(y1-y0)/y0))}% increase", color=darkgreen,
+                            verticalalignment='center_baseline')
+                    y0a = f(cd0+200)
+                    y1a = f(cd1-200)
+                    x0a = cd0+200+2000
+                    x1a = cd1-200+2000
+
+                    ax.arrow(x0a[0], y0a[0], (x1a[0]-x0a[0]), (y1a[0]-y0a[0]),color=darkgreen,width=10,length_includes_head=True,head_width=50,head_length=30)
+                    # ax.arrow(1000, 1000, 100, 100)
+
+                    # f"{int(y1)} \u03BCm\u00b3", fontsize = fs)
+                    # ax.text([cd0 + 1600], y0, f"{int(y0)} \u03BCm\u00b3", fontsize=fs)
             else:
                 ax.plot(xii, pred_yL, "w")
         else:
@@ -2573,7 +2602,7 @@ def ascatter(
                 plt.text(
                     0.02 * (xlim[1] - xlim[0]) + xlim[0],
                     -0.02 * (ylim[1] - ylim[0]) + ylim[1],
-                    f" R\u00b2={cim[0]}",
+                    f" R\u00b2={cim[0]} (Expl. var. is {int(100*cim[0])}%)",
                     fontsize=fs,
                     verticalalignment="top",
                     horizontalalignment="left",
@@ -2639,9 +2668,10 @@ def ascatter(
 
     # Bottom histogram
     _, bine, _ = axB.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 0.5])
-    pos = np.argwhere(np.all(np.concatenate((np.expand_dims(x,axis=0) >= cell_doubling[0]/facX, np.expand_dims(x,axis=0) <= cell_doubling[1]/facX), axis=0), axis=0)).astype(
-        np.int).squeeze()
-    axB.hist(x[pos], bins=bine, color=[0.5, 0.5, 1, 0.5])
+    if len(cell_doubling)>0:
+        pos = np.argwhere(np.all(np.concatenate((np.expand_dims(x,axis=0) >= cell_doubling[0]/facX, np.expand_dims(x,axis=0) <= cell_doubling[1]/facX), axis=0), axis=0)).astype(
+            np.int).squeeze()
+        axB.hist(x[pos], bins=bine, color=darkgreen_t)
     ylimBH = axB.get_ylim()
     axB.set_xticks(xticks)
     axB.set_yticks([])
@@ -2690,8 +2720,8 @@ def ascatter(
                 )
 
     axB.text(
-        np.mean(xlim),
-        ylimBH[1],
+        xlim[0]+.75*(xlim[1]-xlim[0]),
+        np.mean(ylimBH),
         f"{abbX}",
         fontsize=fs2,
         horizontalalignment="center",

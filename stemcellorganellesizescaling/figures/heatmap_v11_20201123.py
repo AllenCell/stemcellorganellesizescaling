@@ -406,7 +406,7 @@ h6 = 0.015
 h7 = 0.035
 h8 = 0.02
 h9 = 0.015
-h10 = 0.025
+h10 = 0.04
 
 y3s = 0.03
 y6s = 0.14
@@ -817,7 +817,7 @@ axColorDens = fig.add_axes([xw+w13, yh+h3+y1+ya+y2s+y2+h10, x1, y7])
 # create spectral color bar
 cpmap = plt.cm.get_cmap(plt.cm.plasma)
 cpmap = cpmap(np.linspace(0, 1, 100) ** 0.4)
-# cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
+cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
 cpmap = ListedColormap(cpmap)
 axColorDens.imshow(np.expand_dims(np.linspace(0,100,101),axis=0), aspect='auto', cmap=cpmap,vmin=0, vmax=100)
 axColorDens.plot([5, 5],[-.5, .5],'k',linewidth=lw)
@@ -828,8 +828,10 @@ text = axColorDens.text(40, 0, '40', ha="center", va="center_baseline", color="g
 text = axColorDens.text(60, 0, '60', ha="center", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
 text = axColorDens.text(80, 0, '80', ha="center", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
 text = axColorDens.text(100, 0, '100', ha="right", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
-text = axColorDens.text(0, 1.2, '5% lowest dens.', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
-text = axColorDens.text(75, 1.2, ' cells in 50% highest dens.', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(0, 1.2, '5% ofcells with', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(0, 1.8, 'lowest density', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(75, 1.2, '50% of cells with', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(75, 1.8, 'highest density', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
 axColorDens.set_yticks([])
 axColorDens.set_yticklabels([])
 axColorDens.set_xticks([-0.5, 5, 50, 100.5])
@@ -882,16 +884,17 @@ axTransition.plot([xlim[0], tf*cell_doubling[0]], [ylm, 0], '--', linewidth=lw2,
 axTransition.plot([xlim[1], tf*cell_doubling[1]], [ylm, 0], '--', linewidth=lw2, color=[0.5, 0.5, 1, 0.5])
 axTransition.axis('off')
 
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res1000_v2.png"
-# plt.savefig(plot_save_path, format="png", dpi=1000)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res600_v2.png"
-# plt.savefig(plot_save_path, format="png", dpi=600)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res300_v2.png"
-# plt.savefig(plot_save_path, format="png", dpi=300)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_v2.svg"
-# plt.savefig(plot_save_path, format="svg")
-# plt.close()
+plot_save_path = pic_root / f"heatmap_v11_20201123_res1000.png"
+plt.savefig(plot_save_path, format="png", dpi=1000)
+plot_save_path = pic_root / f"heatmap_v11_20201123_res600.png"
+plt.savefig(plot_save_path, format="png", dpi=600)
+plot_save_path = pic_root / f"heatmap_v11_20201123_res300.png"
+plt.savefig(plot_save_path, format="png", dpi=300)
+plot_save_path = pic_root / f"heatmap_v11_20201123.svg"
+plt.savefig(plot_save_path, format="svg")
+plt.close()
 
-plt.show()
+# plt.show()
+
 
 

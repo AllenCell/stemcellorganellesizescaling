@@ -49,7 +49,12 @@ def workflow_arg(n_sample,n_try):
     # Load dataset
     cells = pd.read_csv((org_root / 'SizeScaling_20201102.csv'))
     # Sample
-    cells.sample(n=int(n_sample)).to_csv(data_root / 'SizeScaling_20201102.csv')
+    structures = cells['structure_name'].unique()
+    index = pd.Series([])
+    for s, struct in enumerate(structures):
+        index = index.append(cells[cells['structure_name'] == struct].sample(n=int(n_sample)).index.to_series())
+    cells = cells.loc[index]
+    cells.to_csv(data_root / 'SizeScaling_20201102.csv')
     # Directories
     dirs = []
     dirs.append(data_root)
@@ -71,54 +76,54 @@ def workflow_arg(n_sample,n_try):
     # tableOUTL = "SizeScaling_20201006_outliers.csv"
     # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
-    #%% Data preparation - Diagnostic violins
-    # print('##################### Data preparation - Diagnostic violins #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    diagnostic_violins(dirs, tableIN)
+    # #%% Data preparation - Diagnostic violins
+    # # print('##################### Data preparation - Diagnostic violins #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # diagnostic_violins(dirs, tableIN)
 
-    #%% Computing statistics - Compensation analysis
+    # #%% Computing statistics - Compensation analysis
     # print('##################### Computing statistics - Compensation analysis #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    tableOUT = "SizeScaling_20201102_comp.csv"
-    compensate(dirs, tableIN, tableOUT)
-
+    # tableIN = "SizeScaling_20201102.csv"
+    # tableOUT = "SizeScaling_20201102_comp.csv"
+    # compensate(dirs, tableIN, tableOUT)
+    #
     #%% Computing statistics - Pairwise statistics
     # print('##################### Computing statistics - Pairwise statistics #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    table_compIN = "SizeScaling_20201102_comp.csv"
-    statsOUTdir = "Stats_20201102"
-    pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
-
-    #%% Computing statistics - Explained variance of composite models
-    print('##################### Computing statistics - Composite models #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    statsOUTdir = "Stats_20201102"
-    compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
-
-    #%% Computing statistics - Scaling statistics
-    print('##################### Computing statistics - Scaling statistics #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    statsOUTdir = "Stats_20201102"
-    scaling_stats(dirs, tableIN, statsOUTdir)
-
-    #%% Plotting scatterplots - Cell and nuclear metrics
-    print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    statsIN = "Stats_20201102"
-    cellnuc_scatter_plots(dirs, tableIN, statsIN)
-
-    #%% Plotting scatterplots - Organelle scatter plots
-    print('##################### Plotting scatterplots - Organelle scatter plots #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    statsIN = "Stats_20201102"
-    organelle_scatter_plots(dirs, tableIN, statsIN)
-
-    #%% Plotting scatterplots - Organelle scatter plots
-    print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
-    tableIN = "SizeScaling_20201102.csv"
-    table_compIN = "SizeScaling_20201102_comp.csv"
-    statsIN = "Stats_20201102"
-    organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
+    # tableIN = "SizeScaling_20201102.csv"
+    # table_compIN = "SizeScaling_20201102_comp.csv"
+    # statsOUTdir = "Stats_20201102"
+    # pairwisestats(dirs, tableIN, table_compIN, statsOUTdir, COMP_flag=False, PCA_flag=False)
+    #
+    # #%% Computing statistics - Explained variance of composite models
+    # print('##################### Computing statistics - Composite models #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # statsOUTdir = "Stats_20201102"
+    # compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
+    #
+    # #%% Computing statistics - Scaling statistics
+    # print('##################### Computing statistics - Scaling statistics #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # statsOUTdir = "Stats_20201102"
+    # scaling_stats(dirs, tableIN, statsOUTdir)
+    #
+    # #%% Plotting scatterplots - Cell and nuclear metrics
+    # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # statsIN = "Stats_20201102"
+    # cellnuc_scatter_plots(dirs, tableIN, statsIN)
+    #
+    # #%% Plotting scatterplots - Organelle scatter plots
+    # print('##################### Plotting scatterplots - Organelle scatter plots #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # statsIN = "Stats_20201102"
+    # organelle_scatter_plots(dirs, tableIN, statsIN)
+    #
+    # #%% Plotting scatterplots - Organelle scatter plots
+    # print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
+    # tableIN = "SizeScaling_20201102.csv"
+    # table_compIN = "SizeScaling_20201102_comp.csv"
+    # statsIN = "Stats_20201102"
+    # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
 if __name__ == '__main__':
     # Map command line arguments to function arguments.

@@ -86,7 +86,7 @@ FS['struct_metrics'] = [
 # %% Parameters
 nbins = 50 # for doubling values estimate
 growfac = 2
-nbins2 = 10 # for plotting curve
+nbins2 = 25 # for plotting curve
 perc_values = [5, 25, 50, 75, 95]  # for plotting curve
 type = 'Linear'
 save_dir = data_root / "growing"
@@ -140,7 +140,7 @@ ScaleMat = pd.DataFrame()
 ScaleCurve = pd.DataFrame()
 cell_doubling_interval = np.linspace(cell_doubling[0],cell_doubling[1],nbins2)
 ScaleCurve["cell_doubling_interval"]= cell_doubling_interval.squeeze()
-shift = 1*(cell_doubling_interval[1]-cell_doubling_interval[0])
+shift = 5*(cell_doubling_interval[1]-cell_doubling_interval[0])
 for yi, ylabel in enumerate(FS['cellnuc_metrics']):
     x = cells['Cell volume'].squeeze().to_numpy()
     y = cells[ylabel].squeeze().to_numpy()
@@ -206,7 +206,7 @@ for yi, ylabel in enumerate(FS['struct_metrics']):
 
 # %% Saving
 # ScaleMat.to_csv(save_dir / "ScaleStats_20201118.csv")
-ScaleCurve.to_csv(save_dir / "ScaleCurve_20201118.csv")
+ScaleCurve.to_csv(save_dir / "ScaleCurve_20201124.csv")
 
 # %% Make signals
 # cellnuc_metrics = ['Cell surface area', 'Cell volume', 'Cell height',

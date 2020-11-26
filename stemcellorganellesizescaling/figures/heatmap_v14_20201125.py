@@ -67,9 +67,8 @@ print(np.any(cells.isnull()))
 cells_COMP = pd.read_csv(data_root / table_compIN)
 print(np.any(cells_COMP.isnull()))
 structures = pd.read_csv(data_root / 'annotation' / "structure_annotated_20201113.csv")
-Grow = pd.read_csv(data_root / 'growing' / "Growthstats_20201102.csv")
-ScaleMat = pd.read_csv(data_root / 'growing' / "ScaleStats_20201118.csv")
-ScaleCurve = pd.read_csv(data_root / 'growing' / "ScaleCurve_20201118.csv")
+ScaleMat = pd.read_csv(data_root / 'Scale_20201102' / "ScaleStats_20201125.csv")
+ScaleCurve = pd.read_csv(data_root / 'Scale_20201102' / "ScaleCurve_20201125.csv")
 print(np.any(cells_COMP.isnull()))
 
 # %% Simple function to load statistics
@@ -252,7 +251,7 @@ HM["cellnuc_COMP_abbs"] = [
 ]
 
 HM["cellnuc_heatmap_RES_metrics"] = ['cell_AV', 'cell_V', 'cell_A', 'nuc_AV', 'nuc_V', 'nuc_A']
-HM["cellnuc_heatmap_RES_abbs"] =    ['Cell V+A', 'Cell vol', 'Cell area', 'Nuc V+A', 'Nuc Vol', 'Nuc Area']
+HM["cellnuc_heatmap_RES_abbs"] =    ['Cell v+a', 'Cell vol', 'Cell area', 'Nuc v+a', 'Nuc vol', 'Nuc area']
 
 HM["struct_heatmap_metrics"] = "Structure volume"
 HM["COMP_type"] = "AV"
@@ -373,30 +372,36 @@ w6 = 0.01
 w7 = 0.003
 w8 = 0.01
 w9 = 0.01
-w10 = 0.08
+w10 = 0.07
 w11 = -0.02
 w12 = 0.01
 w13 = 0.06
 w14 = 0.005
+w15 = 0.1
+w16 = 0.05
+w17 = 0.01
 
 x3s = 0.03
-x8s = 0.14
+x8s = 0.15
 x8 = 0.28
 x3 = (1-(w10+x8+x8s+x3s+w4+x3s+w5))/2
 x4 = 0.13
 x4r = 0.013
 x4l = x4-x4r
 x5 = 0.03
-x6 = 0.2
-x7 = 0.2
-x7l = x7/6
-x7r = x7-x7l
+x6 = 6*(0.4/12)
+x7 = 6*(0.4/12)
+x7l = 1*(0.4/12)
+x7r = 5*(0.4/12)
 # x8 = 1-w6-x4-w7-x5-w8-x6-w9-x7-w12-x7-w10-x8s-w5
 x9 = x7l+w12+x7r-w11+w9
 x10 = x7r
 x2s = 0.03
 xw = w6+x4+w7+x5+w8+x6+w9+x7l+w12+x7r
 x1 = 1-xw-w13-w14
+x11 = .4*x1
+x12 = (x1-w16-w17-w17)/3
+
 h1 = 0.03
 h2 = 0.005
 h3 = 0.05
@@ -406,7 +411,8 @@ h6 = 0.015
 h7 = 0.035
 h8 = 0.02
 h9 = 0.015
-h10 = 0.025
+h10 = 0.04
+h11 = 0.03
 
 y3s = 0.03
 y6s = 0.14
@@ -417,12 +423,14 @@ y4 = 0.355
 yh = h4+y6+y6s
 y5 = 1-(yh+y4+h5+h3)
 y7 = (y5+h5-h6-h7-h8-h9)/3
-y1 =  0.15
+y1 =  0.1
 ya = 0.02
 y2s = 0.03
 y2 = 1-yh-h3-y1-ya-y2s-h10-y7-h9
+y8 = y1
+y9 = y1-h11
 
-print(y4/15-y5/5)
+# print(y4/15-y5/5)
 
 # %% other parameters
 rot = -20
@@ -449,6 +457,12 @@ def adjust_lightness(color, amount=0.5):
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
     return colorsys.hls_to_rgb(c[0], min(amount, c[1]), c[2])
 
+# %% Figure settings
+plt.rcParams.update({"font.size": fs})
+plt.rcParams['font.sans-serif'] = fn
+plt.rcParams['font.family'] = "sans-serif"
+
+
 # %%
 # Relative
 from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import ascatter, oscatter, ocscatter
@@ -467,9 +481,6 @@ from stemcellorganellesizescaling.analyses.utils.grow_plotting_func import growp
 
 # %%layout
 fig = plt.figure(figsize=(12, 12))
-plt.rcParams.update({"font.size": fs})
-plt.rcParams['font.sans-serif'] = fn
-plt.rcParams['font.family'] = "sans-serif"
 
 # Scale4
 axScale4 = fig.add_axes([w3+x3s, y3s, x3, y3])
@@ -636,8 +647,9 @@ axGrowVarS.set_ylabel('Structure volume scaling as cell volume doubles  (%)')
 axGrowVarS.grid()
 
 # GrowVarS bottom
-axGrowVarSB= fig.add_axes([w3+x3s+x3+w4+x3s+x3+w10, h4+y6, x8+x8s/2, y6s])
-xrange = [10, 100*(1*(x8s/2+x8)/x8)]
+axGrowVarSB= fig.add_axes([w3+x3s+x3+w4+x3s+x3+w10, h4+y6, x8+x8s, y6s])
+# xrange = [10, 100*(1*(x8s/2+x8)/x8)]
+xrange = [10, 100]
 pos =  np.argwhere(np.logical_and(panAll[:,0]>xrange[0],panAll[:,0]<xrange[1]))
 xarray = panAll[pos,0].squeeze()
 temp = xarray.argsort()
@@ -647,6 +659,9 @@ panx = panAll[:,0].copy()
 panx[pos] = np.expand_dims(ranks,axis=1)
 disx = np.sort(panx)
 disx = (disx[1]-disx[0])/2
+fac = 1.2
+panx = panx*fac
+disx = disx*fac
 for i in np.arange(len(growvec)):
     growval = growvec[i,0]
     struct = ann_st[i, 1]
@@ -656,7 +671,7 @@ for i in np.arange(len(growvec)):
     axGrowVarSB.fill([panxval-disx, panxval+disx, panxval+disx, panxval-disx],[0.8, 0.8, 1.15, 1.15],facecolor=color_st.loc[i, 'Color'], edgecolor='None')
     axGrowVarSB.text(panxval, 1.2, struct, fontsize=fs, fontname=fn, color='k', verticalalignment='bottom',fontweight='normal',horizontalalignment='center',rotation=90)
 axGrowVarSB.set_ylim(bottom=0,top=5)
-axGrowVarSB.set_xlim(left=0, right=100*(1*(x8s/2+x8)/x8))
+axGrowVarSB.set_xlim(left=0, right=100*(1*(x8s+x8)/x8))
 axGrowVarSB.axis("off")
 
 # Annotation
@@ -787,8 +802,8 @@ text = axExpVarBar.text(100, 0, '0', ha="center", va="center", color="k", fontsi
 axExpVarBar.set_yticks([])
 axExpVarBar.set_yticklabels([])
 axExpVarBar.set_xticks([50, 150])
-axExpVarBar.set_xticklabels(['Neg. corr.', 'Pos. corr.'],verticalalignment='center')
-axExpVarBar.set_title('Explained Variance (%)',verticalalignment='top',fontsize=fs)
+axExpVarBar.set_xticklabels(['Neg. corr.', 'Pos. corr.'],verticalalignment='center',fontsize=fs)
+axExpVarBar.set_title('Explained variance (%)',verticalalignment='top',fontsize=fs)
 
 axGrowBar= fig.add_axes([w6+x4+w7+x5+w8+x6+w11, yh+h3+y4+h6+y7+h7+y7+h8, x9, y7])
 axGrowBar.imshow(np.expand_dims(np.linspace(0,100,101),axis=0), aspect='auto', cmap='Greens',vmin=0, vmax=100)
@@ -801,15 +816,82 @@ axGrowBar.set_xticks([])
 axGrowBar.set_xticklabels([])
 axGrowBar.set_title('Scaling rate relative to cell volume (%)',verticalalignment='top',fontsize=fs)
 
-# GrowCell
-axGrowCell = fig.add_axes([xw+w13, yh+h3, x1, y1])
+# % GrowCell
+axGrowCell = fig.add_axes([xw+w13, yh+h3, x11, y8])
+tf = (0.108333**3)
+xlabels = np.ceil(tf*np.linspace(cell_doubling[0],cell_doubling[-1],3)).astype(np.int)
+ylabels = np.linspace(0,100,3).astype(np.int)
+axGrowCell.set_xlim(left=0, right=100)
+axGrowCell.set_ylim(bottom=-25, top=125)
+axGrowCell.set_xticks(ylabels)
+axGrowCell.set_xticklabels(xlabels.squeeze())
+axGrowCell.set_yticks(ylabels)
+axGrowCell.set_yticklabels([])
+for n, val in enumerate(ylabels):
+    if n>0:
+        axGrowCell.text(val, -25, f"{val}%", fontsize=fs,
+                    horizontalalignment='center', verticalalignment='bottom', color=[0.5, 0.5, 0.5, 1])
+for n, val in enumerate(ylabels):
+    if n==0:
+        axGrowCell.text(0, val, f" {val}%", fontsize=fs,
+                        horizontalalignment='left', verticalalignment='center', color=[0.5, 0.5, 0.5,1])
+    else:
+        axGrowCell.text(0, val, f" {val}%", fontsize=fs,
+                    horizontalalignment='left', verticalalignment='center', color=[0.5, 0.5, 0.5, 1])
+
+axGrowCell.spines['top'].set_visible(False)
+axGrowCell.spines['right'].set_visible(False)
+axGrowCell.text(-7,50, "Scaling rate (%)", fontsize=fs,
+                    horizontalalignment='center', verticalalignment='center',rotation=90)
+axGrowCell.text(50, -60, f"Cell volume (\u03BCm\u00b3)",fontsize=fs,horizontalalignment = 'center',verticalalignment='top')
+
+yd = 0.02
+axGrowCellLegend = fig.add_axes([xw+w13+x11, yh+h3-yd, x1-x11, h11+yd])
+axGrowCellLegend.set_xlim(left=-.2, right=.8)
+axGrowCellLegend.set_ylim(bottom=0, top=1)
+axGrowCellLegend.fill([.3, .5, .5, .3],[.1, .1, .7, .7], color='gray')
+axGrowCellLegend.plot([.3, .25],[.7, .75], color='k')
+axGrowCellLegend.text(.25,.7,'IQR ',ha='right',va='center',fontsize=fs)
+c = structures.loc[structures["Gene"] == 'RAB5A', "Color"].item()
+color1 = mcolors.to_rgb(c)
+axGrowCellLegend.plot([.3, .5],[.3, .3], color=color1,linewidth=2)
+axGrowCellLegend.text(.5,.3,' scaling',ha='left',va='center_baseline',fontsize=fs)
+axGrowCellLegend.plot([.3, .5],[.5, .5], color='k',linewidth=2,linestyle='dashed')
+axGrowCellLegend.text(.5,.5,' y=x',ha='left',va='center_baseline',fontsize=fs)
+axGrowCellLegend.axis('off')
+
+
+# Small inlays
+stats_root = data_root / statsIN / "cellnuc_struct_metrics"
+axGrowCell1 = fig.add_axes([xw+w13+w16, yh+h3+h11, x12, y9])
 growplot(
-    axGrowCell,
-    'Cell volume_mean',
-    ['RAB5A','SLC25A17','TOMM20'],
+    axGrowCell1,
+    'Cell volume',
+    'RAB5A',
     ScaleCurve,
     structures,
     fs,
+    stats_root,
+)
+axGrowCell2 = fig.add_axes([xw+w13+w16+x12+w17, yh+h3+h11, x12, y9])
+growplot(
+    axGrowCell2,
+    'Cell volume',
+    'SLC25A17',
+    ScaleCurve,
+    structures,
+    fs,
+    stats_root,
+)
+axGrowCell3 = fig.add_axes([xw+w13+w16+x12+w17+x12+w17, yh+h3+h11, x12, y9])
+growplot(
+    axGrowCell3,
+    'Cell volume',
+    'TOMM20',
+    ScaleCurve,
+    structures,
+    fs,
+    stats_root,
 )
 
 # Density bar
@@ -817,7 +899,7 @@ axColorDens = fig.add_axes([xw+w13, yh+h3+y1+ya+y2s+y2+h10, x1, y7])
 # create spectral color bar
 cpmap = plt.cm.get_cmap(plt.cm.plasma)
 cpmap = cpmap(np.linspace(0, 1, 100) ** 0.4)
-# cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
+cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
 cpmap = ListedColormap(cpmap)
 axColorDens.imshow(np.expand_dims(np.linspace(0,100,101),axis=0), aspect='auto', cmap=cpmap,vmin=0, vmax=100)
 axColorDens.plot([5, 5],[-.5, .5],'k',linewidth=lw)
@@ -828,8 +910,10 @@ text = axColorDens.text(40, 0, '40', ha="center", va="center_baseline", color="g
 text = axColorDens.text(60, 0, '60', ha="center", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
 text = axColorDens.text(80, 0, '80', ha="center", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
 text = axColorDens.text(100, 0, '100', ha="right", va="center_baseline", color="gray", fontsize=fs, fontweight='normal')
-text = axColorDens.text(0, 1.2, '5% lowest dens.', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
-text = axColorDens.text(75, 1.2, ' cells in 50% highest dens.', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(0, 1.2, '5% ofcells with', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(0, 1.8, 'lowest density', ha="left", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(75, 1.2, '50% of cells with', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
+text = axColorDens.text(75, 1.8, 'highest density', ha="center", va="center", color="k", fontsize=fs, fontweight='normal')
 axColorDens.set_yticks([])
 axColorDens.set_yticklabels([])
 axColorDens.set_xticks([-0.5, 5, 50, 100.5])
@@ -870,28 +954,22 @@ ascatter(
 xlim = axGrowB.get_xlim()
 ylim = axGrowB.get_ylim()
 tf = (0.108333**3)
-axGrowB.plot([tf*cell_doubling[0], tf*cell_doubling[0]], ylim, '--', linewidth=lw2,color=[0.5, 0.5, 1, 0.5])
-axGrowB.plot([tf*cell_doubling[1], tf*cell_doubling[1]], ylim, '--', linewidth=lw2,color=[0.5, 0.5, 1, 0.5])
+darkgreen = [0., 0.26666667, 0.10588235, 1.]
+# axGrowB.plot([tf*cell_doubling[0], tf*cell_doubling[0]], ylim, '--', linewidth=lw2,color=darkgreen)
+# axGrowB.plot([tf*cell_doubling[1], tf*cell_doubling[1]], ylim, '--', linewidth=lw2,color=darkgreen)
+axGrowB.text(tf*cell_doubling[0], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.round(tf*cell_doubling[0]))}",verticalalignment='top',horizontalalignment='center')
+axGrowB.text(tf*cell_doubling[1], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.ceil(tf*cell_doubling[1]))}",verticalalignment='top',horizontalalignment='center')
 
-# Transition
-axTransition = fig.add_axes([xw+w13, yh+h3+y1, x1, ya])
-axTransition.set_xlim(left=xlim[0], right=xlim[1])
-ylm = -1
-axTransition.set_ylim(bottom=ylm, top=0)
-axTransition.plot([xlim[0], tf*cell_doubling[0]], [ylm, 0], '--', linewidth=lw2,color=[0.5, 0.5, 1, 0.5])
-axTransition.plot([xlim[1], tf*cell_doubling[1]], [ylm, 0], '--', linewidth=lw2, color=[0.5, 0.5, 1, 0.5])
-axTransition.axis('off')
-
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res1000_v2.png"
+# plot_save_path = pic_root / f"heatmap_v13_20201124_res1000.png"
 # plt.savefig(plot_save_path, format="png", dpi=1000)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res600_v2.png"
+# plot_save_path = pic_root / f"heatmap_v13_20201124_res600.png"
 # plt.savefig(plot_save_path, format="png", dpi=600)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_res300_v2.png"
+# plot_save_path = pic_root / f"heatmap_v13_20201124_res300.png"
 # plt.savefig(plot_save_path, format="png", dpi=300)
-# plot_save_path = pic_root / f"heatmap_v10_20201120_v2.svg"
+# plot_save_path = pic_root / f"heatmap_v13_20201124.svg"
 # plt.savefig(plot_save_path, format="svg")
 # plt.close()
 
-plt.show()
 
+plt.show()
 
