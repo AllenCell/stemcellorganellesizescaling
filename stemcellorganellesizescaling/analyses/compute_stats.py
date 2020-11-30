@@ -129,7 +129,7 @@ def compensate(
 
 # %% function defintion of regression model compensation
 def pairwisestats(
-    dirs: list, dataset: Path, dataset_comp: Path, statsOUTdir: Path, COMP_flag=True, PCA_flag=True,
+    dirs: list, dataset: Path, dataset_comp: Path, statsOUTdir: Path, COMP_flag=True, PCA_flag=True, SubSample_flag=False,
 ):
     """
     Computing an array of pairwise statistics
@@ -148,6 +148,8 @@ def pairwisestats(
         Binary flag to compute statistics for compensation analysis
     PCA_flag=True
         Binary flag to compute statistics for PCA components
+    SubSample_flag=False
+        Binary flag to compute only regression stats (if True), and not rolling average and density estimate
     """
 
     # %%
@@ -220,7 +222,7 @@ def pairwisestats(
                 x = np.expand_dims(x, axis=1)
                 y = cells[ylabel].squeeze().to_numpy()
                 y = np.expand_dims(y, axis=1)
-                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, 'None'))
+                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, 'None', SubSample_flag))
     # prepare directory
     save_dir = (data_root / statsOUTdir / 'cell_nuc_metrics')
     save_dir.mkdir(exist_ok=True)
@@ -253,7 +255,7 @@ def pairwisestats(
                 x = np.expand_dims(x, axis=1)
                 y = cells.loc[cells["structure_name"] == struct, ylabel].squeeze().to_numpy()
                 y = np.expand_dims(y, axis=1)
-                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, struct))
+                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, struct, SubSample_flag))
     # prepare directory
     save_dir = (data_root / statsOUTdir / 'cellnuc_struct_metrics')
     save_dir.mkdir(exist_ok=True)
@@ -294,7 +296,7 @@ def pairwisestats(
                                 x = np.expand_dims(x, axis=1)
                                 y = cells_COMP.loc[cells_COMP["structure_name"] == struct, col1].squeeze().to_numpy()
                                 y = np.expand_dims(y, axis=1)
-                                D.update(calculate_pairwisestats(x, y, col2, col1, struct))
+                                D.update(calculate_pairwisestats(x, y, col2, col1, struct, SubSample_flag))
         # prepare directory
         save_dir = (data_root / statsOUTdir / 'cellnuc_struct_COMP_metrics')
         save_dir.mkdir(exist_ok=True)
@@ -325,7 +327,7 @@ def pairwisestats(
                 x = np.expand_dims(x, axis=1)
                 y = cells[ylabel].squeeze().to_numpy()
                 y = np.expand_dims(y, axis=1)
-                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, 'None'))
+                D.update(calculate_pairwisestats(x, y, xlabel, ylabel, 'None', SubSample_flag))
         # prepare directory
         save_dir = (data_root / statsOUTdir / 'cell_nuc_PCA_metrics')
         save_dir.mkdir(exist_ok=True)
@@ -491,7 +493,7 @@ def scaling_stats(
     growfac = 2
     nbins2 = 25  # for plotting curve
     perc_values = [5, 25, 50, 75, 95]  # for plotting curve
-    type = 'Linear'
+    Type = 'Linear'
 
 
     # %% Doubling values
@@ -537,7 +539,7 @@ def scaling_stats(
     for yi, ylabel in enumerate(FS['cellnuc_metrics']):
         x = cells['Cell volume'].squeeze().to_numpy()
         y = cells[ylabel].squeeze().to_numpy()
-        scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, 'None', Nbootstrap=100)
+        scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, Type, cell_doubling, 'None', Nbootstrap=100)
         ScaleMat[f"{ylabel}_prc"] = scaling_stats[:,0]
         ScaleMat[f"{ylabel}_log"] = scaling_stats[:,1]
         if yi==0:
@@ -551,11 +553,11 @@ def scaling_stats(
             pos = np.argwhere(
                 np.all(np.concatenate((x2 >= (vol - shift), x2 <= (vol + shift)), axis=1), axis=1)).astype(
                 np.int).squeeze()
-            if len(pos) < 1:
+            if pos.size < 1:
                 y_res[j, :] = np.nan
-                y_res[j, 0] = len(pos)
+                y_res[j, 0] = pos.size
             else:
-                y_res[j, 0] = len(pos)
+                y_res[j, 0] = pos.size
                 y_res[j, 1] = np.mean(y[pos])
                 y_res[j, 2:(len(perc_values) + 2)] = np.percentile(y[pos], perc_values)
         ScaleCurve[(f"{ylabel}_n")] = y_res[:, 0]
@@ -576,7 +578,7 @@ def scaling_stats(
                     .squeeze()
                     .to_numpy()
             )
-            scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, type, cell_doubling, struct, Nbootstrap=100)
+            scaling_stats = bootstrap_linear_and_log_model(x, y, 'Cell volume', ylabel, Type, cell_doubling, struct, Nbootstrap=100)
             ScaleMat[f"{ylabel}_{struct}prc"] = scaling_stats[:, 0]
             ScaleMat[f"{ylabel}_{struct}log"] = scaling_stats[:, 1]
             PM = np.concatenate((PM, scaling_stats), axis=0)
@@ -587,11 +589,11 @@ def scaling_stats(
                 pos = np.argwhere(
                     np.all(np.concatenate((x2 >= (vol - shift), x2 <= (vol + shift)), axis=1), axis=1)).astype(
                     np.int).squeeze()
-                if len(pos) < 1:
+                if pos.size < 1:
                     y_res[j, :] = np.nan
-                    y_res[j, 0] = len(pos)
+                    y_res[j, 0] = pos.size
                 else:
-                    y_res[j, 0] = len(pos)
+                    y_res[j, 0] = pos.size
                     y_res[j, 1] = np.mean(y[pos])
                     y_res[j, 2:(len(perc_values) + 2)] = np.percentile(y[pos], perc_values)
             ScaleCurve[(f"{ylabel}_{struct}_n")] = y_res[:, 0]

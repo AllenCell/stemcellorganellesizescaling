@@ -92,7 +92,7 @@ def workflow_arg(n_sample,n_try):
     tableIN = "SizeScaling_20201102.csv"
     table_compIN = "SizeScaling_20201102_comp.csv"
     statsOUTdir = "Stats_20201102"
-    pairwisestats(dirs, tableIN, table_compIN, statsOUTdir, COMP_flag=False, PCA_flag=False)
+    pairwisestats(dirs, tableIN, table_compIN, statsOUTdir, COMP_flag=False, PCA_flag=False, SubSample_flag=False)
 
     # #%% Computing statistics - Explained variance of composite models
     print('##################### Computing statistics - Composite models #####################')

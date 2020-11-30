@@ -73,7 +73,7 @@ def growplot(
     xd = ScaleCurve['cell_doubling_interval'].to_numpy()
     cd0 = xd[0]
     cd1 = xd[-1]
-    f = interpolate.interp1d(xii[:, 0], pred_yL)
+    f = interpolate.interp1d(xii[:, 0], pred_yL, kind='linear', fill_value="extrapolate", bounds_error=False)
     y0 = f(cd0)
     y1 = f(cd1)
     ym = ScaleCurve[f"Structure volume_{metric2}_mean"].to_numpy()

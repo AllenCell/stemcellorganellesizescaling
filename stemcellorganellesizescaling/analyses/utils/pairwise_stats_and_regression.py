@@ -128,7 +128,7 @@ def fit_ols(x, y, type, xa=np.nan):
 
 
 # %% function defintion of regression model compensation
-def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
+def calculate_pairwisestats(x, y, xlabel, ylabel, struct, SubSample_flag):
     """
        Calculate residual values
 
@@ -139,6 +139,7 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
        xlabel: label of x array
        ylabel: label of y array
        struct: Name of structure of 'None' if across all structures
+       SubSample_flag: Binary flag to compute only regression stats (if True), and not rolling average and density estimate
 
        Output
        ----------
@@ -190,38 +191,40 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
     pred_matL = np.mean(pred_matL, axis=1)
     pred_matC = np.mean(pred_matC, axis=1)
 
-    # density estimate
-    xS, yS = resample(
-        x.squeeze(),
-        y.squeeze(),
-        replace=False,
-        n_samples=np.amin([N, len(x)]),
-        random_state=rs,
-    )
-    k = gaussian_kde(np.vstack([xS, yS]))
-    zii = k(np.vstack([xii.flatten(), yii.flatten()]))
-    cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
-    # make into cumulative sum
-    zii = zii / np.sum(zii)
-    ix = np.argsort(zii)
-    zii = zii[ix]
-    zii = np.cumsum(zii)
-    jx = np.argsort(ix)
-    zii = zii[jx]
-    zii = zii.reshape(xii.shape)
+    if SubSample_flag is False:
 
-    # rolling average
-    idx = np.digitize(x.squeeze(), xi.squeeze())
-    x_ra = np.zeros((nbins - 1, 1))
-    y_ra = np.zeros((nbins - 1, 6))
-    for n in range(nbins - 1):
-        x_ra[n] = np.mean([xi[n], xi[n + 1]])
-        sc = np.argwhere(idx == (n + 1))
-        if len(sc) < minbinsize:
-            y_ra[n, :] = np.nan
-        else:
-            y_ra[n, 0] = np.mean(y[sc])
-            y_ra[n, 1:6] = np.percentile(y[sc], [5, 25, 50, 75, 95])
+        # density estimate
+        xS, yS = resample(
+            x.squeeze(),
+            y.squeeze(),
+            replace=False,
+            n_samples=np.amin([N, len(x)]),
+            random_state=rs,
+        )
+        k = gaussian_kde(np.vstack([xS, yS]))
+        zii = k(np.vstack([xii.flatten(), yii.flatten()]))
+        cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+        # make into cumulative sum
+        zii = zii / np.sum(zii)
+        ix = np.argsort(zii)
+        zii = zii[ix]
+        zii = np.cumsum(zii)
+        jx = np.argsort(ix)
+        zii = zii[jx]
+        zii = zii.reshape(xii.shape)
+
+        # rolling average
+        idx = np.digitize(x.squeeze(), xi.squeeze())
+        x_ra = np.zeros((nbins - 1, 1))
+        y_ra = np.zeros((nbins - 1, 6))
+        for n in range(nbins - 1):
+            x_ra[n] = np.mean([xi[n], xi[n + 1]])
+            sc = np.argwhere(idx == (n + 1))
+            if len(sc) < minbinsize:
+                y_ra[n, :] = np.nan
+            else:
+                y_ra[n, 0] = np.mean(y[sc])
+                y_ra[n, 1:6] = np.percentile(y[sc], [5, 25, 50, 75, 95])
 
     # Fill dictionary
     D = {}
@@ -231,24 +234,26 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct):
         D[f"{xlabel}_{ylabel}_pred_matL"] = pred_matL
         D[f"{xlabel}_{ylabel}_rs_vecC"] = rs_vecC
         D[f"{xlabel}_{ylabel}_pred_matC"] = pred_matC
-        D[f"{xlabel}_{ylabel}_xii"] = xii
-        D[f"{xlabel}_{ylabel}_yii"] = yii
-        D[f"{xlabel}_{ylabel}_zii"] = zii
-        D[f"{xlabel}_{ylabel}_cell_dens"] = cell_dens
-        D[f"{xlabel}_{ylabel}_x_ra"] = x_ra
-        D[f"{xlabel}_{ylabel}_y_ra"] = y_ra
+        if SubSample_flag is False:
+            D[f"{xlabel}_{ylabel}_xii"] = xii
+            D[f"{xlabel}_{ylabel}_yii"] = yii
+            D[f"{xlabel}_{ylabel}_zii"] = zii
+            D[f"{xlabel}_{ylabel}_cell_dens"] = cell_dens
+            D[f"{xlabel}_{ylabel}_x_ra"] = x_ra
+            D[f"{xlabel}_{ylabel}_y_ra"] = y_ra
     else:
         D[f"{xlabel}_{ylabel}_{struct}_xi"] = xi
         D[f"{xlabel}_{ylabel}_{struct}_rs_vecL"] = rs_vecL
         D[f"{xlabel}_{ylabel}_{struct}_pred_matL"] = pred_matL
         D[f"{xlabel}_{ylabel}_{struct}_rs_vecC"] = rs_vecC
         D[f"{xlabel}_{ylabel}_{struct}_pred_matC"] = pred_matC
-        D[f"{xlabel}_{ylabel}_{struct}_xii"] = xii
-        D[f"{xlabel}_{ylabel}_{struct}_yii"] = yii
-        D[f"{xlabel}_{ylabel}_{struct}_zii"] = zii
-        D[f"{xlabel}_{ylabel}_{struct}_cell_dens"] = cell_dens
-        D[f"{xlabel}_{ylabel}_{struct}_x_ra"] = x_ra
-        D[f"{xlabel}_{ylabel}_{struct}_y_ra"] = y_ra
+        if SubSample_flag is False:
+            D[f"{xlabel}_{ylabel}_{struct}_xii"] = xii
+            D[f"{xlabel}_{ylabel}_{struct}_yii"] = yii
+            D[f"{xlabel}_{ylabel}_{struct}_zii"] = zii
+            D[f"{xlabel}_{ylabel}_{struct}_cell_dens"] = cell_dens
+            D[f"{xlabel}_{ylabel}_{struct}_x_ra"] = x_ra
+            D[f"{xlabel}_{ylabel}_{struct}_y_ra"] = y_ra
 
     return D
 
