@@ -66,7 +66,7 @@ tableIN = "SizeScaling_20201102.csv"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
-save_flag = 1
+save_flag = 0
 
 # %% Time vs. structure
 timestr = cells["ImageDate"]

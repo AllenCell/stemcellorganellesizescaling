@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Standard library
 import logging
 from pathlib import Path
 import pandas as pd
@@ -2474,7 +2473,7 @@ def ascatter(
         elif colorpoints_flag is True:
             sorted_cells = np.argsort(cii)
             cii[sorted_cells] = np.arange(len(sorted_cells))
-            ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
+            qqq = ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
         else:
             ax.pcolormesh(xii, yii, zii, cmap=plt.cm.magma)
             sorted_cells = np.argsort(cii)
@@ -2489,6 +2488,7 @@ def ascatter(
     yticks = ax.get_yticks()
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
+    # qqq.remove()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     ax.grid()
@@ -2496,6 +2496,7 @@ def ascatter(
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
         if (fourcolors_flag is True) or (colorpoints_flag is True):
+            1+1
             ax.text(
                 -0.02 * (xlim[1] - xlim[0]) + xlim[1],
                 -0.02 * (ylim[1] - ylim[0]) + ylim[1],
@@ -2688,6 +2689,7 @@ def ascatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
+                    1+1
                     axB.text(
                         val,
                         ylimBH[0],
@@ -2719,8 +2721,12 @@ def ascatter(
                     color=[0.5, 0.5, 0.5, 0.5],
                 )
 
+    if len(cell_doubling) > 0:
+        xpos = xlim[0]+.75*(xlim[1]-xlim[0])
+    else:
+        xpos = np.mean(xlim)
     axB.text(
-        xlim[0]+.75*(xlim[1]-xlim[0]),
+        xpos,
         np.mean(ylimBH),
         f"{abbX}",
         fontsize=fs2,
@@ -2747,6 +2753,7 @@ def ascatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
+                    1+1
                     axS.text(
                         xlimSH[0],
                         val,
@@ -2894,7 +2901,7 @@ def oscatter(
         elif colorpoints_flag is True:
             sorted_cells = np.argsort(cii)
             cii[sorted_cells] = np.arange(len(sorted_cells))
-            ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
+            qqq = ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
         else:
             ax.pcolormesh(xii, yii, zii, cmap=plt.cm.magma)
             sorted_cells = np.argsort(cii)
@@ -2909,12 +2916,14 @@ def oscatter(
     yticks = ax.get_yticks()
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
+    # qqq.remove()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     ax.grid()
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
         if (fourcolors_flag is True) or (colorpoints_flag is True):
+            1+1
             ax.text(
                 -0.02 * (xlim[1] - xlim[0]) + xlim[1],
                 -0.02 * (ylim[1] - ylim[0]) + ylim[1],
@@ -3101,6 +3110,7 @@ def oscatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
+                    1+1
                     axB.text(
                         val,
                         ylimBH[0],
@@ -3160,6 +3170,7 @@ def oscatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
+                    1+1
                     axS.text(
                         xlimSH[0],
                         val,

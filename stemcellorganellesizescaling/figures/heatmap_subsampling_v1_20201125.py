@@ -53,6 +53,7 @@ dirs.append(pic_root)
 
 save_flag = 0
 plt.rcParams.update({"font.size": 8})
+plt.rcParams['svg.fonttype'] = 'none'
 
 # %% Start
 
@@ -963,8 +964,10 @@ darkgreen = [0., 0.26666667, 0.10588235, 1.]
 axGrowB.text(tf*cell_doubling[0], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.round(tf*cell_doubling[0]))}",verticalalignment='top',horizontalalignment='center')
 axGrowB.text(tf*cell_doubling[1], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.ceil(tf*cell_doubling[1]))}",verticalalignment='top',horizontalalignment='center')
 
-plot_save_path = pic_root / f"heatmap_subsample_v1_20201124_{Nsample}.png"
-plt.savefig(plot_save_path, format="png", dpi=600)
-plt.close()
+# plot_save_path = pic_root / f"heatmap_subsample_v1_20201124_{Nsample}.png"
+# plt.savefig(plot_save_path, format="png", dpi=600)
+# plot_save_path = pic_root / f"heatmap_subsample_v1_20201124_{Nsample}.svg"
+# plt.savefig(plot_save_path, format="svg")
+plt.show()
 
 

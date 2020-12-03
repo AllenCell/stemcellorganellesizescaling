@@ -51,7 +51,6 @@ dirs.append(pic_root)
 
 save_flag = 0
 plt.rcParams.update({"font.size": 8})
-plt.rcParams['svg.fonttype'] = 'none'
 
 # %% Start
 
@@ -506,8 +505,8 @@ oscatter(
     kde_flag=True,
     fourcolors_flag=False,
     colorpoints_flag=True,
-    rollingavg_flag=True,
-    ols_flag=True,
+    rollingavg_flag=False,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -536,8 +535,8 @@ oscatter(
     kde_flag=True,
     fourcolors_flag=False,
     colorpoints_flag=True,
-    rollingavg_flag=True,
-    ols_flag=True,
+    rollingavg_flag=False,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -566,8 +565,8 @@ oscatter(
     kde_flag=True,
     fourcolors_flag=False,
     colorpoints_flag=True,
-    rollingavg_flag=True,
-    ols_flag=True,
+    rollingavg_flag=False,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -597,8 +596,8 @@ oscatter(
     kde_flag=True,
     fourcolors_flag=False,
     colorpoints_flag=True,
-    rollingavg_flag=True,
-    ols_flag=True,
+    rollingavg_flag=False,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -944,8 +943,8 @@ ascatter(
     kde_flag=True,
     fourcolors_flag=False,
     colorpoints_flag=True,
-    rollingavg_flag=True,
-    ols_flag=True,
+    rollingavg_flag=False,
+    ols_flag=False,
     N2=1000,
     fs2=fs,
     fs=fs,
@@ -963,17 +962,14 @@ darkgreen = [0., 0.26666667, 0.10588235, 1.]
 axGrowB.text(tf*cell_doubling[0], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.round(tf*cell_doubling[0]))}",verticalalignment='top',horizontalalignment='center')
 axGrowB.text(tf*cell_doubling[1], ylim[1] + 0.5*(ylim[0]-ylim[1]), f"{int(np.ceil(tf*cell_doubling[1]))}",verticalalignment='top',horizontalalignment='center')
 
-# plot_save_path = pic_root / f"heatmap_v14_20201202_res1000.png"
-# plt.savefig(plot_save_path, format="png", dpi=1000)
-# plot_save_path = pic_root / f"heatmap_v14_20201202_res600.png"
-# plt.savefig(plot_save_path, format="png", dpi=600)
-# plot_save_path = pic_root / f"heatmap_v14_20201202_res300.png"
-# plt.savefig(plot_save_path, format="png", dpi=300)
-plot_save_path = pic_root / f"heatmap_v14_20201202_fonttypenone.svg"
-plt.savefig(plot_save_path, format="svg")
-plot_save_path = pic_root / f"heatmap_v14_20201202_fonttypenone.pdf"
-plt.savefig(plot_save_path, format="pdf")
-
+plot_save_path = pic_root / f"heatmap_v14_20201202_res1000_onlypoints.png"
+plt.savefig(plot_save_path, format="png", dpi=1000)
+plot_save_path = pic_root / f"heatmap_v14_20201202_res600_onlypoints.png"
+plt.savefig(plot_save_path, format="png", dpi=600)
+plot_save_path = pic_root / f"heatmap_v14_20201202_res300_onlypoints.png"
+plt.savefig(plot_save_path, format="png", dpi=300)
+# plot_save_path = pic_root / f"heatmap_v14_20201202_nopoints.svg"
+# plt.savefig(plot_save_path, format="svg")
 
 # plt.close()
 
