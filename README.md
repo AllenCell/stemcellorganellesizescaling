@@ -5,7 +5,7 @@ Python repository for organelle size scaling analyses and figures of the stem ce
 
 ## Brief overview
 
-![ExamplePicture](docs/cellvol_vs_nucvol.png)
+![ExamplePicture](docs/cellvol_vs_nucvol.png =250x)
 
 
 
