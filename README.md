@@ -5,9 +5,7 @@ Python repository for organelle size scaling analyses and figures of the stem ce
 
 ## Brief overview
 
-![ExamplePicture](docs/cellvol_vs_nucvol.png =250x)
-
-
+<img src="docs/cellvol_vs_nucvol.png" width="200">
 
 
 ***Free software: Allen Institute Software License***
