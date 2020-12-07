@@ -2482,16 +2482,17 @@ def ascatter(
             min_cells = min_cells.astype(int)
             ax.plot(x[min_cells], y[min_cells], "w.", markersize=ms)
     else:
-        ax.plot(x, y, "b.", markersize=ms)
+        qqq = ax.plot(x, y, 'b.', markersize=ms)
 
     xticks = ax.get_xticks()
     yticks = ax.get_yticks()
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
-    # qqq.remove()
+    # qqqq = qqq.pop(0)
+    # qqqq.remove()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    ax.grid()
+    # ax.grid()
 
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
@@ -2517,14 +2518,15 @@ def ascatter(
                 color="white",
             )
     else:
-        ax.text(
-            xlim[1],
-            ylim[1],
-            f"n= {len(x)}",
-            fontsize=fs,
-            verticalalignment="top",
-            horizontalalignment="right",
-        )
+        1+1
+        # ax.text(
+        #     xlim[1],
+        #     ylim[1],
+        #     f"n= {len(x)}",
+        #     fontsize=fs,
+        #     verticalalignment="top",
+        #     horizontalalignment="right",
+        # )
     if rollingavg_flag is True:
         rollavg_x = loadps(stats_root, f"{metricX}_{metricY}_x_ra") / facX
         rollavg_y = loadps(stats_root, f"{metricX}_{metricY}_y_ra") / facY
@@ -2711,15 +2713,16 @@ def ascatter(
                     )
 
             else:
-                axB.text(
-                    val,
-                    ylimBH[0],
-                    f"{val}",
-                    fontsize=fs,
-                    horizontalalignment="center",
-                    verticalalignment="bottom",
-                    color=[0.5, 0.5, 0.5, 0.5],
-                )
+                1+1
+                # axB.text(
+                #     val,
+                #     ylimBH[0],
+                #     f"{val}",
+                #     fontsize=fs,
+                #     horizontalalignment="center",
+                #     verticalalignment="bottom",
+                #     color=[0.5, 0.5, 0.5, 0.5],
+                # )
 
     if len(cell_doubling) > 0:
         xpos = xlim[0]+.75*(xlim[1]-xlim[0])
@@ -2774,15 +2777,16 @@ def ascatter(
                         color=[1, 1, 1, 0.5],
                     )
             else:
-                axS.text(
-                    xlimSH[0],
-                    val,
-                    f"{val}",
-                    fontsize=fs,
-                    horizontalalignment="left",
-                    verticalalignment="center",
-                    color=[0.5, 0.5, 0.5, 0.5],
-                )
+                1+1
+                # axS.text(
+                #     xlimSH[0],
+                #     val,
+                #     f"{val}",
+                #     fontsize=fs,
+                #     horizontalalignment="left",
+                #     verticalalignment="center",
+                #     color=[0.5, 0.5, 0.5, 0.5],
+                # )
 
     axS.text(
         np.mean(xlimSH),
