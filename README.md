@@ -4,8 +4,7 @@ Python repository for organelle size scaling analyses and figures of the stem ce
 ---
 
 ## Brief overview
-
-<img src="docs/cellvol_vs_nucvol.png" width="400">
-
+<img src="docs/cellvol_vs_nucvol.png" width="500">
+Statistical associations between volumes and areas of cells, nuclei and structures show how strongly these metrics are coupled to each and how they scale with respect to each other.
 
 ***Free software: Allen Institute Software License***
