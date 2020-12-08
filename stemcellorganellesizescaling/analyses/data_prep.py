@@ -6,36 +6,35 @@ import logging
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 from sklearn.utils import resample
 from scipy.stats import gaussian_kde
 from tqdm import tqdm
 import seaborn as sns
 from datetime import datetime
 import os, platform
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+import numpy as np
 import sys, importlib
+import multiprocessing
+from itertools import repeat
+
+
 
 # Third party
 
 # Relative
 # Third party
-from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
-    organelle_scatter,
-    fscatter,
-    compensated_scatter,
-    organelle_scatterT,
-    compensated_scatter_t,
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
+    oplot,
+    splot,
 )
 
 importlib.reload(
-    sys.modules["stemcellorganellesizescaling.analyses.utils.scatter_plotting_func"]
+    sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs"]
 )
-from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
-    organelle_scatter,
-    fscatter,
-    compensated_scatter,
-    organelle_scatterT,
-    compensated_scatter_t,
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
+    oplot,
+    splot,
 )
 
 print("Libraries loaded successfully")
@@ -400,8 +399,12 @@ def diagnostic_violins(
             plt.show()
 
 
+# sampling from density
+def calc_kernel(samp,k):
+    return k(samp)
+
 def outlier_removal(
-    dirs: list, dataset: Path, dataset_clean: Path, dataset_outliers: Path,
+    dirs: list, dataset: Path, dataset_clean: Path, dataset_outliers: Path, Rounds: int = 5,
 ):
     """
     Removes outliers, generates diagnostic plots, saves cleaned feature data table
@@ -416,7 +419,11 @@ def outlier_removal(
         Path to cleaned CSV file
     dataset_outliers: Path
         Path to outlier annotation CSV (same number of cells as dataset)
+    Rounds: int
+        Number of round to run the density estimation, default is 5
     """
+
+    print(Rounds)
 
     # Resolve directories
     data_root = dirs[0]
@@ -428,9 +435,9 @@ def outlier_removal(
     # Remove outliers
     # %% Parameters, updated directories
     save_flag = 1  # save plot (1) or show on screen (0)
-    pic_root = pic_root / "outlier_removal"
+    pic_root = pic_root / f"outlier_removal_{Rounds}"
     pic_root.mkdir(exist_ok=True)
-    data_root_extra = data_root / "outlier_removal"
+    data_root_extra = data_root / f"outlier_removal_{Rounds}"
     data_root_extra.mkdir(exist_ok=True)
 
     # %% Threshold for determing outliers
@@ -507,7 +514,6 @@ def outlier_removal(
     nbins = 100
     N = 10000
     fac = 1000
-    Rounds = 5
 
     # %% For all pairs compute densities
     remove_cells = cells["CellId"].to_frame().copy()
@@ -532,7 +538,15 @@ def outlier_removal(
                 x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
             )
             k = gaussian_kde(np.vstack([xS, yS]))
-            cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+            if platform.system() == "Windows":
+                cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+            elif platform.system() == "Linux":
+                cores = int(multiprocessing.cpu_count() * .8)
+                with multiprocessing.Pool(processes=cores) as pool:
+                    torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
+                    results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
+                    cell_dens = np.concatenate(results)
+
             cell_dens = cell_dens / np.sum(cell_dens)
             remove_cells.loc[
                 remove_cells.index[np.arange(len(cell_dens))],
@@ -723,61 +737,31 @@ def outlier_removal(
         "Nuclear surface area",
     ]
     selected_metrics_abb = ["Cell Vol", "Cell Area", "Nuc Vol", "Nuc Area"]
+
     selected_structures = [
-        "LMNB1",
-        "ST6GAL1",
-        "TOMM20",
-        "SEC61B",
-        "ATP2A2",
-        "LAMP1",
-        "RAB5A",
-        "SLC25A17",
-        "TUBA1B",
-        "TJP1",
-        "NUP153",
         "FBL",
         "NPM1",
         "SON",
+        "HIST1H2BJ",
+        "LMNB1",
+        "SEC61B",
+        "ATP2A2",
+        "TOMM20",
+        "SLC25A17",
+        "RAB5A",
+        "LAMP1",
+        "ST6GAL1",
+        "CETN2",
+        "TUBA1B",
+        "AAVS1",
     ]
-    selected_structures_org = [
-        "Nuclear envelope",
-        "Golgi",
-        "Mitochondria",
-        "ER",
-        "ER",
-        "Lysosome",
-        "Endosomes",
-        "Peroxisomes",
-        "Microtubules",
-        "Tight junctions",
-        "NPC",
-        "Nucleolus F",
-        "Nucleolus G",
-        "SON",
-    ]
-    selected_structures_cat = [
-        "Major organelle",
-        "Major organelle",
-        "Major organelle",
-        "Major organelle",
-        "Major organelle",
-        "Somes",
-        "Somes",
-        "Somes",
-        "Cytoplasmic structure",
-        "Cell-to-cell contact",
-        "Nuclear",
-        "Nuclear",
-        "Nuclear",
-        "Nuclear",
-    ]
+
     structure_metric = "Structure volume"
 
     # %% Parameters
     nbins = 100
     N = 1000
     fac = 1000
-    Rounds = 5
 
     # %% For all pairs compute densities
     remove_cells = cells["CellId"].to_frame().copy()
@@ -808,7 +792,15 @@ def outlier_removal(
                     x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
                 )
                 k = gaussian_kde(np.vstack([xS, yS]))
-                cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+                if platform.system() == "Windows":
+                    cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+                elif platform.system() == "Linux":
+                    cores = int(multiprocessing.cpu_count() * .5)
+                    with multiprocessing.Pool(processes=cores) as pool:
+                        torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
+                        results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
+                        cell_dens = np.concatenate(results)
+
                 cell_dens = cell_dens / np.sum(cell_dens)
                 remove_cells.loc[
                     cells["structure_name"] == struct,
@@ -1001,8 +993,8 @@ def outlier_removal(
     )
 
     # %% Saving
-    cells.to_csv(data_root / dataset_clean)
-    cells_ao.to_csv(data_root / dataset_outliers)
+    cells.to_csv(data_root_extra / dataset_clean)
+    cells_ao.to_csv(data_root_extra / dataset_outliers)
 
     # %% Final diagnostic plot
     cells = pd.read_csv(data_root / dataset)
