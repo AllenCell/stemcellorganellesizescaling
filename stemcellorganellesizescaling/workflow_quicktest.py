@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 # def workflow_quicktest(N, N2):
 
-N = 1e4
+N = 1e6
 # fac = 1
 N2 = 1e6
 
@@ -81,13 +81,13 @@ if int(N2)>0:
     cell_dens = np.concatenate(results)
     elapsed = time.time() - t
     print(f"Multi-core: Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
-    t = time.time()
-    cell_dens2 = k(np.vstack([xS2.flatten(), yS2.flatten()]))
-    elapsed = time.time() - t
-    print(f"Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
+    # t = time.time()
+    # cell_dens2 = k(np.vstack([xS2.flatten(), yS2.flatten()]))
+    # elapsed = time.time() - t
+    # print(f"Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
     print(f"Sum cell dens: {sum(abs(cell_dens))}")
-    print(f"Sum cell dens: {sum(abs(cell_dens2))}")
-    print(f"Sum cell dens: {sum(abs(cell_dens-cell_dens2))}")
+    # print(f"Sum cell dens: {sum(abs(cell_dens2))}")
+    # print(f"Sum cell dens: {sum(abs(cell_dens-cell_dens2))}")
 
 
 # if __name__ == "__main__":
