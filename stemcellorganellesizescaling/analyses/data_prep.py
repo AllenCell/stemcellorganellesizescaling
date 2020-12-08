@@ -537,7 +537,7 @@ def outlier_removal(
         if platform.system() == "Windows":
             cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
         elif platform.system() == "Linux":
-            cores = int(multiprocessing.cpu_count() / 2)
+            cores = int(multiprocessing.cpu_count() * .8)
             with multiprocessing.Pool(processes=cores) as pool:
                 torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
                 results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
@@ -559,12 +559,12 @@ def outlier_removal(
         print(f"{metricX} vs {metricY}")
         x = remove_cells[f"{metricX} vs {metricY}"].to_numpy()
 
-        fig, axs = plt.subplots(1, 1, figsize=(16, 9))
+        fig, axs = plt.subplots(figsize=(16, 9))
         xr = np.log(x.flatten())
         xr = np.delete(xr, np.argwhere(np.isinf(xr)))
-        axs[0].hist(xr, bins=100)
-        axs[0].set_title(f"Histogram of cell probabilities (log scale)")
-        axs[0].set_yscale("log")
+        axs.hist(xr, bins=100)
+        axs.set_title(f"Histogram of cell probabilities (log scale)")
+        axs.set_yscale("log")
 
         if save_flag:
             plot_save_path = pic_root / f"{metricX} vs {metricY}_cellswithlowprobs.png"
@@ -775,11 +775,11 @@ def outlier_removal(
             if platform.system() == "Windows":
                 cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
             elif platform.system() == "Linux":
-                cores = int(multiprocessing.cpu_count() / 5)
-                pool = multiprocessing.Pool(processes=cores)
-                torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
-                results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
-                cell_dens = np.concatenate(results)
+                cores = int(multiprocessing.cpu_count() * .5)
+                with multiprocessing.Pool(processes=cores) as pool:
+                    torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
+                    results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
+                    cell_dens = np.concatenate(results)
 
             cell_dens = cell_dens / np.sum(cell_dens)
             remove_cells.loc[
@@ -797,12 +797,12 @@ def outlier_removal(
 
         x = remove_cells[f"{metric} vs {structure_metric}"].to_numpy()
 
-        fig, axs = plt.subplots(1, 1, figsize=(16, 9))
+        fig, axs = plt.subplots(figsize=(16, 9))
         xr = np.log(x.flatten())
         xr = np.delete(xr, np.argwhere(np.isinf(xr)))
-        axs[0].hist(xr, bins=100)
-        axs[0].set_title(f"Histogram of cell probabilities (log scale)")
-        axs[0].set_yscale("log")
+        axs.hist(xr, bins=100)
+        axs.set_title(f"Histogram of cell probabilities (log scale)")
+        axs.set_yscale("log")
 
         if save_flag:
             plot_save_path = (
