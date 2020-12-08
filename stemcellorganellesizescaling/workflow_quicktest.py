@@ -22,44 +22,53 @@ log = logging.getLogger(__name__)
 
 ###############################################################################
 
-def workflow_quicktest(N, checkflag):
+# def workflow_quicktest(N, N2):
 
-    #%% Directories
-    if platform.system() == "Windows":
-        data_root = Path("E:/DA/Data/scoss/Data/")
-        pic_root = Path("E:/DA/Data/scoss/Pics/")
-    elif platform.system() == "Linux":
-        data_root = Path(
-            "/allen/aics/modeling/theok/Projects/Data/scoss/Data"
-        )
-        pic_root = Path(
-            "/allen/aics/modeling/theok/Projects/Data/scoss/Pics"
-        )
+N = 1e4
+fac = 1
+N2 = 1e6
 
-    #%%  Test outlier stuff
-    dataset = "SizeScaling_20201006.csv"
-    cells = pd.read_csv(data_root / dataset)
+#%% Directories
+if platform.system() == "Windows":
+    data_root = Path("E:/DA/Data/scoss/Data/")
+    pic_root = Path("E:/DA/Data/scoss/Pics/")
+elif platform.system() == "Linux":
+    data_root = Path(
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Data"
+    )
+    pic_root = Path(
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Pics"
+    )
 
-    # %% Sample
-    x = cells['Cell volume'].to_numpy()
-    y = cells['Cell surface area'].to_numpy()
-    rs = 1
-    xS, yS = resample(
-                    x, y, replace=False, n_samples=np.amin([int(N), len(x)]), random_state=rs
-                )
+#%%  Test outlier stuff
+dataset = "SizeScaling_20201006.csv"
+cells = pd.read_csv(data_root / dataset)
 
-    # %% Density estimation
+# %% Sample
+x = cells['Cell volume'].to_numpy() / fac
+y = cells['Cell surface area'].to_numpy() /fac
+rs = 1
+xS, yS = resample(
+                x, y, replace=False, n_samples=np.amin([int(N), len(x)]), random_state=rs
+            )
+xS2, yS2 = resample(
+                x, y, replace=False, n_samples=np.amin([int(N2), len(x)]), random_state=rs
+            )
+
+# %% Density estimation
+t = time.time()
+print(np.vstack([xS, yS]).shape)
+k = gaussian_kde(np.vstack([xS, yS]))
+elapsed = time.time() - t
+print(f"Density estimation with {len(xS)} samples: {np.round(elapsed)}s")
+if int(N2)>0:
     t = time.time()
-    k = gaussian_kde(np.vstack([x, y]))
+    print(np.vstack([xS2, yS2]).shape)
+    cell_dens = k(np.vstack([xS2.flatten(), yS2.flatten()]))
     elapsed = time.time() - t
-    print(f"Density estimation with {len(xS)} samples: {np.round(elapsed)}s")
-    t = time.time()
-    if int(checkflag)==1:
-        cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
-        elapsed = time.time() - t
-        print(f"Assigning density to {len(x)} samples: {np.round(elapsed)}s")
+    print(f"Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
 
-if __name__ == "__main__":
-    # Map command line arguments to function arguments.
-    workflow_quicktest(*sys.argv[1:])
+# if __name__ == "__main__":
+#     # Map command line arguments to function arguments.
+#     workflow_quicktest(*sys.argv[1:])
 

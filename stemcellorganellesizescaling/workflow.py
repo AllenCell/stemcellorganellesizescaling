@@ -64,10 +64,10 @@ if platform.system() == "Windows":
     pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
 elif platform.system() == "Linux":
     data_root = Path(
-        "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Nov2020/"
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020_outliertest/"
     )
     pic_root = Path(
-        "/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_2020/"
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Dec2020_outliertest/"
     )
 dirs = []
 dirs.append(data_root)
@@ -82,12 +82,12 @@ dirs.append(pic_root)
 # initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
-print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################')
-print('##################### Data preparation - Outlier Removal #####################')
-tableIN = "SizeScaling_20201006.csv"
-tableOUT = "SizeScaling_20201006_clean.csv"
-tableOUTL = "SizeScaling_20201006_outliers.csv"
-outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
+# print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################')
+# print('##################### Data preparation - Outlier Removal #####################')
+# tableIN = "SizeScaling_20201006.csv"
+# tableOUT = "SizeScaling_20201006_clean.csv"
+# tableOUTL = "SizeScaling_20201006_outliers.csv"
+# outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
 # print('##################### Data preparation - Diagnostic violins #####################')
@@ -100,12 +100,21 @@ outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 # tableOUT = "SizeScaling_20201102_comp.csv"
 # compensate(dirs, tableIN, tableOUT)
 
-#%% Computing statistics - Pairwise statistics
-# print('##################### Computing statistics - Pairwise statistics #####################')
-# tableIN = "SizeScaling_20201102.csv"
-# table_compIN = "SizeScaling_20201102_comp.csv"
-# statsOUTdir = "Stats_20201102"
-# pairwisestats(dirs, tableIN, table_compIN, statsOUTdir)
+print(
+    "##################### Computing statistics - Pairwise statistics #####################"
+)
+tableIN = "SizeScaling_20201102.csv"
+table_compIN = "SizeScaling_20201102_comp.csv"
+statsOUTdir = "Stats_20201102"
+pairwisestats(
+    dirs,
+    tableIN,
+    table_compIN,
+    statsOUTdir,
+    COMP_flag=False,
+    PCA_flag=False,
+    SubSample_flag=False,
+)
 
 #%% Computing statistics - Explained variance of composite models
 # print('##################### Computing statistics - Composite models #####################')

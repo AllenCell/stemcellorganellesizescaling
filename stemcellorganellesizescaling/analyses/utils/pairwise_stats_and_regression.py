@@ -15,6 +15,7 @@ from matplotlib import cm
 import statsmodels.api as sm
 import pickle
 import psutil
+import time
 
 # Third party
 
@@ -156,6 +157,9 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct, SubSample_flag):
            x_ra: (nbins-1)*1 bins on x
            y_ra: (nbins-1)*6 mean and 5,25,50,75,95 percentile values on y
     """
+
+    print(f"flag={SubSample_flag}")
+
     # Parameters
     Nbootstrap = 100
     # Nbootstrap = 5
@@ -201,9 +205,25 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct, SubSample_flag):
             n_samples=np.amin([N, len(x)]),
             random_state=rs,
         )
+
+        t = time.time()
+        print(np.vstack([xS, yS]).shape)
         k = gaussian_kde(np.vstack([xS, yS]))
+        elapsed = time.time() - t
+        print(f"Density estimation with {len(xS)} samples: {np.round(elapsed)}s")
+
+        t = time.time()
+        print(np.vstack([xii.flatten(), yii.flatten()]).shape)
         zii = k(np.vstack([xii.flatten(), yii.flatten()]))
+        elapsed = time.time() - t
+        print(f"Assigning density to {len(xii)} points: {np.round(elapsed)}s")
+
+        t = time.time()
+        print(np.vstack([x.flatten(), y.flatten()]).shape)
         cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+        elapsed = time.time() - t
+        print(f"Assigning density to {len(x)} samples: {np.round(elapsed)}s")
+
         # make into cumulative sum
         zii = zii / np.sum(zii)
         ix = np.argsort(zii)
