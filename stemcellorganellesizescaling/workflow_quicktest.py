@@ -71,7 +71,7 @@ if int(N2)>0:
     print(np.vstack([xS2, yS2]).shape)
 
     # Choose number of cores and split input array.
-    cores = 2
+    cores = 80
     # cores = multiprocessing.cpu_count()
     print(f"No of cores: {cores}")
     torun = np.array_split(np.vstack([xS2, yS2]), cores, axis=1)
