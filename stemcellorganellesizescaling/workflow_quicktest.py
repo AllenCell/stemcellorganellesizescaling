@@ -68,7 +68,7 @@ def workflow_quicktest(N, N2):
         elapsed = time.time() - t
         print(f"Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
 
-    if __name__ == "__main__":
-        # Map command line arguments to function arguments.
-        workflow_quicktest(*sys.argv[1:])
+if __name__ == "__main__":
+    # Map command line arguments to function arguments.
+    workflow_quicktest(*sys.argv[1:])
 
