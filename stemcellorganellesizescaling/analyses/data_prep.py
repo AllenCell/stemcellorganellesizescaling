@@ -510,7 +510,7 @@ def outlier_removal(
 
     # %% Parameters
     # nbins = 100
-    N = 1e6
+    N = 1000000
     rs = 1
     # fac = 1000
     # Rounds = 5
