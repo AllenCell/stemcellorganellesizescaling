@@ -532,7 +532,7 @@ def outlier_removal(
         # density estimate, run in parallel if possible
         print(f"Density estimate on {[N, len(x)]} samples")
         xS, yS = resample(
-            x, y, replace=False, n_samples=np.amin(), random_state=rs
+            x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
         )
         k = gaussian_kde(np.vstack([xS, yS]))
         if platform.system() == "Windows":
