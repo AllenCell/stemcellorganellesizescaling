@@ -27,7 +27,7 @@ from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
 )
 
 importlib.reload(
-    sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_func"]
+    sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs"]
 )
 from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
     oplot,
