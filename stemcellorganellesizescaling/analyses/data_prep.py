@@ -537,11 +537,11 @@ def outlier_removal(
         if platform.system() == "Windows":
             cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
         elif platform.system() == "Linux":
-            cores = int(multiprocessing.cpu_count()/2)
-            pool = multiprocessing.Pool(processes=cores)
-            torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
-            results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
-            cell_dens = np.concatenate(results)
+            cores = int(multiprocessing.cpu_count() / 2)
+            with multiprocessing.Pool(processes=cores) as pool:
+                torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
+                results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
+                cell_dens = np.concatenate(results)
 
         cell_dens = cell_dens / np.sum(cell_dens)
         remove_cells.loc[
