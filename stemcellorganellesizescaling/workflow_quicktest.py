@@ -71,8 +71,7 @@ if int(N2)>0:
     print(np.vstack([xS2, yS2]).shape)
 
     # Choose number of cores and split input array.
-    cores = 80
-    # cores = multiprocessing.cpu_count()
+    cores = multiprocessing.cpu_count()-5
     print(f"No of cores: {cores}")
     torun = np.array_split(np.vstack([xS2, yS2]), cores, axis=1)
     # Calculate
@@ -86,6 +85,10 @@ if int(N2)>0:
     cell_dens2 = k(np.vstack([xS2.flatten(), yS2.flatten()]))
     elapsed = time.time() - t
     print(f"Assigning density to {len(xS2)} samples: {np.round(elapsed)}s")
+    print(f"Sum cell dens: {sum(abs(cell_dens))}")
+    print(f"Sum cell dens: {sum(abs(cell_dens2))}")
+    print(f"Sum cell dens: {sum(abs(cell_dens-cell_dens2))}")
+
 
 # if __name__ == "__main__":
 #     # Map command line arguments to function arguments.
