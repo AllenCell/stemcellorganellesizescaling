@@ -257,6 +257,7 @@ def calculate_pairwisestats(x, y, xlabel, ylabel, struct, SubSample_flag):
 
     return D
 
+
 # %% function defintion of regression model compensation
 def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
     """
@@ -304,8 +305,11 @@ def explain_var_compositemodels(x, y, xlabel, ylabel, struct):
 
     return D
 
+
 # %% function defintion of bootstrapping the regression model
-def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, struct, Nbootstrap=100):
+def bootstrap_linear_and_log_model(
+    x, y, xlabel, ylabel, type, cell_doubling, struct, Nbootstrap=100
+):
     """
        Calculate residual values
 

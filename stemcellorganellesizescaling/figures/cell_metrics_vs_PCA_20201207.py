@@ -44,7 +44,7 @@ np.any(cells_COMP.isnull())
 # %% Parameters, updated directories
 save_flag = 0  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
-pic_root = pic_root / "plot_cellvol_vs_nucvol"
+pic_root = pic_root / "plot_cellmetrics_vs_PCA"
 pic_root.mkdir(exist_ok=True)
 
 # %% Feature sets
@@ -87,38 +87,39 @@ def scatter(
     N2=1000,
     fs2=10,
     fs=5,
-    typ=['vol','vol'],
+    typ=["vol", "vol"],
+    PrintType="all",
 ):
 
     #%% Change labels
-    if typ[0]=='vol':
+    if typ[0] == "vol":
         abbX = f"{abbX} (\u03BCm\u00b3)"
-    elif typ[0]=='area':
+    elif typ[0] == "area":
         abbX = f"{abbX} (\u03BCm\u00b2)"
-    elif typ[0]=='height':
+    elif typ[0] == "height":
         abbX = f"{abbX} (\u03BCm)"
-    if typ[1]=='vol':
+    if typ[1] == "vol":
         abbY = f"{abbY} (\u03BCm\u00b3)"
-    elif typ[1]=='area':
+    elif typ[1] == "area":
         abbY = f"{abbY} (\u03BCm\u00b2)"
-    elif typ[1]=='height':
+    elif typ[1] == "height":
         abbY = f"{abbY} (\u03BCm)"
-    if typ[0] == 'vol':
+    if typ[0] == "vol":
         facX = 1 / ((0.108333) ** 3)
-    elif typ[0] == 'area':
+    elif typ[0] == "area":
         facX = 1 / ((0.108333) ** 2)
-    elif typ[0] == 'height':
+    elif typ[0] == "height":
         facX = 1 / ((0.108333) ** 1)
     else:
-        facX = 1000
-    if typ[1] == 'vol':
+        facX = 1
+    if typ[1] == "vol":
         facY = 1 / ((0.108333) ** 3)
-    elif typ[1] == 'area':
+    elif typ[1] == "area":
         facY = 1 / ((0.108333) ** 2)
-    elif typ[1] == 'height':
+    elif typ[1] == "height":
         facY = 1 / ((0.108333) ** 1)
     else:
-        facY = 1000
+        facY = 1
 
     #%% Archery new colormap
     white = np.array([1, 1, 1, 1])
@@ -151,10 +152,6 @@ def scatter(
     y = cells[metricY]
     x = x / facX
     y = y / facY
-    x = np.log10(x)
-    y = np.log10(y)
-
-
 
     # plot
     if kde_flag is True:
@@ -169,7 +166,7 @@ def scatter(
         elif colorpoints_flag is True:
             sorted_cells = np.argsort(cii)
             cii[sorted_cells] = np.arange(len(sorted_cells))
-            ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
+            qqq = ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
         else:
             ax.pcolormesh(xii, yii, zii, cmap=plt.cm.magma)
             sorted_cells = np.argsort(cii)
@@ -186,19 +183,23 @@ def scatter(
     ylim = ax.get_ylim()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    ax.grid()
+    if PrintType == "svg":
+        qqq.remove()
+    if PrintType != "png":
+        ax.grid()
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
         if (fourcolors_flag is True) or (colorpoints_flag is True):
-            ax.text(
-                xlim[1],
-                ylim[1],
-                f"n= {len(x)}",
-                fontsize=fs,
-                verticalalignment="top",
-                horizontalalignment="right",
-                color="black",
-            )
+            if PrintType != "png":
+                ax.text(
+                    xlim[1],
+                    ylim[1],
+                    f"n= {len(x)}",
+                    fontsize=fs,
+                    verticalalignment="top",
+                    horizontalalignment="right",
+                    color="black",
+                )
         else:
             ax.text(
                 xlim[1],
@@ -219,21 +220,23 @@ def scatter(
             horizontalalignment="right",
         )
     if rollingavg_flag is True:
-        rollavg_x = loadps(stats_root, f"{metricX}_{metricY}_x_ra") / facX
-        rollavg_y = loadps(stats_root, f"{metricX}_{metricY}_y_ra") / facY
-        ax.plot(rollavg_x, rollavg_y[:, 0], "lime", linewidth=lw2)
+        if PrintType != "png":
+            rollavg_x = loadps(stats_root, f"{metricX}_{metricY}_x_ra") / facX
+            rollavg_y = loadps(stats_root, f"{metricX}_{metricY}_y_ra") / facY
+            ax.plot(rollavg_x, rollavg_y[:, 0], "lime", linewidth=lw2)
 
     if ols_flag is True:
         xii = loadps(stats_root, f"{metricX}_{metricY}_xii") / facX
         pred_yL = loadps(stats_root, f"{metricX}_{metricY}_pred_matL") / facY
         pred_yC = loadps(stats_root, f"{metricX}_{metricY}_pred_matC") / facY
         if kde_flag is True:
-            if fourcolors_flag is True:
-                ax.plot(xii, pred_yL, "gray")
-            elif colorpoints_flag is True:
-                ax.plot(xii, pred_yL, "gray")
-            else:
-                ax.plot(xii, pred_yL, "w")
+            if PrintType != "png":
+                if fourcolors_flag is True:
+                    ax.plot(xii, pred_yL, "gray")
+                elif colorpoints_flag is True:
+                    ax.plot(xii, pred_yL, "gray")
+                else:
+                    ax.plot(xii, pred_yL, "w")
         else:
             ax.plot(xii, pred_yL, "r")
             ax.plot(xii, pred_yC, "m")
@@ -266,15 +269,17 @@ def scatter(
                     color="gray",
                 )
             elif colorpoints_flag is True:
-                plt.text(
-                    xlim[0],
-                    ylim[1],
-                    # f"rs={cim[0]}, pc={pc[0]}",
-                    f"R\u00b2={cim[0]}",
-                    fontsize=fs,
-                    verticalalignment="top",
-                    color="black",
-                )
+                if PrintType != "png":
+                    plt.text(
+                        xlim[0],
+                        ylim[1],
+                        # f"rs={cim[0]}, pc={pc[0]}",
+                        f"R\u00b2={cim[0]}",
+                        fontsize=fs,
+                        verticalalignment="top",
+                        horizontalalignment="left",
+                        color="black",
+                    )
             else:
                 plt.text(
                     xlim[0],
@@ -351,15 +356,16 @@ def scatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
-                    axB.text(
-                        val,
-                        ylimBH[0],
-                        f"{val}",
-                        fontsize=fs,
-                        horizontalalignment="center",
-                        verticalalignment="bottom",
-                        color=[0.5, 0.5, 0.5, 0.5],
-                    )
+                    if PrintType != "png":
+                        axB.text(
+                            val,
+                            ylimBH[0],
+                            f"{val}",
+                            fontsize=fs,
+                            horizontalalignment="center",
+                            verticalalignment="bottom",
+                            color=[0.5, 0.5, 0.5, 0.5],
+                        )
                 else:
                     axB.text(
                         val,
@@ -382,14 +388,15 @@ def scatter(
                     color=[0.5, 0.5, 0.5, 0.5],
                 )
 
-    axB.text(
-        np.mean(xlim),
-        np.mean(ylimBH),
-        f"{abbX}",
-        fontsize=fs2,
-        horizontalalignment="center",
-        verticalalignment="center",
-    )
+    if PrintType != "png":
+        axB.text(
+            np.mean(xlim),
+            np.mean(ylimBH),
+            f"{abbX}",
+            fontsize=fs2,
+            horizontalalignment="center",
+            verticalalignment="center",
+        )
     axB.axis("off")
 
     # Side histogram
@@ -410,15 +417,16 @@ def scatter(
                 val = np.round(val, 2)
             if kde_flag is True:
                 if (fourcolors_flag is True) or (colorpoints_flag is True):
-                    axS.text(
-                        xlimSH[0],
-                        val,
-                        f"{val}",
-                        fontsize=fs,
-                        horizontalalignment="left",
-                        verticalalignment="center",
-                        color=[0.5, 0.5, 0.5, 0.5],
-                    )
+                    if PrintType != "png":
+                        axS.text(
+                            xlimSH[0],
+                            val,
+                            f"{val}",
+                            fontsize=fs,
+                            horizontalalignment="left",
+                            verticalalignment="center",
+                            color=[0.5, 0.5, 0.5, 0.5],
+                        )
                 else:
                     axS.text(
                         xlimSH[0],
@@ -440,16 +448,18 @@ def scatter(
                     color=[0.5, 0.5, 0.5, 0.5],
                 )
 
-    axS.text(
-        np.mean(xlimSH),
-        np.mean(ylim),
-        f"{abbY}",
-        fontsize=fs2,
-        horizontalalignment="center",
-        verticalalignment="center",
-        rotation=90,
-    )
+    if PrintType != "png":
+        axS.text(
+            np.mean(xlimSH),
+            np.mean(ylim),
+            f"{abbY}",
+            fontsize=fs2,
+            horizontalalignment="center",
+            verticalalignment="center",
+            rotation=90,
+        )
     axS.axis("off")
+
 
 # %% Simple function to load statistics
 def loadps(pairstats_root, x):
@@ -457,53 +467,99 @@ def loadps(pairstats_root, x):
         result = pickle.load(f)
     return result
 
+
 # %% measurements
 w1 = 0.05
 w2 = 0.05
 h1 = 0.05
 h2 = 0.05
 
-xs = .1
-ys = .1
-x = 1-w1-w2-xs
-y = 1-h1-h2-ys
+xs = 0.1
+ys = 0.1
+x = 1 - w1 - w2 - xs
+y = 1 - h1 - h2 - ys
 
 # %% fontsize
 fs = 20
 
-# %%layout
-fig = plt.figure(figsize=(16, 9))
+# %% Cell height vs dna_mem_pc1
+fig = plt.figure(figsize=(5, 5))
 plt.rcParams.update({"font.size": fs})
-axScatter = fig.add_axes([w1+xs, h1+ys, x, y])
-axScatterB = fig.add_axes([w1+xs, h1, x, ys])
-axScatterS = fig.add_axes([w1, h1+ys, xs, y])
+plt.rcParams["svg.fonttype"] = "none"
+axScatter = fig.add_axes([w1 + xs, h1 + ys, x, y])
+axScatterB = fig.add_axes([w1 + xs, h1, x, ys])
+axScatterS = fig.add_axes([w1, h1 + ys, xs, y])
 
 plotname = "test"
-ps = data_root / statsIN / "cell_nuc_metrics"
+ps = data_root / statsIN / "cell_nuc_PCA_metrics"
 scatter(
     axScatter,
     axScatterB,
     axScatterS,
-    FS['cellnuc_metrics'][1],
-    FS['cellnuc_metrics'][4],
-    FS['cellnuc_abbs'][1],
-    FS['cellnuc_abbs'][4],
+    "DNA_MEM_PC1",
+    "Cell height",
+    "Shape mode 1",
+    "Cell height",
     cells,
     ps,
-    kde_flag=False,
+    kde_flag=True,
     fourcolors_flag=False,
-    colorpoints_flag=False,
-    rollingavg_flag=False,
-    ols_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
     N2=1000,
     fs2=fs,
     fs=fs,
-    typ = ['vol','vol'],
+    typ=["pca", "height"],
+    PrintType="svg",
 )
 
-if save_flag==1:
-    plot_save_path = pic_root / f"heightnucvscell_20201111.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
+if save_flag == 1:
+    # plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201207.png"
+    # plt.savefig(plot_save_path, format="png", dpi=300)
+    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201207.svg"
+    plt.savefig(plot_save_path, format="svg")
+    plt.close()
+else:
+    plt.show()
+
+# %% cell volume vs dna_mem_pc2
+fig = plt.figure(figsize=(5, 5))
+plt.rcParams.update({"font.size": fs})
+plt.rcParams["svg.fonttype"] = "none"
+axScatter = fig.add_axes([w1 + xs, h1 + ys, x, y])
+axScatterB = fig.add_axes([w1 + xs, h1, x, ys])
+axScatterS = fig.add_axes([w1, h1 + ys, xs, y])
+
+plotname = "test"
+ps = data_root / statsIN / "cell_nuc_PCA_metrics"
+scatter(
+    axScatter,
+    axScatterB,
+    axScatterS,
+    "DNA_MEM_PC2",
+    "Cell volume",
+    "Shape Mode 2",
+    "Cell volume",
+    cells,
+    ps,
+    kde_flag=True,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
+    rollingavg_flag=True,
+    ols_flag=True,
+    N2=1000,
+    fs2=fs,
+    fs=fs,
+    typ=["pca", "vol"],
+    PrintType="svg",
+)
+
+if save_flag == 1:
+    # plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201207.png"
+    # plt.savefig(plot_save_path, format="png", dpi=300)
+    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201207.svg"
+    plt.savefig(plot_save_path, format="svg")
     plt.close()
 else:
     plt.show()
