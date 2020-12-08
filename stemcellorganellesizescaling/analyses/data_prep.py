@@ -507,6 +507,10 @@ def outlier_removal(
     yvec = [4]
     pairs1 = np.stack((xvec, yvec)).T
 
+    pairs2 = pairs1
+    pairs = pairs1
+
+
     # %% Parameters
     # nbins = 100
     N = 1000000
