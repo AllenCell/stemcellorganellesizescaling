@@ -21,23 +21,17 @@ from itertools import repeat
 
 # Relative
 # Third party
-from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
-    organelle_scatter,
-    fscatter,
-    compensated_scatter,
-    organelle_scatterT,
-    compensated_scatter_t,
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
+    oplot,
+    splot,
 )
 
 importlib.reload(
-    sys.modules["stemcellorganellesizescaling.analyses.utils.scatter_plotting_func"]
+    sys.modules["stemcellorganellesizescaling.analyses.utils.outlier_plotting_func"]
 )
-from stemcellorganellesizescaling.analyses.utils.scatter_plotting_func import (
-    organelle_scatter,
-    fscatter,
-    compensated_scatter,
-    organelle_scatterT,
-    compensated_scatter_t,
+from stemcellorganellesizescaling.analyses.utils.outlier_plotting_funcs import (
+    oplot,
+    splot,
 )
 
 print("Libraries loaded successfully")
@@ -466,7 +460,7 @@ def outlier_removal(
     print(np.any(cells.isnull()))
 
     # %%
-    print("FIX LINE BELOW")
+    # print("FIX LINE BELOW")
     # cells["Piece std"] = cells["Piece std"].replace(np.nan, 0)
 
     # %% Feature set for cell and nuclear features
@@ -532,7 +526,7 @@ def outlier_removal(
         # y = cells[metricY].sample(1000,random_state = 1117).to_numpy()
 
         # density estimate, run in parallel if possible
-        print(f"Density estimate on {[N, len(x)]} samples")
+        print(f"Density estimate on {np.amin([N, len(x)])} samples")
         xS, yS = resample(
             x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
         )
@@ -540,7 +534,7 @@ def outlier_removal(
         if platform.system() == "Windows":
             cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
         elif platform.system() == "Linux":
-            cores = multiprocessing.cpu_count() - 5
+            cores = int(multiprocessing.cpu_count()/2)
             pool = multiprocessing.Pool(processes=cores)
             torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
             results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
@@ -556,29 +550,18 @@ def outlier_removal(
     # remove_cells = pd.read_csv(data_root_extra / 'cell_nucleus.csv')
 
     # %% Summarize across repeats
-    remove_cells_summary = cells["CellId"].to_frame().copy()
     for i, xy_pair in enumerate(pairs):
         metricX = cellnuc_metrics[xy_pair[0]]
         metricY = cellnuc_metrics[xy_pair[1]]
         print(f"{metricX} vs {metricY}")
-        metricX = cellnuc_metrics[xy_pair[0]]
-        metricY = cellnuc_metrics[xy_pair[1]]
-        filter_col = [
-            col for col in remove_cells if col.startswith(f"{metricX} vs {metricY}")
-        ]
-        x = remove_cells[filter_col].to_numpy()
-        pos = np.argwhere(np.any(x < cell_dens_th_CN, axis=1))
-        y = x[pos, :].squeeze()
+        x = remove_cells[f"{metricX} vs {metricY}"].to_numpy()
 
-        fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+        fig, axs = plt.subplots(1, 1, figsize=(16, 9))
         xr = np.log(x.flatten())
         xr = np.delete(xr, np.argwhere(np.isinf(xr)))
         axs[0].hist(xr, bins=100)
         axs[0].set_title(f"Histogram of cell probabilities (log scale)")
         axs[0].set_yscale("log")
-        im = axs[1].imshow(np.log(y), aspect="auto")
-        plt.colorbar(im)
-        axs[1].set_title(f"Heatmap with low probability cells (log scale)")
 
         if save_flag:
             plot_save_path = pic_root / f"{metricX} vs {metricY}_cellswithlowprobs.png"
@@ -587,8 +570,6 @@ def outlier_removal(
         else:
             plt.show()
 
-        remove_cells_summary[f"{metricX} vs {metricY}"] = np.median(x, axis=1)
-
     # %% Identify cells to be removed
     CellIds_remove_dict = {}
     CellIds_remove = np.empty(0, dtype=int)
@@ -596,480 +577,445 @@ def outlier_removal(
         metricX = cellnuc_metrics[xy_pair[0]]
         metricY = cellnuc_metrics[xy_pair[1]]
         CellIds_remove_dict[f"{metricX} vs {metricY}"] = np.argwhere(
-            remove_cells_summary[f"{metricX} vs {metricY}"].to_numpy() < cell_dens_th_CN
+            remove_cells[f"{metricX} vs {metricY}"].to_numpy() < cell_dens_th_CN
         )
         CellIds_remove = np.union1d(
             CellIds_remove, CellIds_remove_dict[f"{metricX} vs {metricY}"]
         )
         print(len(CellIds_remove))
 
-    # # %% Plot and remove outliers
-    # plotname = "CellNucleus"
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_6_org_fine",
-    #     0.5,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_6_org_thick",
-    #     2,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_6_outliers",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_21_org_fine",
-    #     0.5,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_21_org_thick",
-    #     2,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_21_outliers",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    # print(cells.shape)
-    # CellIds_remove = (
-    #     cells.loc[cells.index[CellIds_remove], "CellId"].squeeze().to_numpy()
-    # )
-    # cells_ao.loc[
-    #     cells_ao["CellId"].isin(CellIds_remove), "Outlier annotation"
-    # ] = "Abnormal cell or nuclear metric"
-    # cells = cells.drop(cells.index[cells["CellId"].isin(CellIds_remove)])
-    # print(
-    #     f"Removing {len(CellIds_remove)} cells due to abnormal cell or nuclear metric"
-    # )
-    # print(cells.shape)
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_6_clean_thick",
-    #     2,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_6_clean_fine",
-    #     0.5,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_21_clean_thick",
-    #     2,
-    #     [],
-    # )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_21_clean_fine",
-    #     0.5,
-    #     [],
-    # )
-    #
-    # # %% Feature sets for structures
-    # selected_metrics = [
-    #     "Cell volume",
-    #     "Cell surface area",
-    #     "Nuclear volume",
-    #     "Nuclear surface area",
-    # ]
-    # selected_metrics_abb = ["Cell Vol", "Cell Area", "Nuc Vol", "Nuc Area"]
-    # selected_structures = [
-    #     "LMNB1",
-    #     "ST6GAL1",
-    #     "TOMM20",
-    #     "SEC61B",
-    #     "ATP2A2",
-    #     "LAMP1",
-    #     "RAB5A",
-    #     "SLC25A17",
-    #     "TUBA1B",
-    #     "TJP1",
-    #     "NUP153",
-    #     "FBL",
-    #     "NPM1",
-    #     "SON",
-    # ]
-    # selected_structures_org = [
-    #     "Nuclear envelope",
-    #     "Golgi",
-    #     "Mitochondria",
-    #     "ER",
-    #     "ER",
-    #     "Lysosome",
-    #     "Endosomes",
-    #     "Peroxisomes",
-    #     "Microtubules",
-    #     "Tight junctions",
-    #     "NPC",
-    #     "Nucleolus F",
-    #     "Nucleolus G",
-    #     "SON",
-    # ]
-    # selected_structures_cat = [
-    #     "Major organelle",
-    #     "Major organelle",
-    #     "Major organelle",
-    #     "Major organelle",
-    #     "Major organelle",
-    #     "Somes",
-    #     "Somes",
-    #     "Somes",
-    #     "Cytoplasmic structure",
-    #     "Cell-to-cell contact",
-    #     "Nuclear",
-    #     "Nuclear",
-    #     "Nuclear",
-    #     "Nuclear",
-    # ]
-    # structure_metric = "Structure volume"
-    #
-    # # %% Parameters
+    # %% Plot and remove outliers
+    plotname = "CellNucleus"
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_6_org_fine",
+        0.5,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_6_org_thick",
+        2,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_6_outliers",
+        2,
+        CellIds_remove_dict,
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_21_org_fine",
+        0.5,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_21_org_thick",
+        2,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_21_outliers",
+        2,
+        CellIds_remove_dict,
+    )
+    print(cells.shape)
+    CellIds_remove = (
+        cells.loc[cells.index[CellIds_remove], "CellId"].squeeze().to_numpy()
+    )
+    cells_ao.loc[
+        cells_ao["CellId"].isin(CellIds_remove), "Outlier annotation"
+    ] = "Abnormal cell or nuclear metric"
+    cells = cells.drop(cells.index[cells["CellId"].isin(CellIds_remove)])
+    print(
+        f"Removing {len(CellIds_remove)} cells due to abnormal cell or nuclear metric"
+    )
+    print(cells.shape)
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_6_clean_thick",
+        2,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_6_clean_fine",
+        0.5,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_21_clean_thick",
+        2,
+        [],
+    )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_21_clean_fine",
+        0.5,
+        [],
+    )
+
+    # %% Feature sets for structures
+    selected_metrics = [
+        "Cell volume",
+        "Cell surface area",
+        "Nuclear volume",
+        "Nuclear surface area",
+    ]
+    selected_metrics_abb = ["Cell Vol", "Cell Area", "Nuc Vol", "Nuc Area"]
+    selected_structures = [
+        "FBL",
+        "NPM1",
+        "SON",
+        "HIST1H2BJ",
+        "LMNB1",
+        "SEC61B",
+        "ATP2A2",
+        "TOMM20",
+        "SLC25A17",
+        "RAB5A",
+        "LAMP1",
+        "ST6GAL1",
+        "CETN2",
+        "TUBA1B",
+        "AAVS1",
+    ]
+
+    structure_metric = "Structure volume"
+
+    # %% Parameters
     # nbins = 100
-    # N = 1000
+    N = 1000000
     # fac = 1000
     # Rounds = 5
-    #
-    # # %% For all pairs compute densities
-    # remove_cells = cells["CellId"].to_frame().copy()
-    # for xm, metric in tqdm(enumerate(selected_metrics), "Iterating metrics"):
-    #     for ys, struct in tqdm(enumerate(selected_structures), "and structures"):
-    #
-    #         # data
-    #         x = (
-    #             cells.loc[cells["structure_name"] == struct, [metric]]
-    #             .squeeze()
-    #             .to_numpy()
-    #             / fac
-    #         )
-    #         y = (
-    #             cells.loc[cells["structure_name"] == struct, [structure_metric]]
-    #             .squeeze()
-    #             .to_numpy()
-    #             / fac
-    #         )
-    #
-    #         # density estimate, repeat because of probabilistic nature of density estimate used here
-    #         for r in np.arange(Rounds):
-    #             if ys == 0:
-    #                 remove_cells[f"{metric} vs {structure_metric}_{r}"] = np.nan
-    #             # print(f"Round {r+1} of {Rounds}")
-    #             rs = int(r)
-    #             xS, yS = resample(
-    #                 x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
-    #             )
-    #             k = gaussian_kde(np.vstack([xS, yS]))
-    #             cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
-    #             cell_dens = cell_dens / np.sum(cell_dens)
-    #             remove_cells.loc[
-    #                 cells["structure_name"] == struct,
-    #                 f"{metric} vs {structure_metric}_{r}",
-    #             ] = cell_dens
-    #
-    # remove_cells.to_csv(data_root_extra / "structures.csv")
-    # # remove_cells = pd.read_csv(data_root_extra / 'structures.csv')
-    #
-    # # %% Summarize across repeats
-    # remove_cells_summary = cells["CellId"].to_frame().copy()
-    # for xm, metric in enumerate(selected_metrics):
-    #     print(metric)
-    #
-    #     filter_col = [
-    #         col
-    #         for col in remove_cells
-    #         if col.startswith(f"{metric} vs {structure_metric}")
-    #     ]
-    #     x = remove_cells[filter_col].to_numpy()
-    #     pos = np.argwhere(np.any(x < cell_dens_th_S, axis=1))
-    #     y = x[pos, :].squeeze()
-    #
-    #     fig, axs = plt.subplots(1, 2, figsize=(16, 9))
-    #     xr = np.log(x.flatten())
-    #     xr = np.delete(xr, np.argwhere(np.isinf(xr)))
-    #     axs[0].hist(xr, bins=100)
-    #     axs[0].set_title(f"Histogram of cell probabilities (log scale)")
-    #     axs[0].set_yscale("log")
-    #     im = axs[1].imshow(np.log(y), aspect="auto")
-    #     plt.colorbar(im)
-    #     axs[1].set_title(f"Heatmap with low probability cells (log scale)")
-    #
-    #     if save_flag:
-    #         plot_save_path = (
-    #             pic_root / f"{metric} vs {structure_metric}_cellswithlowprobs.png"
-    #         )
-    #         plt.savefig(plot_save_path, format="png", dpi=1000)
-    #         plt.close()
-    #     else:
-    #         plt.show()
-    #
-    #     remove_cells_summary[f"{metric} vs {structure_metric}"] = np.median(x, axis=1)
-    #
-    # # %% Identify cells to be removed
-    # CellIds_remove_dict = {}
-    # CellIds_remove = np.empty(0, dtype=int)
-    # for xm, metric in enumerate(selected_metrics):
-    #     print(metric)
-    #     CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(
-    #         remove_cells_summary[f"{metric} vs {structure_metric}"].to_numpy()
-    #         < cell_dens_th_S
-    #     )
-    #     CellIds_remove = np.union1d(
-    #         CellIds_remove, CellIds_remove_dict[f"{metric} vs {structure_metric}"]
-    #     )
-    #     print(len(CellIds_remove))
-    #
-    # # %% Plot and remove outliers
-    # plotname = "Structures"
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_1_org_fine",
-    #     0.5,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_2_org_fine",
-    #     0.5,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_1_org_thick",
-    #     2,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_2_org_thick",
-    #     2,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_1_outliers",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_2_outliers",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    # print(cells.shape)
-    # CellIds_remove = (
-    #     cells.loc[cells.index[CellIds_remove], "CellId"].squeeze().to_numpy()
-    # )
-    # cells_ao.loc[
-    #     cells_ao["CellId"].isin(CellIds_remove), "Outlier annotation"
-    # ] = "Abnormal structure volume metrics"
-    # cells = cells.drop(cells.index[cells["CellId"].isin(CellIds_remove)])
-    # print(f"Removing {len(CellIds_remove)} cells due to structure volume metrics")
-    # print(cells.shape)
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_1_clean_fine",
-    #     0.5,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_2_clean_fine",
-    #     0.5,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_1_clean_thick",
-    #     2,
-    #     [],
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"{plotname}_2_clean_thick",
-    #     2,
-    #     [],
-    # )
-    #
-    # # %% Saving
-    # cells.to_csv(data_root / dataset_clean)
-    # cells_ao.to_csv(data_root / dataset_outliers)
-    #
-    # # %% Final diagnostic plot
-    # cells = pd.read_csv(data_root / dataset)
-    # CellIds_remove_dict = {}
-    #
-    # for i, xy_pair in enumerate(pairs):
-    #     metricX = cellnuc_metrics[xy_pair[0]]
-    #     metricY = cellnuc_metrics[xy_pair[1]]
-    #     CellIds_remove_dict[f"{metricX} vs {metricY}"] = np.argwhere(
-    #         (
-    #             cells_ao["Outlier annotation"] == "Abnormal cell or nuclear metric"
-    #         ).to_numpy()
-    #     )
-    # oplot(
-    #     cellnuc_metrics,
-    #     cellnuc_abbs,
-    #     pairs2,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"Check_cellnucleus",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    #
-    # CellIds_remove_dict = {}
-    # for xm, metric in enumerate(selected_metrics):
-    #     CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(
-    #         (
-    #             (cells_ao["Outlier annotation"] == "Abnormal structure volume metrics")
-    #             | (cells_ao["Outlier annotation"] == "Abnormal cell or nuclear metric")
-    #         ).to_numpy()
-    #     )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[0:7],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"Check_structures_1",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
-    # splot(
-    #     selected_metrics,
-    #     selected_metrics_abb,
-    #     selected_structures[7:14],
-    #     structure_metric,
-    #     cells,
-    #     True,
-    #     pic_root,
-    #     f"Check_structures_2",
-    #     2,
-    #     CellIds_remove_dict,
-    # )
+    rs = 1
+
+    # %% For all pairs compute densities
+    remove_cells = cells["CellId"].to_frame().copy()
+    for xm, metric in tqdm(enumerate(selected_metrics), "Iterating metrics"):
+        for ys, struct in tqdm(enumerate(selected_structures), "and structures"):
+
+            # data
+            x = (
+                cells.loc[cells["structure_name"] == struct, [metric]]
+                .squeeze()
+                .to_numpy()
+            )
+            y = (
+                cells.loc[cells["structure_name"] == struct, [structure_metric]]
+                .squeeze()
+                .to_numpy()
+            )
+
+            if ys == 0:
+                remove_cells[f"{metric} vs {structure_metric}"] = np.nan
+
+            print(f"Density estimate on {np.amin([N, len(x)])} samples")
+            xS, yS = resample(
+                x, y, replace=False, n_samples=np.amin([N, len(x)]), random_state=rs
+            )
+            k = gaussian_kde(np.vstack([xS, yS]))
+            if platform.system() == "Windows":
+                cell_dens = k(np.vstack([x.flatten(), y.flatten()]))
+            elif platform.system() == "Linux":
+                cores = int(multiprocessing.cpu_count() / 5)
+                pool = multiprocessing.Pool(processes=cores)
+                torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
+                results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
+                cell_dens = np.concatenate(results)
+
+            cell_dens = cell_dens / np.sum(cell_dens)
+            remove_cells.loc[
+                cells["structure_name"] == struct,
+                f"{metric} vs {structure_metric}",
+            ] = cell_dens
+
+    remove_cells.to_csv(data_root_extra / "structures.csv")
+    # remove_cells = pd.read_csv(data_root_extra / 'structures.csv')
+
+    # %% Summarize across repeats
+    remove_cells_summary = cells["CellId"].to_frame().copy()
+    for xm, metric in enumerate(selected_metrics):
+        print(metric)
+
+        x = remove_cells[f"{metric} vs {structure_metric}"].to_numpy()
+
+        fig, axs = plt.subplots(1, 1, figsize=(16, 9))
+        xr = np.log(x.flatten())
+        xr = np.delete(xr, np.argwhere(np.isinf(xr)))
+        axs[0].hist(xr, bins=100)
+        axs[0].set_title(f"Histogram of cell probabilities (log scale)")
+        axs[0].set_yscale("log")
+
+        if save_flag:
+            plot_save_path = (
+                pic_root / f"{metric} vs {structure_metric}_cellswithlowprobs.png"
+            )
+            plt.savefig(plot_save_path, format="png", dpi=1000)
+            plt.close()
+        else:
+            plt.show()
+
+        remove_cells_summary[f"{metric} vs {structure_metric}"] = x
+
+    # %% Identify cells to be removed
+    CellIds_remove_dict = {}
+    CellIds_remove = np.empty(0, dtype=int)
+    for xm, metric in enumerate(selected_metrics):
+        print(metric)
+        CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(
+            remove_cells_summary[f"{metric} vs {structure_metric}"].to_numpy()
+            < cell_dens_th_S
+        )
+        CellIds_remove = np.union1d(
+            CellIds_remove, CellIds_remove_dict[f"{metric} vs {structure_metric}"]
+        )
+        print(len(CellIds_remove))
+
+    # %% Plot and remove outliers
+    plotname = "Structures"
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_1_org_fine",
+        0.5,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_2_org_fine",
+        0.5,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_1_org_thick",
+        2,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_2_org_thick",
+        2,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_1_outliers",
+        2,
+        CellIds_remove_dict,
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_2_outliers",
+        2,
+        CellIds_remove_dict,
+    )
+    print(cells.shape)
+    CellIds_remove = (
+        cells.loc[cells.index[CellIds_remove], "CellId"].squeeze().to_numpy()
+    )
+    cells_ao.loc[
+        cells_ao["CellId"].isin(CellIds_remove), "Outlier annotation"
+    ] = "Abnormal structure volume metrics"
+    cells = cells.drop(cells.index[cells["CellId"].isin(CellIds_remove)])
+    print(f"Removing {len(CellIds_remove)} cells due to structure volume metrics")
+    print(cells.shape)
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_1_clean_fine",
+        0.5,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_2_clean_fine",
+        0.5,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_1_clean_thick",
+        2,
+        [],
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"{plotname}_2_clean_thick",
+        2,
+        [],
+    )
+
+    # %% Saving
+    cells.to_csv(data_root / dataset_clean)
+    cells_ao.to_csv(data_root / dataset_outliers)
+
+    # %% Final diagnostic plot
+    cells = pd.read_csv(data_root / dataset)
+    CellIds_remove_dict = {}
+
+    for i, xy_pair in enumerate(pairs):
+        metricX = cellnuc_metrics[xy_pair[0]]
+        metricY = cellnuc_metrics[xy_pair[1]]
+        CellIds_remove_dict[f"{metricX} vs {metricY}"] = np.argwhere(
+            (
+                cells_ao["Outlier annotation"] == "Abnormal cell or nuclear metric"
+            ).to_numpy()
+        )
+    oplot(
+        cellnuc_metrics,
+        cellnuc_abbs,
+        pairs2,
+        cells,
+        True,
+        pic_root,
+        f"Check_cellnucleus",
+        2,
+        CellIds_remove_dict,
+    )
+
+    CellIds_remove_dict = {}
+    for xm, metric in enumerate(selected_metrics):
+        CellIds_remove_dict[f"{metric} vs {structure_metric}"] = np.argwhere(
+            (
+                (cells_ao["Outlier annotation"] == "Abnormal structure volume metrics")
+                | (cells_ao["Outlier annotation"] == "Abnormal cell or nuclear metric")
+            ).to_numpy()
+        )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[0:7],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"Check_structures_1",
+        2,
+        CellIds_remove_dict,
+    )
+    splot(
+        selected_metrics,
+        selected_metrics_abb,
+        selected_structures[7:14],
+        structure_metric,
+        cells,
+        True,
+        pic_root,
+        f"Check_structures_2",
+        2,
+        CellIds_remove_dict,
+    )
