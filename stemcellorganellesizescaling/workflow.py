@@ -87,7 +87,8 @@ print('##################### Data preparation - Outlier Removal ################
 tableIN = "SizeScaling_20201006.csv"
 tableOUT = "SizeScaling_20201006_clean.csv"
 tableOUTL = "SizeScaling_20201006_outliers.csv"
-outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
+Rounds = 10
+outlier_removal(dirs, tableIN, tableOUT, tableOUTL, Rounds)
 
 #%% Data preparation - Diagnostic violins
 # print('##################### Data preparation - Diagnostic violins #####################')
