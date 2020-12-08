@@ -1,0 +1,45 @@
+stemcellorganellesizescaling.analyses package
+=============================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+   stemcellorganellesizescaling.analyses.utils
+
+Submodules
+----------
+
+stemcellorganellesizescaling.analyses.compute\_stats module
+-----------------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.analyses.compute_stats
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+stemcellorganellesizescaling.analyses.data\_prep module
+-------------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.analyses.data_prep
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+stemcellorganellesizescaling.analyses.scatter\_plots module
+-----------------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.analyses.scatter_plots
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: stemcellorganellesizescaling.analyses
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+   stemcellorganellesizescaling.analyses
    stemcellorganellesizescaling.bin
 
 Submodules
@@ -15,6 +16,30 @@ stemcellorganellesizescaling.example module
 -------------------------------------------
 
 .. automodule:: stemcellorganellesizescaling.example
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+stemcellorganellesizescaling.workflow module
+--------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.workflow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+stemcellorganellesizescaling.workflow\_arg module
+-------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.workflow_arg
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+stemcellorganellesizescaling.workflow\_subsample module
+-------------------------------------------------------
+
+.. automodule:: stemcellorganellesizescaling.workflow_subsample
    :members:
    :undoc-members:
    :show-inheritance:
