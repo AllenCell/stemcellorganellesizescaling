@@ -15,6 +15,7 @@ from datetime import datetime
 import os, platform
 import sys, importlib
 import multiprocessing
+from itertools import repeat
 
 # Third party
 
@@ -401,6 +402,11 @@ def diagnostic_violins(
             plt.show()
 
 
+# define function
+def calc_kernel(samp,k):
+    return k(samp)
+
+
 def outlier_removal(
     dirs: list, dataset: Path, dataset_clean: Path, dataset_outliers: Path,
 ):
@@ -418,10 +424,6 @@ def outlier_removal(
     dataset_outliers: Path
         Path to outlier annotation CSV (same number of cells as dataset)
     """
-
-    # define function
-    def calc_kernel(samp):
-        return k(samp)
 
     # Resolve directories
     data_root = dirs[0]
@@ -541,7 +543,7 @@ def outlier_removal(
             cores = multiprocessing.cpu_count() - 5
             pool = multiprocessing.Pool(processes=cores)
             torun = np.array_split(np.vstack([x.flatten(), y.flatten()]), cores, axis=1)
-            results = pool.map(calc_kernel, torun)
+            results = pool.starmap(calc_kernel, zip(torun, repeat(k)))
             cell_dens = np.concatenate(results)
 
         cell_dens = cell_dens / np.sum(cell_dens)
