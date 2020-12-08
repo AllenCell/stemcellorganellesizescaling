@@ -82,12 +82,12 @@ dirs.append(pic_root)
 # initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
-# print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################'
-# print('##################### Data preparation - Outlier Removal #####################')
-# tableIN = "SizeScaling_20201006.csv"
-# tableOUT = "SizeScaling_20201006_clean.csv"
-# tableOUTL = "SizeScaling_20201006_outliers.csv"
-# outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
+print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################')
+print('##################### Data preparation - Outlier Removal #####################')
+tableIN = "SizeScaling_20201006.csv"
+tableOUT = "SizeScaling_20201006_clean.csv"
+tableOUTL = "SizeScaling_20201006_outliers.csv"
+outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
 # print('##################### Data preparation - Diagnostic violins #####################')
@@ -114,12 +114,12 @@ dirs.append(pic_root)
 # compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
 #%% Computing statistics - Scaling statistics
-print(
-    "##################### Computing statistics - Scaling statistics #####################"
-)
-tableIN = "SizeScaling_20201102.csv"
-scaleOUTdir = "Scale_20201102"
-scaling_stats(dirs, tableIN, scaleOUTdir)
+# print(
+#     "##################### Computing statistics - Scaling statistics #####################"
+# )
+# tableIN = "SizeScaling_20201102.csv"
+# scaleOUTdir = "Scale_20201102"
+# scaling_stats(dirs, tableIN, scaleOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
@@ -141,9 +141,9 @@ scaling_stats(dirs, tableIN, scaleOUTdir)
 # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
 #%% Downsampling analysis
-print(
-    "##################### Plotting scatterplots - Compensated organelle scatter plots #####################"
-)
-tableIN = "SizeScaling_20201102.csv"
-sampleOUTdir = "Sample_20201102"
-sampling_stats(dirs, tableIN, sampleOUTdir)
+# print(
+#     "##################### Plotting scatterplots - Compensated organelle scatter plots #####################"
+# )
+# tableIN = "SizeScaling_20201102.csv"
+# sampleOUTdir = "Sample_20201102"
+# sampling_stats(dirs, tableIN, sampleOUTdir)
