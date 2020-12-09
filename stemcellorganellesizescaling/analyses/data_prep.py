@@ -876,7 +876,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
@@ -900,7 +900,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
@@ -924,7 +924,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
@@ -958,7 +958,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
@@ -982,7 +982,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
@@ -1043,7 +1043,7 @@ def outlier_removal(
     splot(
         selected_metrics,
         selected_metrics_abb,
-        selected_structures[7:14],
+        selected_structures[7:15],
         structure_metric,
         cells,
         True,
