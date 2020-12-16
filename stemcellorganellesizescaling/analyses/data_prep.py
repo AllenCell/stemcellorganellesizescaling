@@ -84,60 +84,60 @@ def initial_parsing(
         cells.sample(n=10).to_csv(data_root / dataset_snippet)
 
         # %% Check out columns, keep a couple
-        # keepcolumns = [
-        #     "CellId",
-        #     "structure_name",
-        #     "mem_roundness_surface_area_lcc",
-        #     "mem_shape_volume_lcc",
-        #     "dna_roundness_surface_area_lcc",
-        #     "dna_shape_volume_lcc",
-        #     "str_connectivity_number_cc",
-        #     "str_shape_volume",
-        #     "mem_position_depth_lcc",
-        #     "mem_position_height_lcc",
-        #     "mem_position_width_lcc",
-        #     "dna_position_depth_lcc",
-        #     "dna_position_height_lcc",
-        #     "dna_position_width_lcc",
-        #     "DNA_MEM_PC1",
-        #     "DNA_MEM_PC2",
-        #     "DNA_MEM_PC3",
-        #     "DNA_MEM_PC4",
-        #     "DNA_MEM_PC5",
-        #     "DNA_MEM_PC6",
-        #     "DNA_MEM_PC7",
-        #     "DNA_MEM_PC8",
-        #     "WorkflowId",
-        #     "meta_fov_image_date",
-        #     "meta_imaging_mode",
-        # ]
-        # cells = cells[keepcolumns]
-        #
-        # # Missing:
-        # # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
-        #
-        # # %% Rename columns
-        # cells = cells.rename(
-        #     columns={
-        #         "mem_roundness_surface_area_lcc": "Cell surface area",
-        #         "mem_shape_volume_lcc": "Cell volume",
-        #         "dna_roundness_surface_area_lcc": "Nuclear surface area",
-        #         "dna_shape_volume_lcc": "Nuclear volume",
-        #         "str_connectivity_number_cc": "Number of pieces",
-        #         "str_shape_volume": "Structure volume",
-        #         "mem_position_depth_lcc": "Cell height",
-        #         "mem_position_height_lcc": "Cell xbox",
-        #         "mem_position_width_lcc": "Cell ybox",
-        #         "dna_position_depth_lcc": "Nucleus height",
-        #         "dna_position_height_lcc": "Nucleus xbox",
-        #         "dna_position_width_lcc": "Nucleus ybox",
-        #         "meta_fov_image_date": "ImageDate",
-        #     }
-        # )
-        #
-        # # %% Add a column
-        # cells["Cytoplasmic volume"] = cells["Cell volume"] - cells["Nuclear volume"]
-        #
+        keepcolumns = [
+            "CellId",
+            "structure_name",
+            "mem_roundness_surface_area",
+            "mem_shape_volume",
+            "dna_roundness_surface_area",
+            "dna_shape_volume",
+            "str_connectivity_number_cc",
+            "str_shape_volume",
+            "mem_position_depth",
+            "mem_position_height",
+            "mem_position_width",
+            "dna_position_depth",
+            "dna_position_height",
+            "dna_position_width",
+            "DNA_MEM_PC1",
+            "DNA_MEM_PC2",
+            "DNA_MEM_PC3",
+            "DNA_MEM_PC4",
+            "DNA_MEM_PC5",
+            "DNA_MEM_PC6",
+            "DNA_MEM_PC7",
+            "DNA_MEM_PC8",
+            "WorkflowId",
+            "meta_fov_image_date",
+            "meta_imaging_mode",
+        ]
+        cells = cells[keepcolumns]
+
+        # Missing:
+        # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
+
+        # %% Rename columns
+        cells = cells.rename(
+            columns={
+                "mem_roundness_surface_area": "Cell surface area",
+                "mem_shape_volume": "Cell volume",
+                "dna_roundness_surface_area": "Nuclear surface area",
+                "dna_shape_volume": "Nuclear volume",
+                "str_connectivity_number_cc": "Number of pieces",
+                "str_shape_volume": "Structure volume",
+                "mem_position_depth": "Cell height",
+                "mem_position_height": "Cell xbox",
+                "mem_position_width": "Cell ybox",
+                "dna_position_depth": "Nucleus height",
+                "dna_position_height": "Nucleus xbox",
+                "dna_position_width": "Nucleus ybox",
+                "meta_fov_image_date": "ImageDate",
+            }
+        )
+
+        # %% Add a column
+        cells["Cytoplasmic volume"] = cells["Cell volume"] - cells["Nuclear volume"]
+
         # # %% Adding feature pieces
         # paths = Path(piecedir).glob("**/*.csv")
         # cells["Piece average"] = np.nan
@@ -169,8 +169,8 @@ def initial_parsing(
         #     )
         #     pieces.set_index("CellId", drop=False, inplace=True)
         #     cells.update(pieces)
-        #
-        # # %% Post-processing and checking
+
+        # %% Post-processing and checking
         # sv = cells["Structure volume"].to_numpy()
         # ps = cells["Piece sum"].to_numpy()
         # sn = cells["structure_name"].to_numpy()
@@ -185,9 +185,9 @@ def initial_parsing(
         # print(np.any(cells.isnull()))
         # cells.loc[cells["Piece std"].isnull(), "Piece std"] = 0
         # print(np.any(cells.isnull()))
-        #
-        # # %% Save
-        # cells.to_csv(data_root / dataset_filtered)
+
+        # %% Save
+        cells.to_csv(data_root / dataset_filtered)
 
     else:
         print("Can only be run on Linux machine at AICS")
@@ -357,11 +357,6 @@ def diagnostic_violins(
         "Cell ybox",
         "Nucleus height",
         "Nucleus xbox",
-        "Piece average",
-        "Piece max",
-        "Piece min",
-        "Piece std",
-        "Piece sum",
         "Nucleus ybox",
         "DNA_MEM_PC1",
         "DNA_MEM_PC2",
