@@ -69,24 +69,24 @@ for s, sample in enumerate(samplevec):
         datastr = f"{sample}_{r}"
         #%% Directories
         if platform.system() == "Windows":
-            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Nov2020/{datastr}")
-            pic_root = Path(f"E:/DA/Data/scoss/Pics/Subsample_Nov2020/{datastr}")
-            org_root = Path("E:/DA/Data/scoss/Data/Nov2020")
+            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020/{datastr}")
+            pic_root = Path(f"E:/DA/Data/scoss/Pics/Subsample_Dec2020/{datastr}")
+            org_root = Path("E:/DA/Data/scoss/Data/Dec2020")
         elif platform.system() == "Linux":
             data_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Nov2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Dec2020/{datastr}"
             )
             pic_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Nov2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Dec2020/{datastr}"
             )
             org_root = Path(
-                "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020"
+                "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020"
             )
         print(data_root)
         data_root.mkdir(exist_ok=True)
         pic_root.mkdir(exist_ok=True)
         # Load dataset
-        cells = pd.read_csv((org_root / "SizeScaling_20201102.csv"))
+        cells = pd.read_csv((org_root / "SizeScaling_20201215.csv"))
         # Sample
         structures = cells["structure_name"].unique()
         index = pd.Series([])
@@ -97,7 +97,7 @@ for s, sample in enumerate(samplevec):
                 .index.to_series()
             )
         cells = cells.loc[index]
-        cells.to_csv(data_root / "SizeScaling_20201102.csv")
+        cells.to_csv(data_root / "SizeScaling_20201215.csv")
         # Directories
         dirs = []
         dirs.append(data_root)
@@ -107,9 +107,9 @@ for s, sample in enumerate(samplevec):
         print(
             "##################### Computing statistics - Pairwise statistics #####################"
         )
-        tableIN = "SizeScaling_20201102.csv"
-        table_compIN = "SizeScaling_20201102_comp.csv"
-        statsOUTdir = "Stats_20201102"
+        tableIN = "SizeScaling_20201215.csv"
+        table_compIN = "SizeScaling_20201215_comp.csv"
+        statsOUTdir = "Stats_20201215"
         pairwisestats(
             dirs,
             tableIN,
@@ -124,14 +124,14 @@ for s, sample in enumerate(samplevec):
         print(
             "##################### Computing statistics - Composite models #####################"
         )
-        tableIN = "SizeScaling_20201102.csv"
-        statsOUTdir = "Stats_20201102"
+        tableIN = "SizeScaling_20201215.csv"
+        statsOUTdir = "Stats_20201215"
         compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
         # #%% Computing statistics - Scaling statistics
         print(
             "##################### Computing statistics - Scaling statistics #####################"
         )
-        tableIN = "SizeScaling_20201102.csv"
-        statsOUTdir = "Stats_20201102"
+        tableIN = "SizeScaling_20201215.csv"
+        statsOUTdir = "Stats_20201215"
         scaling_stats(dirs, tableIN, statsOUTdir)
