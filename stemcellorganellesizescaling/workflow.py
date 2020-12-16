@@ -75,11 +75,11 @@ dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
 # print('##################### Data preparation - Initial Parsing #####################')
-# tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/shapemode/manifest.csv"
-# featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
-# tableSNIP = "Manifest_snippet_20201102.csv"
-# tableOUT = "SizeScaling_20201102.csv"
-# initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
+tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/shapemode/manifest.csv"
+featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
+tableSNIP = "Manifest_snippet_20201102.csv"
+tableOUT = "SizeScaling_20201102.csv"
+initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
 # print('##################### Outlier removal is done more upstream and typically not run anymore as part of the size scaling workflow #####################'
