@@ -60,14 +60,14 @@ log = logging.getLogger(__name__)
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/Nov2020/")
-    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
+    data_root = Path("E:/DA/Data/scoss/Data/Dec2020/")
+    pic_root = Path("E:/DA/Data/scoss/Pics/Dec2020/")
 elif platform.system() == "Linux":
     data_root = Path(
-        "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Nov2020/"
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020/"
     )
     pic_root = Path(
-        "/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_2020/"
+        "/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Dec2020/"
     )
 dirs = []
 dirs.append(data_root)
