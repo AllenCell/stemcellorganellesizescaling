@@ -77,8 +77,8 @@ dirs.append(pic_root)
 # print('##################### Data preparation - Initial Parsing #####################')
 tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_beta/shapemode/manifest.csv"
 featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
-tableSNIP = "Manifest_snippet_20201102.csv"
-tableOUT = "SizeScaling_20201102.csv"
+tableSNIP = "Manifest_snippet_20201215.csv"
+tableOUT = "SizeScaling_20201215.csv"
 initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 
 #%% Data preparation - Outlier Removal
