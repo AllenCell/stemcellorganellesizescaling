@@ -90,9 +90,9 @@ initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 # outlier_removal(dirs, tableIN, tableOUT, tableOUTL)
 
 #%% Data preparation - Diagnostic violins
-# print('##################### Data preparation - Diagnostic violins #####################')
-# tableIN = "SizeScaling_20201102.csv"
-# diagnostic_violins(dirs, tableIN)
+print('##################### Data preparation - Diagnostic violins #####################')
+tableIN = "SizeScaling_20201215.csv"
+diagnostic_violins(dirs, tableIN)
 
 #%% Computing statistics - Compensation analysis
 # print('##################### Computing statistics - Compensation analysis #####################')
