@@ -75,7 +75,7 @@ dirs.append(pic_root)
 
 #%% Data preparation - Initial Parsing
 # print('##################### Data preparation - Initial Parsing #####################')
-tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging/shapemode/manifest.csv"
+tableIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/projects/cell_shape_variation/local_staging_beta/shapemode/manifest.csv"
 featIN = "/allen/aics/assay-dev/MicroscopyOtherData/Viana/resources/qcb/data-raw/production/feature"
 tableSNIP = "Manifest_snippet_20201102.csv"
 tableOUT = "SizeScaling_20201102.csv"
@@ -114,12 +114,12 @@ initial_parsing(dirs, tableIN, featIN, tableSNIP, tableOUT)
 # compositemodels_explainedvariance(dirs, tableIN, statsOUTdir)
 
 #%% Computing statistics - Scaling statistics
-print(
-    "##################### Computing statistics - Scaling statistics #####################"
-)
-tableIN = "SizeScaling_20201102.csv"
-scaleOUTdir = "Scale_20201102"
-scaling_stats(dirs, tableIN, scaleOUTdir)
+# print(
+#     "##################### Computing statistics - Scaling statistics #####################"
+# )
+# tableIN = "SizeScaling_20201102.csv"
+# scaleOUTdir = "Scale_20201102"
+# scaling_stats(dirs, tableIN, scaleOUTdir)
 
 #%% Plotting scatterplots - Cell and nuclear metrics
 # print('##################### Plotting scatterplots - Cell and nuclear metrics #####################')
@@ -141,9 +141,9 @@ scaling_stats(dirs, tableIN, scaleOUTdir)
 # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
 
 #%% Downsampling analysis
-print(
-    "##################### Plotting scatterplots - Compensated organelle scatter plots #####################"
-)
-tableIN = "SizeScaling_20201102.csv"
-sampleOUTdir = "Sample_20201102"
-sampling_stats(dirs, tableIN, sampleOUTdir)
+# print(
+#     "##################### Plotting scatterplots - Compensated organelle scatter plots #####################"
+# )
+# tableIN = "SizeScaling_20201102.csv"
+# sampleOUTdir = "Sample_20201102"
+# sampling_stats(dirs, tableIN, sampleOUTdir)
