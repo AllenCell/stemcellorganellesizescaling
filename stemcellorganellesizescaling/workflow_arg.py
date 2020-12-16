@@ -172,7 +172,7 @@ def workflow_arg(n_sample, n_try):
     #
     # #%% Plotting scatterplots - Organelle scatter plots
     # print('##################### Plotting scatterplots - Compensated organelle scatter plots #####################')
-    # tableIN = "SizeScaling_20201102.csv"
+    # tableIN = "SizeScaling_20201102.csv"_arg
     # table_compIN = "SizeScaling_20201102_comp.csv"
     # statsIN = "Stats_20201102"
     # organelle_compensated_scatter_plots(dirs, tableIN, table_compIN, statsIN)
