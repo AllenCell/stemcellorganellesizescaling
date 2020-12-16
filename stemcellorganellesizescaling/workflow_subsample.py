@@ -69,18 +69,18 @@ for s, sample in enumerate(samplevec):
         datastr = f"{sample}_{r}"
         #%% Directories
         if platform.system() == "Windows":
-            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020/{datastr}")
-            pic_root = Path(f"E:/DA/Data/scoss/Pics/Subsample_Dec2020/{datastr}")
-            org_root = Path("E:/DA/Data/scoss/Data/Dec2020")
+            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020mesh/{datastr}")
+            pic_root = Path(f"E:/DA/Data/scoss/Pics/Subsample_Dec2020mesh/{datastr}")
+            org_root = Path("E:/DA/Data/scoss/Data/Dec2020mesh")
         elif platform.system() == "Linux":
             data_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Dec2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Dec2020mesh/{datastr}"
             )
             pic_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Dec2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Dec2020mesh/{datastr}"
             )
             org_root = Path(
-                "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020"
+                "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020mesh"
             )
         print(data_root)
         data_root.mkdir(exist_ok=True)
