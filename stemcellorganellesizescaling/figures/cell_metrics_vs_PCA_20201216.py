@@ -19,11 +19,11 @@ log = logging.getLogger(__name__)
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/Nov2020")
-    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
+    data_root = Path("E:/DA/Data/scoss/Data/Dec2020mesh")
+    pic_root = Path("E:/DA/Data/scoss/Pics/Dec2020mesh/")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Nov2020/")
+    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020mesh")
+    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Dec2020mesh/")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
@@ -33,16 +33,13 @@ data_root = dirs[0]
 pic_root = dirs[1]
 
 # Load dataset
-tableIN = "SizeScaling_20201102.csv"
-table_compIN = "SizeScaling_20201102_comp.csv"
-statsIN = "Stats_20201102"
+tableIN = "SizeScaling_20201215.csv"
+statsIN = "Stats_20201215"
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
-cells_COMP = pd.read_csv(data_root / table_compIN)
-np.any(cells_COMP.isnull())
 
 # %% Parameters, updated directories
-save_flag = 0  # save plot (1) or show on screen (0)
+save_flag = 1  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
 pic_root = pic_root / "plot_cellmetrics_vs_PCA"
 pic_root.mkdir(exist_ok=True)
@@ -515,9 +512,9 @@ scatter(
 )
 
 if save_flag == 1:
-    # plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201207.png"
+    # plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201217.png"
     # plt.savefig(plot_save_path, format="png", dpi=300)
-    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201207.svg"
+    plot_save_path = pic_root / f"Cell height vs dna_mem_pc1_20201217.svg"
     plt.savefig(plot_save_path, format="svg")
     plt.close()
 else:
@@ -556,9 +553,9 @@ scatter(
 )
 
 if save_flag == 1:
-    # plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201207.png"
+    # plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201217.png"
     # plt.savefig(plot_save_path, format="png", dpi=300)
-    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201207.svg"
+    plot_save_path = pic_root / f"Cell volume vs dna_mem_pc2_20201217.svg"
     plt.savefig(plot_save_path, format="svg")
     plt.close()
 else:
