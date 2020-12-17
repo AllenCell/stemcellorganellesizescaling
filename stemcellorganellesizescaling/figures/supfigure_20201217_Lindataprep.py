@@ -93,17 +93,17 @@ structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
 
 # %%
 PlotMat = pd.DataFrame()
-data_root = Path(f"E:/DA/Data/scoss/Data/Nov2020/")
+data_root = Path(f"E:/DA/Data/scoss/Data/Dec2020/")
 
 # %% Load dataset
 
-tableIN = "SizeScaling_20201102.csv"
-table_compIN = "SizeScaling_20201102_comp.csv"
-statsIN = "Stats_20201102"
+tableIN = "SizeScaling_20201215.csv"
+table_compIN = "SizeScaling_20201215_comp.csv"
+statsIN = "Stats_20201215"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
-ScaleMat = pd.read_csv(data_root / "Stats_20201102" / "ScaleStats_20201125.csv")
-ScaleCurve = pd.read_csv(data_root / "Stats_20201102" / "ScaleCurve_20201125.csv")
+ScaleMat = pd.read_csv(data_root / "Scale_20201215" / "ScaleStats_20201125.csv")
+ScaleCurve = pd.read_csv(data_root / "Scale_20201215" / "ScaleCurve_20201125.csv")
 
 
 # %% Start dataframe
@@ -221,4 +221,6 @@ for xi, xlabel in enumerate(
                 CompMat.loc[counter, "Com_max"] = cmin_max
 
 # %%
-CompMat.to_csv(data_root / "supplementalfiguredata" / "LinCom_20201202.csv")
+data_rootT = data_root / "supplementalfiguredata"
+data_rootT.mkdir(exist_ok=True)
+CompMat.to_csv(data_rootT / "LinCom_20201217.csv")

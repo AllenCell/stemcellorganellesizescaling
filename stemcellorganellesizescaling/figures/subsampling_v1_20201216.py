@@ -106,21 +106,27 @@ repeats = 3
 for s, sample in tqdm(enumerate(samplevec), "Sample number"):
     for r in range(0, repeats):
         if sample == -1:
-            data_root = Path(f"E:/DA/Data/scoss/Data/Nov2020/")
+            data_root = Path(f"E:/DA/Data/scoss/Data/Dec2020/")
         else:
-            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Nov2020/{sample}_{r}/")
+            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020/{sample}_{r}/")
 
         # %% Load dataset
 
-        tableIN = "SizeScaling_20201102.csv"
-        table_compIN = "SizeScaling_20201102_comp.csv"
-        statsIN = "Stats_20201102"
+        tableIN = "SizeScaling_20201215.csv"
+        table_compIN = "SizeScaling_20201215_comp.csv"
+        statsIN = "Stats_20201215"
         # Load dataset
         cells = pd.read_csv(data_root / tableIN)
-        ScaleMat = pd.read_csv(data_root / "Stats_20201102" / "ScaleStats_20201125.csv")
-        ScaleCurve = pd.read_csv(
-            data_root / "Stats_20201102" / "ScaleCurve_20201125.csv"
-        )
+        if sample == -1:
+            ScaleMat = pd.read_csv(data_root / "Scale_20201215" / "ScaleStats_20201125.csv")
+            ScaleCurve = pd.read_csv(
+                data_root / "Scale_20201215" / "ScaleCurve_20201125.csv"
+            )
+        else:
+            ScaleMat = pd.read_csv(data_root / "Stats_20201215" / "ScaleStats_20201125.csv")
+            ScaleCurve = pd.read_csv(
+                data_root / "Stats_20201215" / "ScaleCurve_20201125.csv"
+            )
 
         # %% Start dataframe
         CellNucGrow = pd.DataFrame()
@@ -368,11 +374,11 @@ ax2.set_ylim(bottom=0)
 
 
 # Resolve directories
-pic_root = pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
+pic_root = pic_root = Path("E:/DA/Data/scoss/Pics/Dec2020/")
 pic_rootT = pic_root / "subsampling"
 pic_rootT.mkdir(exist_ok=True)
 
-plot_save_path = pic_rootT / f"SubsamplingSizeScaling_20201202_v1.svg"
+plot_save_path = pic_rootT / f"SubsamplingSizeScaling_20201217_v1.svg"
 plt.savefig(plot_save_path, format="svg")
 
 plt.show()
