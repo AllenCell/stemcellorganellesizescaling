@@ -322,7 +322,7 @@ def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, st
 
        Output
        ----------
-       Scale_rates: N (no of bootstraps) by 2 (linear and log-log model)
+       Scale_rates: N (no of bootstraps) by 2 (linear and log-log model or r-squared for linear model)
        Scale_plot_data - dictionary
 
 
@@ -341,7 +341,8 @@ def bootstrap_linear_and_log_model(x, y, xlabel, ylabel, type, cell_doubling, st
         xC = sm.add_constant(xC)
         yC = model.predict(xC)
         Scale_rates[i, 0] = np.round(100 * (yC[1] - yC[0]) / yC[0], 2)
-        model_ll, _ = fit_ols(np.log2(xx), np.log2(yy), type)
-        Scale_rates[i, 1] = np.round(100 * model_ll.params[1], 2)
+        # model_ll, _ = fit_ols(np.log2(xx), np.log2(yy), type)
+        # Scale_rates[i, 1] = np.round(100 * model_ll.params[1], 2)
+        Scale_rates[i, 1] = model.rsquared
 
     return Scale_rates
