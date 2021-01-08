@@ -13,6 +13,7 @@ from scipy.stats import gaussian_kde
 from tqdm import tqdm
 from matplotlib import cm
 import statsmodels.api as sm
+from scipy.optimize import curve_fit
 import pickle
 import psutil
 
@@ -61,6 +62,25 @@ def fit_ols(x, y, type, xa=np.nan):
         if not np.any(np.isnan(xa)):
             xa = sm.add_constant(xa)
             ya = fittedmodel.predict(xa)
+    elif type is "LogPower":
+        x = np.log2(x)
+        y = np.log2(y)
+        x = sm.add_constant(x)
+        model = sm.OLS(y, x)
+        fittedmodel = model.fit()
+        if not np.any(np.isnan(xa)):
+            xa = np.log2(xa)
+            xa = sm.add_constant(xa)
+            ya = fittedmodel.predict(xa)
+            ya = np.exp2(ya)
+    elif type is "Power":
+        x = np.squeeze(x)
+        y = np.squeeze(y)
+        def func(x, a, b, k):
+            return a * x ** k + b
+        fittedmodel, _ = curve_fit(func, x, y,  maxfev = 10000)
+        if not np.any(np.isnan(xa)):
+            ya = func(xa, *fittedmodel)
     elif type is "Complex":
         # first make interaction terms
         for f1 in np.arange(F):
