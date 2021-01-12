@@ -39,12 +39,12 @@ log = logging.getLogger(__name__)
 ###############################################################################
 
 Nsample = 300
-
+ntry = 6
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020/{Nsample} 1/")
-    pic_root = Path(f"E:/DA/Data/scoss/Pics/Dec2020/")
+    data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Nov2020/{Nsample} {ntry}/")
+    pic_root = Path(f"E:/DA/Data/scoss/Pics/Nov2020/")
 elif platform.system() == "Linux":
     1 / 0
 dirs = []
@@ -61,9 +61,9 @@ plt.rcParams["svg.fonttype"] = "none"
 data_root = dirs[0]
 pic_root = dirs[1]
 
-tableIN = "SizeScaling_20201215.csv"
-table_compIN = "SizeScaling_20201215_comp.csv"
-statsIN = "Stats_20201215"
+tableIN = "SizeScaling_20201102.csv"
+table_compIN = "SizeScaling_20201102_comp.csv"
+statsIN = "Stats_20201102"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 print(np.any(cells.isnull()))
@@ -71,8 +71,8 @@ print(np.any(cells.isnull()))
 # print(np.any(cells_COMP.isnull()))
 ann_root = Path("E:/DA/Data/scoss/Data/Nov2020/annotation")
 structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
-ScaleMat = pd.read_csv(data_root / "Stats_20201215" / "ScaleStats_20201125.csv")
-ScaleCurve = pd.read_csv(data_root / "Stats_20201215" / "ScaleCurve_20201125.csv")
+ScaleMat = pd.read_csv(data_root / "Stats_20201102" / "ScaleStats_20201125.csv")
+ScaleCurve = pd.read_csv(data_root / "Stats_20201102" / "ScaleCurve_20201125.csv")
 
 
 # %% Simple function to load statistics
@@ -527,7 +527,7 @@ from stemcellorganellesizescaling.analyses.utils.grow_plotting_func import growp
 
 # %%layout
 fig = plt.figure(figsize=(12, 12))
-PrintType = 'png'
+PrintType = 'all'
 
 # Scale4
 axScale4 = fig.add_axes([w3 + x3s, y3s, x3, y3])
@@ -1381,7 +1381,7 @@ pic_rootT = pic_root / "subsampling"
 pic_rootT.mkdir(exist_ok=True)
 
 if PrintType=='all':
-    plot_save_path = pic_rootT / f"heatmap_subsample{Nsample}_20201217_res300_ALL.png"
+    plot_save_path = pic_rootT / f"heatmap_subsample{Nsample}_20201217_res300_{ntry}.png"
     plt.savefig(plot_save_path, format="png", dpi=300)
     plt.show()
 elif PrintType=='png':

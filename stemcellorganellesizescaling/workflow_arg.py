@@ -76,7 +76,7 @@ def workflow_arg(n_sample, n_try):
         pic_root = Path(
             f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Dec2020/{datastr}"
         )
-        org_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020")
+        org_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020    ")
     print(data_root)
     data_root.mkdir(exist_ok=True)
     pic_root.mkdir(exist_ok=True)
