@@ -19,11 +19,11 @@ log = logging.getLogger(__name__)
 
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/Nov2020")
-    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020/")
+    data_root = Path("E:/DA/Data/scoss/Data/Dec2020")
+    pic_root = Path("E:/DA/Data/scoss/Pics/Dec2020/")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Nov2020")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Nov2020/")
+    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020")
+    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Dec2020/")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
@@ -33,17 +33,15 @@ data_root = dirs[0]
 pic_root = dirs[1]
 
 # Load dataset
-tableIN = "SizeScaling_20201102.csv"
-table_compIN = "SizeScaling_20201102_comp.csv"
-statsIN = "Stats_20201102"
+tableIN = "SizeScaling_20201215.csv"
+statsIN = "Stats_20201215"
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
-cells_COMP = pd.read_csv(data_root / table_compIN)
-np.any(cells_COMP.isnull())
 
 # %% Parameters, updated directories
 save_flag = 0  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
+plt.rcParams['axes.facecolor'] = 'black'
 pic_root = pic_root / "plot_cellvol_vs_nucvol"
 pic_root.mkdir(exist_ok=True)
 
@@ -136,8 +134,13 @@ def scatter(
 
     #%% Spectral
     cpmap = plt.cm.get_cmap(plt.cm.plasma)
-    cpmap = cpmap(np.linspace(0, 1, 100) ** 0.4)
-    cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
+    cpmap = cpmap(np.linspace(0, 1, 1000) ** 0.4)
+    ret = 0.3
+    ret2 = 25
+    cpmap[0:ret2, 0] = cpmap[0:ret2, 0] + np.linspace(ret, 0, ret2)
+    cpmap[0:ret2, 1] = cpmap[0:ret2, 1] + np.linspace(ret, 0, ret2)
+    cpmap[0:ret2, 2] = cpmap[0:ret2, 2] + np.linspace(ret, 0, ret2)
+    # cpmap[0:10, 3] = np.linspace(0.3, 1, 10)
     cpmap = ListedColormap(cpmap)
 
     #%% Plotting parameters
@@ -151,8 +154,8 @@ def scatter(
     y = cells[metricY]
     x = x / facX
     y = y / facY
-    x = np.log10(x)
-    y = np.log10(y)
+    # x = np.log10(x)
+    # y = np.log10(y)
 
 
 
@@ -162,14 +165,17 @@ def scatter(
         yii = loadps(stats_root, f"{metricX}_{metricY}_yii") / facY
         zii = loadps(stats_root, f"{metricX}_{metricY}_zii")
         cii = loadps(stats_root, f"{metricX}_{metricY}_cell_dens")
-        ax.set_ylim(top=np.max(yii))
+        ax.set_ylim(top=.97*np.max(yii))
         ax.set_ylim(bottom=np.min(yii))
         if fourcolors_flag is True:
             ax.pcolormesh(xii, yii, zii, cmap=newcmp)
         elif colorpoints_flag is True:
+            ax.set_facecolor('black')
             sorted_cells = np.argsort(cii)
             cii[sorted_cells] = np.arange(len(sorted_cells))
             ax.scatter(x, y, c=cii, s=ms, cmap=cpmap)
+            ax.set_ylim(bottom=0)
+            ax.set_xlim(left=0)
         else:
             ax.pcolormesh(xii, yii, zii, cmap=plt.cm.magma)
             sorted_cells = np.argsort(cii)
@@ -186,7 +192,7 @@ def scatter(
     ylim = ax.get_ylim()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    ax.grid()
+    ax.grid(b=True, which='major', color=[.5,.5,.5,.5], linestyle='-', linewidth=.5)
     # ax.text(xlim[0],ylim[1],f"{abbX} vs {abbY}",fontsize=fs2, verticalalignment = 'top')
     if kde_flag is True:
         if (fourcolors_flag is True) or (colorpoints_flag is True):
@@ -197,7 +203,7 @@ def scatter(
                 fontsize=fs,
                 verticalalignment="top",
                 horizontalalignment="right",
-                color="black",
+                color="white",
             )
         else:
             ax.text(
@@ -334,15 +340,15 @@ def scatter(
     ax.set_ylim(bottom=ylim[0], top=ylim[1])
 
     # Bottom histogram
-    axB.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 0.5])
+    # axB.hist(x, bins=nbins, color=[0.5, 0.5, 0.5, 0.5])
     ylimBH = axB.get_ylim()
-    axB.set_xticks(xticks)
+    axB.set_xticks([])
     axB.set_yticks([])
     axB.set_yticklabels([])
     axB.set_xticklabels([])
     axB.set_xlim(left=xlim[0], right=xlim[1])
-    axB.grid()
     axB.invert_yaxis()
+    axB.set_facecolor('black')
     for n, val in enumerate(xticks):
         if val >= xlim[0] and val <= xlim[1]:
             if int(val) == val:
@@ -355,9 +361,9 @@ def scatter(
                         val,
                         ylimBH[0],
                         f"{val}",
-                        fontsize=fs,
+                        fontsize=fs-4,
                         horizontalalignment="center",
-                        verticalalignment="bottom",
+                        verticalalignment="top",
                         color=[0.5, 0.5, 0.5, 0.5],
                     )
                 else:
@@ -389,19 +395,20 @@ def scatter(
         fontsize=fs2,
         horizontalalignment="center",
         verticalalignment="center",
+        color='white',
     )
-    axB.axis("off")
+    # axB.axis("off")
 
     # Side histogram
-    axS.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 0.5], orientation="horizontal")
+    # axS.hist(y, bins=nbins, color=[0.5, 0.5, 0.5, 0.5], orientation="horizontal")
     xlimSH = axS.get_xlim()
-    axS.set_yticks(yticks)
+    axS.set_yticks([])
     axS.set_xticks([])
     axS.set_xticklabels([])
     axS.set_yticklabels([])
     axS.set_ylim(bottom=ylim[0], top=ylim[1])
-    axS.grid()
     axS.invert_xaxis()
+    axS.set_facecolor('black')
     for n, val in enumerate(yticks):
         if val >= ylim[0] and val <= ylim[1]:
             if int(val) == val:
@@ -414,8 +421,8 @@ def scatter(
                         xlimSH[0],
                         val,
                         f"{val}",
-                        fontsize=fs,
-                        horizontalalignment="left",
+                        fontsize=fs-4,
+                        horizontalalignment="right",
                         verticalalignment="center",
                         color=[0.5, 0.5, 0.5, 0.5],
                     )
@@ -441,15 +448,16 @@ def scatter(
                 )
 
     axS.text(
-        np.mean(xlimSH),
+        xlimSH[1],
         np.mean(ylim),
         f"{abbY}",
         fontsize=fs2,
         horizontalalignment="center",
         verticalalignment="center",
         rotation=90,
+        color='white'
     )
-    axS.axis("off")
+
 
 # %% Simple function to load statistics
 def loadps(pairstats_root, x):
@@ -474,6 +482,7 @@ fs = 20
 # %%layout
 fig = plt.figure(figsize=(9, 9))
 plt.rcParams.update({"font.size": fs})
+fig.patch.set_facecolor('black')
 axScatter = fig.add_axes([w1+xs, h1+ys, x, y])
 axScatterB = fig.add_axes([w1+xs, h1, x, ys])
 axScatterS = fig.add_axes([w1, h1+ys, xs, y])
@@ -491,8 +500,8 @@ scatter(
     cells,
     ps,
     kde_flag=True,
-    fourcolors_flag=True,
-    colorpoints_flag=False,
+    fourcolors_flag=False,
+    colorpoints_flag=True,
     rollingavg_flag=False,
     ols_flag=False,
     N2=1000,
@@ -502,8 +511,9 @@ scatter(
 )
 
 if save_flag==1:
-    plot_save_path = pic_root / f"heightnucvscell_20201111.png"
-    plt.savefig(plot_save_path, format="png", dpi=1000)
+    plot_save_path = pic_root / f"lunch_20210218.png"
+    plt.savefig(plot_save_path, format="png", dpi=450)
     plt.close()
 else:
     plt.show()
+
