@@ -60,7 +60,7 @@ log = logging.getLogger(__name__)
 
 ###############################################################################
 
-# %% Define sampling numbers
+#%% Define sampling numbers
 samplevec = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 1500]
 repeats = 3
 for s, sample in enumerate(samplevec):
