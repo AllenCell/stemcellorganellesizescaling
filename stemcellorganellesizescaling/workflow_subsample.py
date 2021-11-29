@@ -63,21 +63,23 @@ log = logging.getLogger(__name__)
 #%% Define sampling numbers
 samplevec = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 1500]
 repeats = 3
+# samplevec = [10, 100]
+# repeats = 2
 for s, sample in enumerate(samplevec):
     for r in range(0, repeats):
 
         datastr = f"{sample}_{r}"
         #%% Directories
         if platform.system() == "Windows":
-            data_root = Path(f"E:/DA/Data/scoss/Data/Subsample_Dec2020/{datastr}")
-            pic_root = Path(f"E:/DA/Data/scoss/Pics/Subsample_Dec2020/{datastr}")
-            org_root = Path("E:/DA/Data/scoss/Data/Dec2020")
+            data_root = Path(f"Z:/modeling/theok/Projects/Data/scoss/Data/Subsample_Oct2021/{datastr}")
+            pic_root = Path(f"Z:/modeling/theok/Projects/Data/scoss/Data/Subsample_Oct2021/{datastr}")
+            org_root = Path("Z:/modeling/theok/Projects/Data/scoss/Data/Dec2020")
         elif platform.system() == "Linux":
             data_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Dec2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Data/Subsample_Oct2021/{datastr}"
             )
             pic_root = Path(
-                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Dec2020/{datastr}"
+                f"/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Subsample_Oct2021/{datastr}"
             )
             org_root = Path(
                 "/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020"

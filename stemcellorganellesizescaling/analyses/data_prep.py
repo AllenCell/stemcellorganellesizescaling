@@ -51,7 +51,9 @@ log = logging.getLogger(__name__)
 def initial_parsing(
     dirs: list,
     dataset: Path,
+    old_dataset: Path,
     piecedir: Path,
+    pca_dataset: Path,
     dataset_snippet: Path,
     dataset_filtered: Path,
 ):
@@ -64,8 +66,12 @@ def initial_parsing(
         Lists data and plotting dir
     dataset: Path
         absolute Path to original data table csv file
+    dataset_old: Path
+        absolute Path to old data table csv file
     piecedir: Path
         absolute Path (folder) to original piece stats
+    pca_dataset: Path
+        absolute Path to original data table csv file with the shape mode coefficients
     dataset_snippet: Path
         Path to snippet of original table
     dataset_filtered: Path
@@ -84,31 +90,23 @@ def initial_parsing(
         cells.sample(n=10).to_csv(data_root / dataset_snippet)
 
         # %% Check out columns, keep a couple
+        #DNA_MEM_PC1 - missing
         keepcolumns = [
             "CellId",
             "structure_name",
-            "mem_roundness_surface_area",
-            "mem_shape_volume",
-            "dna_roundness_surface_area",
-            "dna_shape_volume",
-            "str_connectivity_number_cc",
-            "str_shape_volume",
-            "mem_position_depth",
-            "mem_position_height",
-            "mem_position_width",
-            "dna_position_depth",
-            "dna_position_height",
-            "dna_position_width",
-            "DNA_MEM_PC1",
-            "DNA_MEM_PC2",
-            "DNA_MEM_PC3",
-            "DNA_MEM_PC4",
-            "DNA_MEM_PC5",
-            "DNA_MEM_PC6",
-            "DNA_MEM_PC7",
-            "DNA_MEM_PC8",
+            "MEM_roundness_surface_area",
+            "MEM_shape_volume",
+            "NUC_roundness_surface_area",
+            "NUC_shape_volume",
+            "STR_connectivity_cc",
+            "STR_shape_volume",
+            "MEM_position_depth",
+            "MEM_position_height",
+            "MEM_position_width",
+            "NUC_position_depth",
+            "NUC_position_height",
+            "NUC_position_width",
             "WorkflowId",
-            "meta_fov_image_date",
             "meta_imaging_mode",
         ]
         cells = cells[keepcolumns]
@@ -116,21 +114,32 @@ def initial_parsing(
         # Missing:
         # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
 
-        # %% Rename columns
+        # %%
+        # "meta_fov_image_date"
+        # Load old dataset to get time in there
+        old_cells = pd.read_csv(old_dataset)
+        cells = cells.merge(old_cells[['CellId','meta_fov_image_date']],how='left',on='CellId')
+
+        # Load PCA components
+        pca_cells = pd.read_csv(pca_dataset)
+        pca_cols = [f'NUC_MEM_PC{x+1}' for x in np.arange(8)]
+        cells = cells.merge(pca_cells[['CellId',*pca_cols]],how='left',on='CellId')
+
+# %% Rename columns
         cells = cells.rename(
             columns={
-                "mem_roundness_surface_area": "Cell surface area",
-                "mem_shape_volume": "Cell volume",
-                "dna_roundness_surface_area": "Nuclear surface area",
-                "dna_shape_volume": "Nuclear volume",
-                "str_connectivity_number_cc": "Number of pieces",
-                "str_shape_volume": "Structure volume",
-                "mem_position_depth": "Cell height",
-                "mem_position_height": "Cell xbox",
-                "mem_position_width": "Cell ybox",
-                "dna_position_depth": "Nucleus height",
-                "dna_position_height": "Nucleus xbox",
-                "dna_position_width": "Nucleus ybox",
+                "MEM_roundness_surface_area": "Cell surface area",
+                "MEM_shape_volume": "Cell volume",
+                "NUC_roundness_surface_area": "Nuclear surface area",
+                "NUC_shape_volume": "Nuclear volume",
+                "STR_connectivity_cc": "Number of pieces",
+                "STR_shape_volume": "Structure volume",
+                "MEM_position_depth": "Cell height",
+                "MEM_position_height": "Cell xbox",
+                "MEM_position_width": "Cell ybox",
+                "NUC_position_depth": "Nucleus height",
+                "NUC_position_height": "Nucleus xbox",
+                "NUC_position_width": "Nucleus ybox",
                 "meta_fov_image_date": "ImageDate",
             }
         )
@@ -213,6 +222,11 @@ def diagnostic_violins(
 
     # Load dataset
     cells = pd.read_csv(data_root / dataset)
+
+    # Drop cells with imagedata
+    print(len(cells))
+    cells.dropna(axis=0,subset=['ImageDate'],inplace=True)
+    print(len(cells))
 
     # %% Parameters, updated directories
     save_flag = 1  # save plot (1) or show on screen (0)
@@ -342,7 +356,7 @@ def diagnostic_violins(
     # %% Plot structure over FOVids
     # Still missing:
     # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2',
-    #
+    # DNA_MEM_PC1
 
     selected_metrics = [
         "Cell surface area",
@@ -358,14 +372,14 @@ def diagnostic_violins(
         "Nucleus height",
         "Nucleus xbox",
         "Nucleus ybox",
-        "DNA_MEM_PC1",
-        "DNA_MEM_PC2",
-        "DNA_MEM_PC3",
-        "DNA_MEM_PC4",
-        "DNA_MEM_PC5",
-        "DNA_MEM_PC6",
-        "DNA_MEM_PC7",
-        "DNA_MEM_PC8",
+        "NUC_MEM_PC1",
+        "NUC_MEM_PC2",
+        "NUC_MEM_PC3",
+        "NUC_MEM_PC4",
+        "NUC_MEM_PC5",
+        "NUC_MEM_PC6",
+        "NUC_MEM_PC7",
+        "NUC_MEM_PC8",
     ]
 
     for i, metric in enumerate(selected_metrics):

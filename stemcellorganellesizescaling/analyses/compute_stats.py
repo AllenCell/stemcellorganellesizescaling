@@ -85,11 +85,11 @@ def compensate(
     #     "Piece sum/min/max",
     # ]
 
+    #20211118 removed:         "Piece average",   "Piece std",
+
     FS["struct_metrics"] = [
         "Structure volume",
         "Number of pieces",
-        "Piece average",
-        "Piece std",
     ]
     # %% Compensate
     cells_COMP = cells[["CellId", "structure_name"]]
@@ -218,14 +218,14 @@ def pairwisestats(
     ]
 
     FS["pca_components"] = [
-        "DNA_MEM_PC1",
-        "DNA_MEM_PC2",
-        "DNA_MEM_PC3",
-        "DNA_MEM_PC4",
-        "DNA_MEM_PC5",
-        "DNA_MEM_PC6",
-        "DNA_MEM_PC7",
-        "DNA_MEM_PC8",
+        "NUC_MEM_PC1",
+        "NUC_MEM_PC2",
+        "NUC_MEM_PC3",
+        "NUC_MEM_PC4",
+        "NUC_MEM_PC5",
+        "NUC_MEM_PC6",
+        "NUC_MEM_PC7",
+        "NUC_MEM_PC8",
     ]
 
     # struct_metrics = [
