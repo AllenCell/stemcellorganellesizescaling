@@ -18,30 +18,11 @@ log = logging.getLogger(__name__)
 ###############################################################################
 
 #%% Directories
-#%% Directories
 if platform.system() == "Windows":
     data_root = Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021")
     pic_root = Path("Z:/modeling/theok/Projects/Data/scoss/Pics/Oct2021")
 elif platform.system() == "Linux":
     1 / 0
-
-pic_rootT = pic_root / "edgeviolins"
-pic_rootT.mkdir(exist_ok=True)
-
-
-# %% Resolve directories and load data
-tableIN = "SizeScaling_20211101.csv"
-# Load dataset
-cells = pd.read_csv(all_root / tableIN)
-
-
-
-if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/Dec2020")
-    pic_root = Path("E:/DA/Data/scoss/Pics/Dec2020/")
-elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Dec2020")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Dec2020/")
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
@@ -51,13 +32,13 @@ data_root = dirs[0]
 pic_root = dirs[1]
 
 # Load dataset
-tableIN = "SizeScaling_20201215.csv"
-statsIN = "Stats_20201215"
+tableIN = "SizeScaling_20211101.csv"
+statsIN = "Stats_20211101"
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
 
 # %% Parameters, updated directories
-save_flag = 1  # save plot (1) or show on screen (0)
+save_flag = 0  # save plot (1) or show on screen (0)
 plt.rcParams.update({"font.size": 12})
 pic_root = pic_root / "plot_cellmetrics_vs_PCA"
 pic_root.mkdir(exist_ok=True)
@@ -511,7 +492,7 @@ scatter(
     axScatter,
     axScatterB,
     axScatterS,
-    "DNA_MEM_PC1",
+    "NUC_MEM_PC1",
     "Cell height",
     "Shape mode 1",
     "Cell height",
