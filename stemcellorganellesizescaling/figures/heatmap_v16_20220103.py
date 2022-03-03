@@ -67,7 +67,7 @@ cells = pd.read_csv(data_root / tableIN)
 print(np.any(cells.isnull()))
 # cells_COMP = pd.read_csv(data_root / table_compIN)
 # print(np.any(cells_COMP.isnull()))
-structures = pd.read_csv(ann_root / "annotation" / "structure_annotated_20201113.csv")
+structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
 ScaleMat = pd.read_csv(data_root / 'Scale_20211101' / "ScaleStats_20201125.csv")
 ScaleCurve = pd.read_csv(data_root / 'Scale_20211101' / "ScaleCurve_20201125.csv")
 # ScaleMat = pd.read_csv(data_root / "growing" / "ScaleStats_20201118.csv")
@@ -813,7 +813,7 @@ axOrgGrow.imshow(
     vmax=100,
 )
 for i in range(len(growvec[:, 0])):
-    val = np.int(growvec[i, 0])
+    val = np.int(np.round(growvec[i, 0]))
     text = axOrgGrow.text(
         0,
         i,
@@ -849,7 +849,7 @@ axOrgGrow.text(
 axCellGrow = fig.add_axes([w6 + x4 + w7, yh + h3 + y4, x5, y5])
 axCellGrow.imshow(growvecC, aspect="auto", cmap="Greens", vmin=0, vmax=100)
 for i in range(len(growvecC)):
-    val = np.int(growvecC[i, 0])
+    val = np.int(np.round(growvecC[i, 0]))
     text = axCellGrow.text(
         0,
         i,
@@ -871,7 +871,7 @@ axOrgVar = fig.add_axes([w6 + x4 + w7 + x5 + w8, yh + h3, x6, y4])
 axOrgVar.imshow(pan, aspect="auto", cmap="RdBu_r", vmin=-100, vmax=100)
 for i in range(len(plot_array)):
     for j in range(len(plot_array.columns)):
-        val = np.int(pan[i, j])
+        val = np.int(np.round(pan[i, j]))
         text = axOrgVar.text(
             j,
             i,
@@ -911,7 +911,7 @@ axCellVar = fig.add_axes([w6 + x4 + w7 + x5 + w8, yh + h3 + y4, x6, y5])
 axCellVar.imshow(panCN, aspect="auto", cmap="RdBu_r", vmin=-100, vmax=100)
 for i in range(len(plot_arrayCN)):
     for j in range(len(plot_arrayCN.columns)):
-        val = np.int(panCN[i, j])
+        val = np.int(np.round(panCN[i, j]))
         text = axCellVar.text(
             j,
             i,
@@ -940,7 +940,7 @@ axAllVarC.imshow(
 )
 for i in range(len(plot_arrayAll)):
     for j in range(1):
-        val = np.int(panAll[i, j])
+        val = np.int(np.round(panAll[i, j]))
         text = axAllVarC.text(
             j,
             i,
@@ -982,7 +982,7 @@ axCompVarC = fig.add_axes(
 axCompVarC.imshow(panComp, aspect="auto", cmap="Oranges", vmin=0, vmax=20)
 for i in range(len(plot_arrayComp)):
     for j in range(len(plot_arrayComp.columns)):
-        val = np.int(panComp[i, j])
+        val = np.int(np.round(panComp[i, j]))
         text = axCompVarC.text(
             j,
             i,

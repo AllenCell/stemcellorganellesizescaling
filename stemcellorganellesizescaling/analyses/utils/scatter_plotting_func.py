@@ -2597,14 +2597,14 @@ def ascatter(
                         ax.text(
                             cd1 + 2000,
                             y1,
-                            f"{int(np.floor(y1))} \u03BCm\u00b3",
+                            f"{int(np.round(y1))} \u03BCm\u00b3",
                             color=darkgreen,
                             verticalalignment="center_baseline",
                         )
                         ax.text(
                             (cd1 + cd0) / 2 + 2200,
                             (y1 + y0) / 2,
-                            f"{int(np.floor(100*(y1-y0)/y0))}% increase",
+                            f"{int(np.round(100*(y1-y0)/y0))}% increase",
                             color=darkgreen,
                             verticalalignment="center_baseline",
                         )

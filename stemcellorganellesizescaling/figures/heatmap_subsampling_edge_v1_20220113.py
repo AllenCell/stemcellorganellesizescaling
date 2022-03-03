@@ -37,14 +37,16 @@ print("Libraries loaded succesfully")
 log = logging.getLogger(__name__)
 
 ###############################################################################
+
+select = 'non-edge'
+
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
+    data_root = Path(f"Z:/modeling/theok/Projects/Data/scoss/Data/Subsample_Oct2021/{select}/")
+    pic_root = Path(f"Z:/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
     ann_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
-    pic_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
 elif platform.system() == "Linux":
-    data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
+    1 / 0
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
@@ -65,13 +67,9 @@ statsIN = "Stats_20211101"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 print(np.any(cells.isnull()))
-# cells_COMP = pd.read_csv(data_root / table_compIN)
-# print(np.any(cells_COMP.isnull()))
-structures = pd.read_csv(ann_root / "annotation" / "structure_annotated_20201113.csv")
-ScaleMat = pd.read_csv(data_root / 'Scale_20211101' / "ScaleStats_20201125.csv")
-ScaleCurve = pd.read_csv(data_root / 'Scale_20211101' / "ScaleCurve_20201125.csv")
-# ScaleMat = pd.read_csv(data_root / "growing" / "ScaleStats_20201118.csv")
-# ScaleCurve = pd.read_csv(data_root / "growing" / "ScaleCurve_20201124.csv")
+structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
+ScaleMat = pd.read_csv(data_root / 'Stats_20211101' / "ScaleStats_20201125.csv")
+ScaleCurve = pd.read_csv(data_root / 'Stats_20211101' / "ScaleCurve_20201125.csv")
 
 
 # %% Simple function to load statistics
@@ -176,24 +174,17 @@ for xi, xlabel in enumerate(FS["cellnuc_metrics"]):
                 StructGrow["structure_name"] == struct, f"{xlabel}_{ylabel}_max"
             ] = cmin_max
 
-# ps = data_root / statsIN / "cellnuc_struct_COMP_metrics"
+# ps = (data_root / statsIN / 'cellnuc_struct_COMP_metrics')
 # comp_columns = list(cells_COMP.columns)
 # for xi, xlabel in enumerate(
-#     [
-#         "nuc_metrics_AVH",
-#         "nuc_metrics_AV",
-#         "nuc_metrics_H",
-#         "cell_metrics_AVH",
-#         "cell_metrics_AV",
-#         "cell_metrics_H",
-#     ]
-# ):
-#     for zi, zlabel in enumerate(FS["cellnuc_metrics"]):
+#     ['nuc_metrics_AVH', 'nuc_metrics_AV', 'nuc_metrics_H', 'cell_metrics_AVH', 'cell_metrics_AV',
+#      'cell_metrics_H']):
+#     for zi, zlabel in enumerate(FS['cellnuc_metrics']):
 #         for ti, type in enumerate(["Linear", "Complex"]):
 #             col2 = f"{zlabel}_COMP_{type}_{xlabel}"
 #             if col2 in comp_columns:
 #                 print(col2)
-#                 for yi, ylabel in enumerate(FS["struct_metrics"]):
+#                 for yi, ylabel in enumerate(FS['struct_metrics']):
 #                     selected_structures = cells_COMP["structure_name"].unique()
 #                     col1 = f"{ylabel}_COMP_{type}_{xlabel}"
 #                     StructGrow[f"{zlabel}_{col1}"] = np.nan
@@ -203,9 +194,7 @@ for xi, xlabel in enumerate(FS["cellnuc_metrics"]):
 #                         cmin = np.round(100 * np.percentile(val, [50]))
 #                         if pred_yL[0] > pred_yL[-1]:
 #                             cmin = -cmin
-#                         StructGrow.loc[
-#                             StructGrow["structure_name"] == struct, f"{zlabel}_{col1}"
-#                         ] = cmin
+#                         StructGrow.loc[StructGrow['structure_name'] == struct, f"{zlabel}_{col1}"] = cmin
 
 # ps = (data_root / statsIN / 'struct_composite_metrics_bu')
 # for xi, xlabel in enumerate(
@@ -403,7 +392,7 @@ for i, struct in enumerate(HM["cellnuc_heatmap"]):
 # end_bin = int(Grow.loc[51,'bins'])
 # perc_values = [5, 25, 50, 75, 95]
 # growfac = 2
-ps = data_root / "Scale_20211101"
+ps = data_root / statsIN
 cell_doubling = loadps(ps, f"cell_doubling")
 
 # %% measurements
@@ -742,7 +731,7 @@ axGrowVarSB = fig.add_axes(
     [w3 + x3s + x3 + w4 + x3s + x3 + w10, h4 + y6, x8 + x8s, y6s]
 )
 # xrange = [10, 100*(1*(x8s/2+x8)/x8)]
-xrange = [9, 100]
+xrange = [8, 100]
 pos = np.argwhere(np.logical_and(panAll[:, 0] > xrange[0], panAll[:, 0] < xrange[1]))
 xarray = panAll[pos, 0].squeeze()
 temp = xarray.argsort()
@@ -1362,8 +1351,6 @@ ascatter(
     PrintType=PrintType,
 )
 
-# PrintType=PrintType,
-
 # Cell Size
 xlim = axGrowB.get_xlim()
 ylim = axGrowB.get_ylim()
@@ -1386,22 +1373,19 @@ axGrowB.text(
     horizontalalignment="center",
 )
 
+
+pic_rootT = pic_root / "edge"
+pic_rootT.mkdir(exist_ok=True)
+
 if PrintType=='all':
-    plot_save_path = pic_root / f"heatmap_v16_20220103_res300_ALL.png"
+    plot_save_path = pic_rootT / f"heatmap_{select}_20220113.png"
     plt.savefig(plot_save_path, format="png", dpi=300)
     plt.show()
-elif PrintType=='png':
-    plot_save_path = pic_root / f"heatmap_v16_20220103_res300.png"
-    plt.savefig(plot_save_path, format="png", dpi=300)
-    plt.close()
-elif PrintType=='svg':
-    plot_save_path = pic_root / f"heatmap_v16_20220103.svg"
-    plt.savefig(plot_save_path, format="svg")
-    plt.close()
-
-
-
-
-
-
-
+# elif PrintType=='png':
+#     plot_save_path = pic_rootT / f"heatmap_subsample{Nsample}_20201217_res300.png"
+#     plt.savefig(plot_save_path, format="png", dpi=300)
+#     plt.close()
+# elif PrintType=='svg':
+#     plot_save_path = pic_rootT / f"heatmap_subsample{Nsample}_20201217.svg"
+#     plt.savefig(plot_save_path, format="svg")
+#     plt.close()
