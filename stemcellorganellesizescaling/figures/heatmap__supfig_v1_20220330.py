@@ -1675,7 +1675,7 @@ h2 = 0.05
 h3 = 0.05
 y1 = 0.03
 y2 = 1 - h1 - y1 - h2 - h3
-y22 = 0.65*y2
+y22 = 0.6*y2
 y2h = 0.05
 
 stretch_factor = figsize_width/figsize_height
@@ -1791,12 +1791,12 @@ if PrintType != 'png':
     xCplot = np.sort(x.copy())
     yCplot = fittedmodelC.predict(sm.add_constant(xCplot ** (2 / 3)))
     axNuc.plot(xCplot, yCplot, ":", color="black")
-    axNuc.legend(
+    lgnd = axNuc.legend(
         [
             f"All cells (n={len(cells)})",
-            f"Cells with spherical nuclei (sn) (n={len(xs)})",
+            f"Cells with spherical nuclei (n={len(xs)})",
             "Line describing vol. vs. area for perfect spheres",
-            f"Linear model for sn (R\u00b2={np.round(100*rsL,2)})",
+            f"Linear model for spherical nuclei (R\u00b2={np.round(100*rsL,2)})",
             f"Non-lin. model with correct scaling (R\u00b2={np.round(100*rsC,2)})",
             f"Linear model for all cells (R\u00b2={np.round(100 * rsLa, 2)})",
             f"Non-lin. model with correct scaling (R\u00b2={np.round(100 * rsCa, 2)})",
@@ -1807,6 +1807,8 @@ if PrintType != 'png':
         bbox_to_anchor=(1, 1),
         borderaxespad=0.
     )
+    lgnd.legendHandles[0]._legmarker.set_markersize(4)
+
 
 xlim = axNuc.get_xlim()
 ylim = axNuc.get_ylim()
@@ -1879,7 +1881,7 @@ for i, p in enumerate(np.intersect1d(pos1, pos2)):
         f"{CompMat.iloc[p,1]} {CompMat.iloc[p,2]} {CompMat.iloc[p,3]} {CompMat.iloc[p,6]}"
     )
 axLin.set_xlabel("Expl. Var. for linear models (%)")
-axLin.set_ylabel("Expl. Var. for non-linear models (%)")
+axLin.set_ylabel("Expl. Var. for non-linear models (%)      ")
 xlim = axLin.get_xlim()
 ylim = axLin.get_ylim()
 # axLin.text(
@@ -1928,7 +1930,7 @@ ylim = axScale.get_ylim()
 
 # %% Finalize plotting
 if PrintType=='all':
-    plot_save_path = pic_root / f"heatmap_v18_20220401_res300_ALL.png"
+    plot_save_path = pic_root / f"heatmap_v19_20220419_res300_ALL.png"
     plt.savefig(plot_save_path, format="png", dpi=300)
     plt.show()
     print('ok')
