@@ -58,12 +58,15 @@ if platform.system() == "Windows":
     pic_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
 elif platform.system() == "Linux":
     data_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
-    pic_root = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
+    ann_root  = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
+    pic_root  = Path("/allen/aics/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
+
 dirs = []
 dirs.append(data_root)
 dirs.append(pic_root)
 
 save_flag = 0
+comp_volume_flag = False
 plt.rcParams.update({"font.size": 8})
 plt.rcParams["svg.fonttype"] = "none"
 
@@ -561,7 +564,7 @@ from stemcellorganellesizescaling.analyses.utils.grow_plotting_func import growp
 
 # %%layout
 fig = plt.figure(figsize=(figsize_width, figsize_height))
-PrintType = 'svg'
+PrintType = 'all'
 
 # Scale4
 axScale4 = fig.add_axes([w3 + x3s, offset_factor + y3s, x3, y3])
@@ -1446,15 +1449,22 @@ FS["struct_metrics"] = [
 
 # %% Preparation of PCA
 # %% Annotation
-ann_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
+# ann_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
 structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
+
+
+cv = "Cell volume"
+X_comp = cells[cv].to_numpy()
 
 X = cells[FS["cellnuc_metrics"]].to_numpy()
 Y = cells[FS["pca_components"]].to_numpy()
 CM = np.zeros((X.shape[1], Y.shape[1]))
 for x in np.arange(X.shape[1]):
     for y in np.arange(Y.shape[1]):
-        CM[x, y], _ = pearsonr(X[:, x], Y[:, y])
+        if comp_volume_flag is True:
+            CM[x, y], _ = pearsonr(X[:, x]/X_comp, Y[:, y])
+        else:
+            CM[x, y], _ = pearsonr(X[:, x], Y[:, y])
 
 CMT = np.zeros(
     (
@@ -1471,6 +1481,8 @@ for m, metric in enumerate(FS["struct_metrics"]):
         struct = pack[0]
         organelle = pack[1]
         X = cells.loc[cells["structure_name"] == struct, metric].to_numpy()
+        if comp_volume_flag is True:
+            X = X/X_comp[cells["structure_name"] == struct]
         Y = cells.loc[
             cells["structure_name"] == struct, FS["pca_components"]
         ].to_numpy()
@@ -1896,10 +1908,24 @@ ylim = axLin.get_ylim()
 # Scale
 axScale = fig.add_axes([w1 + x3 + w4 + x4 + w5, h1 + y1 + h2, x5, y2])
 xlabels = FS["pca_abbs"]
+
+for i in range(CMT.shape[0]):
+    for j in range(CMT.shape[1]):
+        if not np.isnan(CMT[i,j]):
+            val = CMT[i, j]
+            if val<0:
+                val = -(val**2)
+            else:
+                val = (val ** 2)
+            CMT[i,j] = val
 axScale.imshow(CMT, aspect="auto", cmap="RdBu_r", vmin=-1, vmax=1)
 for i in range(CMT.shape[0]):
     for j in range(CMT.shape[1]):
-        val = np.int(np.round(100*CMT[i, j]))
+        if np.isnan(CMT[i,j]):
+            val = 'NA'
+        else:
+            val = CMT[i, j]
+            val = np.int(np.round(100*val))
         text = axScale.text(
             j,
             i,
@@ -1930,7 +1956,7 @@ ylim = axScale.get_ylim()
 
 # %% Finalize plotting
 if PrintType=='all':
-    plot_save_path = pic_root / f"heatmap_v20_20220524_res300_ALL.png"
+    plot_save_path = pic_root / f"heatmap_v20_20220624_Comp4Volume{comp_volume_flag}_r2.png"
     plt.savefig(plot_save_path, format="png", dpi=300)
     plt.show()
     print('ok')
