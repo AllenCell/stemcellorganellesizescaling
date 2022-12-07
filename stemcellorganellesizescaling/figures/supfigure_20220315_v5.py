@@ -31,8 +31,8 @@ log = logging.getLogger(__name__)
 ###############################################################################
 #%% Directories
 if platform.system() == "Windows":
-    data_root = Path("E:/DA/Data/scoss/Data/Nov2020")
-    pic_root = Path("E:/DA/Data/scoss/Pics/Nov2020")
+    data_root = Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
+    pic_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Pics/Oct2021/")
 elif platform.system() == "Linux":
     1 / 0
 
@@ -40,8 +40,8 @@ pic_rootT = pic_root / "supplemental"
 pic_rootT.mkdir(exist_ok=True)
 
 # %% Resolve directories and load data
-tableIN = "SizeScaling_20201102.csv"
-statsIN = "Stats_20201102"
+tableIN = "SizeScaling_20211101.csv"
+statsIN = "Stats_20211101"
 # Load dataset
 cells = pd.read_csv(data_root / tableIN)
 np.any(cells.isnull())
@@ -66,14 +66,14 @@ FS["cellnuc_metrics"] = [
 
 
 FS["pca_components"] = [
-    "DNA_MEM_PC1",
-    "DNA_MEM_PC2",
-    "DNA_MEM_PC3",
-    "DNA_MEM_PC4",
-    "DNA_MEM_PC5",
-    "DNA_MEM_PC6",
-    "DNA_MEM_PC7",
-    "DNA_MEM_PC8",
+    "NUC_MEM_PC1",
+    "NUC_MEM_PC2",
+    "NUC_MEM_PC3",
+    "NUC_MEM_PC4",
+    "NUC_MEM_PC5",
+    "NUC_MEM_PC6",
+    "NUC_MEM_PC7",
+    "NUC_MEM_PC8",
 ]
 
 FS["pca_abbs"] = ["sm1", "sm2", "sm3", "sm4", "sm5", "sm6", "sm7", "sm8"]
@@ -84,7 +84,7 @@ FS["struct_metrics"] = [
 
 # %% Preparation of PCA
 # %% Annotation
-ann_root = Path("E:/DA/Data/scoss/Data/Nov2020/annotation")
+ann_root =  Path("Z:/modeling/theok/Projects/Data/scoss/Data/Oct2021/")
 structures = pd.read_csv(ann_root / "structure_annotated_20201113.csv")
 
 X = cells[FS["cellnuc_metrics"]].to_numpy()
@@ -331,6 +331,7 @@ fs = 10
 fsP = 20
 fig = plt.figure(figsize=(18, 6))
 plt.rcParams.update({"font.size": fs})
+PrintType = 'all'
 
 # # SIM
 # axSim = fig.add_axes([w1, h1, x1, y1])
@@ -370,77 +371,76 @@ ascatter(
     fs=fs,
     cell_doubling=[],
     typ=["vol", "area"],
+    PrintType=PrintType,
 )
 
-plot_save_path = pic_rootT / f"sizescaling_supfig_v4_20201205_res300.png"
-plt.savefig(plot_save_path, format="png", dpi=300)
-plt.show()
+# plot_save_path = pic_rootT / f"sizescaling_supfig_v4_20201205_res300.png"
+# plt.savefig(plot_save_path, format="png", dpi=300)
+# plt.show()
 
-# %%
+if PrintType != 'png':
+    axNuc.plot(xs, ys, ".", color="peru")
+    axNuc.plot(
+        plot_array["Vol. sum voxels"] * ((0.108333) ** 3),
+        plot_array["Area pixelate"] * ((0.108333) ** 2),
+        "m--",
+        linewidth=1,
+    )
 
+    #% Fitting
+    xL = xs.copy()
+    xL = sm.add_constant(xL)
+    modelL = sm.OLS(ys, xL)
+    fittedmodelL = modelL.fit()
+    rsL = fittedmodelL.rsquared
+    xLplot = np.sort(xs.copy())
+    yLplot = fittedmodelL.predict(sm.add_constant(xLplot))
+    axNuc.plot(xLplot, yLplot, "-", color="cyan")
 
-axNuc.plot(xs, ys, ".", color="peru")
-axNuc.plot(
-    plot_array["Vol. sum voxels"] * ((0.108333) ** 3),
-    plot_array["Area pixelate"] * ((0.108333) ** 2),
-    "m--",
-    linewidth=1,
-)
+    xC = xs.copy()
+    xC = xC ** (2 / 3)
+    xC = sm.add_constant(xC)
+    modelC = sm.OLS(ys, xC)
+    fittedmodelC = modelC.fit()
+    rsC = fittedmodelC.rsquared
+    xCplot = np.sort(xs.copy())
+    yCplot = fittedmodelC.predict(sm.add_constant(xCplot ** (2 / 3)))
+    axNuc.plot(xCplot, yCplot, ":", color="cyan")
 
+    #% Fitting
+    xL = x.copy()
+    xL = sm.add_constant(xL)
+    modelL = sm.OLS(y, xL)
+    fittedmodelL = modelL.fit()
+    rsLa = fittedmodelL.rsquared
+    xLplot = np.sort(x.copy())
+    yLplot = fittedmodelL.predict(sm.add_constant(xLplot))
+    axNuc.plot(xLplot, yLplot, "-", color="black")
 
-#% Fitting
-xL = xs.copy()
-xL = sm.add_constant(xL)
-modelL = sm.OLS(ys, xL)
-fittedmodelL = modelL.fit()
-rsL = fittedmodelL.rsquared
-xLplot = np.sort(xs.copy())
-yLplot = fittedmodelL.predict(sm.add_constant(xLplot))
-axNuc.plot(xLplot, yLplot, "-", color="cyan")
+    xC = x.copy()
+    xC = xC ** (2 / 3)
+    xC = sm.add_constant(xC)
+    modelC = sm.OLS(y, xC)
+    fittedmodelC = modelC.fit()
+    rsCa = fittedmodelC.rsquared
+    xCplot = np.sort(x.copy())
+    yCplot = fittedmodelC.predict(sm.add_constant(xCplot ** (2 / 3)))
+    axNuc.plot(xCplot, yCplot, ":", color="black")
+    axNuc.legend(
+        [
+            f"All cells (n={len(cells)})",
+            f"Cells with spherical nuclei (sn) (n={len(xs)})",
+            "Line describing vol. vs. area for perfect spheres",
+            f"Linear model for sn (R\u00b2={np.round(100*rsL,2)})",
+            f"Non-lin. model with correct scaling (R\u00b2={np.round(100*rsC,2)})",
+            f"Linear model for all cells (R\u00b2={np.round(100 * rsLa, 2)})",
+            f"Non-lin. model with correct scaling (R\u00b2={np.round(100 * rsCa, 2)})",
+        ],
+        loc="lower right",
+        framealpha=1,
+        fontsize=8.8,
+    )
 
-xC = xs.copy()
-xC = xC ** (2 / 3)
-xC = sm.add_constant(xC)
-modelC = sm.OLS(ys, xC)
-fittedmodelC = modelC.fit()
-rsC = fittedmodelC.rsquared
-xCplot = np.sort(xs.copy())
-yCplot = fittedmodelC.predict(sm.add_constant(xCplot ** (2 / 3)))
-axNuc.plot(xCplot, yCplot, ":", color="cyan")
-
-#% Fitting
-xL = x.copy()
-xL = sm.add_constant(xL)
-modelL = sm.OLS(y, xL)
-fittedmodelL = modelL.fit()
-rsLa = fittedmodelL.rsquared
-xLplot = np.sort(x.copy())
-yLplot = fittedmodelL.predict(sm.add_constant(xLplot))
-axNuc.plot(xLplot, yLplot, "-", color="black")
-
-xC = x.copy()
-xC = xC ** (2 / 3)
-xC = sm.add_constant(xC)
-modelC = sm.OLS(y, xC)
-fittedmodelC = modelC.fit()
-rsCa = fittedmodelC.rsquared
-xCplot = np.sort(x.copy())
-yCplot = fittedmodelC.predict(sm.add_constant(xCplot ** (2 / 3)))
-axNuc.plot(xCplot, yCplot, ":", color="black")
-axNuc.legend(
-    [
-        f"All cells (n={len(cells)})",
-        f"Cells with spherical nuclei (sn) (n={len(xs)})",
-        "Line describing vol. vs. area for perfect spheres",
-        f"Linear model for sn (R\u00b2={np.round(100*rsL,2)})",
-        f"Non-lin. model with correct scaling (R\u00b2={np.round(100*rsC,2)})",
-        f"Linear model for all cells (R\u00b2={np.round(100 * rsLa, 2)})",
-        f"Non-lin. model with correct scaling (R\u00b2={np.round(100 * rsCa, 2)})",
-    ],
-    loc="lower right",
-    framealpha=1,
-    fontsize=8.8,
-)
 xlim = axNuc.get_xlim()
 ylim = axNuc.get_ylim()
 axNuc.text(
@@ -455,7 +455,7 @@ axNuc.text(
 
 # Lin
 axLin = fig.add_axes([w1 + x3 + w4, h1 + y1 + h2, x4, y2])
-CompMat = pd.read_csv(data_root / "supplementalfiguredata" / "LinCom_20201202.csv")
+CompMat = pd.read_csv(data_root / "supplementalfiguredata" / "LinCom_20220315.csv")
 LinPatchColor = [0, 0, 1, 0.5]
 LinPointColor = [0, 0, 0.5, 0.5]
 ComPatchColor = [1, 0, 0, 0.5]
@@ -567,16 +567,19 @@ axScale.text(
     va="top",
 )
 
+pic_rootT = pic_root / "supplemental"
+pic_rootT.mkdir(exist_ok=True)
 
-# plot_save_path = pic_rootT / f"sizescaling_supfig_v3_20201202_res1000.png"
-# plt.savefig(plot_save_path, format="png", dpi=1000)
-# plot_save_path = pic_rootT / f"sizescaling_supfig_v3_20201202_res600.png"
-# plt.savefig(plot_save_path, format="png", dpi=600)
-# plot_save_path = pic_rootT / f"sizescaling_supfig_v4_20201205_res300.png"
-# plt.savefig(plot_save_path, format="png", dpi=300)
-# plot_save_path = pic_rootT / f"sizescaling_supfig_v4_20201205.svg"
-# plt.savefig(plot_save_path, format="svg")
-# plot_save_path = pic_rootT / f"sizescaling_supfig_v3_20201202.pdf"
-# plt.savefig(plot_save_path, format="pdf")
+if PrintType=='all':
+    plot_save_path = pic_rootT / f"fizescaling_supfig_v4_20220315_res300_ALL.png"
+    plt.savefig(plot_save_path, format="png", dpi=300)
+    plt.show()
+elif PrintType=='png':
+    plot_save_path = pic_rootT / f"fizescaling_supfig_v3_20201217_res300.png"
+    plt.savefig(plot_save_path, format="png", dpi=300)
+    plt.close()
+elif PrintType=='svg':
+    plot_save_path = pic_rootT / f"fizescaling_supfig_v3_20201217.svg"
+    plt.savefig(plot_save_path, format="svg")
+    plt.close()
 
-plt.show()

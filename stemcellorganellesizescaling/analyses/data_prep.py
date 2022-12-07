@@ -51,7 +51,9 @@ log = logging.getLogger(__name__)
 def initial_parsing(
     dirs: list,
     dataset: Path,
+    old_dataset: Path,
     piecedir: Path,
+    pca_dataset: Path,
     dataset_snippet: Path,
     dataset_filtered: Path,
 ):
@@ -64,8 +66,12 @@ def initial_parsing(
         Lists data and plotting dir
     dataset: Path
         absolute Path to original data table csv file
+    dataset_old: Path
+        absolute Path to old data table csv file
     piecedir: Path
         absolute Path (folder) to original piece stats
+    pca_dataset: Path
+        absolute Path to original data table csv file with the shape mode coefficients
     dataset_snippet: Path
         Path to snippet of original table
     dataset_filtered: Path
@@ -84,31 +90,23 @@ def initial_parsing(
         cells.sample(n=10).to_csv(data_root / dataset_snippet)
 
         # %% Check out columns, keep a couple
+        #DNA_MEM_PC1 - missing
         keepcolumns = [
             "CellId",
             "structure_name",
-            "mem_roundness_surface_area_lcc",
-            "mem_shape_volume_lcc",
-            "dna_roundness_surface_area_lcc",
-            "dna_shape_volume_lcc",
-            "str_connectivity_number_cc",
-            "str_shape_volume",
-            "mem_position_depth_lcc",
-            "mem_position_height_lcc",
-            "mem_position_width_lcc",
-            "dna_position_depth_lcc",
-            "dna_position_height_lcc",
-            "dna_position_width_lcc",
-            "DNA_MEM_PC1",
-            "DNA_MEM_PC2",
-            "DNA_MEM_PC3",
-            "DNA_MEM_PC4",
-            "DNA_MEM_PC5",
-            "DNA_MEM_PC6",
-            "DNA_MEM_PC7",
-            "DNA_MEM_PC8",
+            "MEM_roundness_surface_area",
+            "MEM_shape_volume",
+            "NUC_roundness_surface_area",
+            "NUC_shape_volume",
+            "STR_connectivity_cc",
+            "STR_shape_volume",
+            "MEM_position_depth",
+            "MEM_position_height",
+            "MEM_position_width",
+            "NUC_position_depth",
+            "NUC_position_height",
+            "NUC_position_width",
             "WorkflowId",
-            "meta_fov_image_date",
             "meta_imaging_mode",
         ]
         cells = cells[keepcolumns]
@@ -116,21 +114,32 @@ def initial_parsing(
         # Missing:
         # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2'
 
-        # %% Rename columns
+        # %%
+        # "meta_fov_image_date"
+        # Load old dataset to get time in there
+        old_cells = pd.read_csv(old_dataset)
+        cells = cells.merge(old_cells[['CellId','meta_fov_image_date']],how='left',on='CellId')
+
+        # Load PCA components
+        pca_cells = pd.read_csv(pca_dataset)
+        pca_cols = [f'NUC_MEM_PC{x+1}' for x in np.arange(8)]
+        cells = cells.merge(pca_cells[['CellId',*pca_cols]],how='left',on='CellId')
+
+# %% Rename columns
         cells = cells.rename(
             columns={
-                "mem_roundness_surface_area_lcc": "Cell surface area",
-                "mem_shape_volume_lcc": "Cell volume",
-                "dna_roundness_surface_area_lcc": "Nuclear surface area",
-                "dna_shape_volume_lcc": "Nuclear volume",
-                "str_connectivity_number_cc": "Number of pieces",
-                "str_shape_volume": "Structure volume",
-                "mem_position_depth_lcc": "Cell height",
-                "mem_position_height_lcc": "Cell xbox",
-                "mem_position_width_lcc": "Cell ybox",
-                "dna_position_depth_lcc": "Nucleus height",
-                "dna_position_height_lcc": "Nucleus xbox",
-                "dna_position_width_lcc": "Nucleus ybox",
+                "MEM_roundness_surface_area": "Cell surface area",
+                "MEM_shape_volume": "Cell volume",
+                "NUC_roundness_surface_area": "Nuclear surface area",
+                "NUC_shape_volume": "Nuclear volume",
+                "STR_connectivity_cc": "Number of pieces",
+                "STR_shape_volume": "Structure volume",
+                "MEM_position_depth": "Cell height",
+                "MEM_position_height": "Cell xbox",
+                "MEM_position_width": "Cell ybox",
+                "NUC_position_depth": "Nucleus height",
+                "NUC_position_height": "Nucleus xbox",
+                "NUC_position_width": "Nucleus ybox",
                 "meta_fov_image_date": "ImageDate",
             }
         )
@@ -138,53 +147,53 @@ def initial_parsing(
         # %% Add a column
         cells["Cytoplasmic volume"] = cells["Cell volume"] - cells["Nuclear volume"]
 
-        # %% Adding feature pieces
-        paths = Path(piecedir).glob("**/*.csv")
-        cells["Piece average"] = np.nan
-        cells["Piece max"] = np.nan
-        cells["Piece min"] = np.nan
-        cells["Piece std"] = np.nan
-        cells["Piece sum"] = np.nan
-        cells.set_index("CellId", drop=False, inplace=True)
-        for csvf in paths:
-            print(csvf)
-            pieces = pd.read_csv(csvf)
-            keepcolumns = [
-                "CellId",
-                "str_shape_volume_pcc_avg",
-                "str_shape_volume_pcc_max",
-                "str_shape_volume_pcc_min",
-                "str_shape_volume_pcc_std",
-                "str_shape_volume_pcc_sum",
-            ]
-            pieces = pieces[keepcolumns]
-            pieces = pieces.rename(
-                columns={
-                    "str_shape_volume_pcc_avg": "Piece average",
-                    "str_shape_volume_pcc_max": "Piece max",
-                    "str_shape_volume_pcc_min": "Piece min",
-                    "str_shape_volume_pcc_std": "Piece std",
-                    "str_shape_volume_pcc_sum": "Piece sum",
-                }
-            )
-            pieces.set_index("CellId", drop=False, inplace=True)
-            cells.update(pieces)
+        # # %% Adding feature pieces
+        # paths = Path(piecedir).glob("**/*.csv")
+        # cells["Piece average"] = np.nan
+        # cells["Piece max"] = np.nan
+        # cells["Piece min"] = np.nan
+        # cells["Piece std"] = np.nan
+        # cells["Piece sum"] = np.nan
+        # cells.set_index("CellId", drop=False, inplace=True)
+        # for csvf in paths:
+        #     print(csvf)
+        #     pieces = pd.read_csv(csvf)
+        #     keepcolumns = [
+        #         "CellId",
+        #         "str_shape_volume_pcc_avg",
+        #         "str_shape_volume_pcc_max",
+        #         "str_shape_volume_pcc_min",
+        #         "str_shape_volume_pcc_std",
+        #         "str_shape_volume_pcc_sum",
+        #     ]
+        #     pieces = pieces[keepcolumns]
+        #     pieces = pieces.rename(
+        #         columns={
+        #             "str_shape_volume_pcc_avg": "Piece average",
+        #             "str_shape_volume_pcc_max": "Piece max",
+        #             "str_shape_volume_pcc_min": "Piece min",
+        #             "str_shape_volume_pcc_std": "Piece std",
+        #             "str_shape_volume_pcc_sum": "Piece sum",
+        #         }
+        #     )
+        #     pieces.set_index("CellId", drop=False, inplace=True)
+        #     cells.update(pieces)
 
         # %% Post-processing and checking
-        sv = cells["Structure volume"].to_numpy()
-        ps = cells["Piece sum"].to_numpy()
-        sn = cells["structure_name"].to_numpy()
-        pos = np.argwhere(np.divide(abs(ps - sv), sv) > 0)
-        print(f"{len(pos)} mismatches in {np.unique(sn[pos])}")
-        posS = np.argwhere(np.divide(abs(ps - sv), sv) > 0.01)
-        print(f"{len(posS)} larger than 1%")
-        posT = np.argwhere(np.divide(abs(ps - sv), sv) > 0.1)
-        print(f"{len(posT)} larger than 10%")
-        # cells.drop(labels='Unnamed: 0', axis=1, inplace=True)
-        cells.reset_index(drop=True, inplace=True)
-        print(np.any(cells.isnull()))
-        cells.loc[cells["Piece std"].isnull(), "Piece std"] = 0
-        print(np.any(cells.isnull()))
+        # sv = cells["Structure volume"].to_numpy()
+        # ps = cells["Piece sum"].to_numpy()
+        # sn = cells["structure_name"].to_numpy()
+        # pos = np.argwhere(np.divide(abs(ps - sv), sv) > 0)
+        # print(f"{len(pos)} mismatches in {np.unique(sn[pos])}")
+        # posS = np.argwhere(np.divide(abs(ps - sv), sv) > 0.01)
+        # print(f"{len(posS)} larger than 1%")
+        # posT = np.argwhere(np.divide(abs(ps - sv), sv) > 0.1)
+        # print(f"{len(posT)} larger than 10%")
+        # # cells.drop(labels='Unnamed: 0', axis=1, inplace=True)
+        # cells.reset_index(drop=True, inplace=True)
+        # print(np.any(cells.isnull()))
+        # cells.loc[cells["Piece std"].isnull(), "Piece std"] = 0
+        # print(np.any(cells.isnull()))
 
         # %% Save
         cells.to_csv(data_root / dataset_filtered)
@@ -213,6 +222,11 @@ def diagnostic_violins(
 
     # Load dataset
     cells = pd.read_csv(data_root / dataset)
+
+    # Drop cells with imagedata
+    print(len(cells))
+    cells.dropna(axis=0,subset=['ImageDate'],inplace=True)
+    print(len(cells))
 
     # %% Parameters, updated directories
     save_flag = 1  # save plot (1) or show on screen (0)
@@ -342,7 +356,7 @@ def diagnostic_violins(
     # %% Plot structure over FOVids
     # Still missing:
     # 'DNA_MEM_UMAP1', 'DNA_MEM_UMAP2',
-    #
+    # DNA_MEM_PC1
 
     selected_metrics = [
         "Cell surface area",
@@ -357,20 +371,15 @@ def diagnostic_violins(
         "Cell ybox",
         "Nucleus height",
         "Nucleus xbox",
-        "Piece average",
-        "Piece max",
-        "Piece min",
-        "Piece std",
-        "Piece sum",
         "Nucleus ybox",
-        "DNA_MEM_PC1",
-        "DNA_MEM_PC2",
-        "DNA_MEM_PC3",
-        "DNA_MEM_PC4",
-        "DNA_MEM_PC5",
-        "DNA_MEM_PC6",
-        "DNA_MEM_PC7",
-        "DNA_MEM_PC8",
+        "NUC_MEM_PC1",
+        "NUC_MEM_PC2",
+        "NUC_MEM_PC3",
+        "NUC_MEM_PC4",
+        "NUC_MEM_PC5",
+        "NUC_MEM_PC6",
+        "NUC_MEM_PC7",
+        "NUC_MEM_PC8",
     ]
 
     for i, metric in enumerate(selected_metrics):
