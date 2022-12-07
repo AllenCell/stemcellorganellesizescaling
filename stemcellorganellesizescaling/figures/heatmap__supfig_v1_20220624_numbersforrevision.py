@@ -1669,6 +1669,24 @@ for i, bin in enumerate(np.unique(xi)):
 
 xs = x[z == 1] * ((0.108333) ** 3)
 ys = y[z == 1] * ((0.108333) ** 2)
+id = cells["CellId"].to_numpy()
+ids = id[z == 1]
+
+# %%
+III = pd.DataFrame(columns=['CellId','Nuclear volume','Nuclear surface area'])
+III['CellId'] = ids
+III['Nuclear volume'] = xs
+III['Nuclear surface area'] = ys
+III.to_csv(pic_root / f"numbersforSF7I_sphericalnuclei.csv")
+
+# %%
+
+growvec_df = pd.DataFrame(growvec,columns=['y median','y 5 percentile','y 95 percentile'])
+panAll_df = pd.DataFrame(panAll,columns=['x median','x 5 percentile','x 95 percentile'])
+AAA = pd.concat([structures.reset_index(),panAll_df.reset_index(),growvec_df.reset_index()],axis=1)
+AAA.to_csv(pic_root / f"numbersforSF7H.csv")
+
+
 
 x = x * ((0.108333) ** 3)
 y = y * ((0.108333) ** 2)
@@ -1764,6 +1782,9 @@ ascatter(
 
 if PrintType != 'png':
     axNuc.plot(xs, ys, ".", color="peru")
+
+
+
     axNuc.plot(
         plot_array["Vol. sum voxels"] * ((0.108333) ** 3),
         plot_array["Area pixelate"] * ((0.108333) ** 2),
@@ -1868,6 +1889,7 @@ for i, typ in enumerate(CompMat["Type"].unique()):
         yc = MatCom[ord, 0]
         axLin.plot([xc, xc], yi, "r", linewidth=lw)
         axLin.plot(xi, [yc, yc], "r", linewidth=lw)
+
 for i, typ in enumerate(CompMat["Type"].unique()):
     MatLin = CompMat.loc[
         CompMat["Type"] == typ, ["Lin", "Lin_min", "Lin_max"]
@@ -1903,6 +1925,8 @@ axLin.set_xlabel("Expl. Var. for linear models (%)")
 axLin.set_ylabel("Expl. Var. for non-linear models (%)       ")
 xlim = axLin.get_xlim()
 ylim = axLin.get_ylim()
+
+1/0
 # axLin.text(
 #     xlim[0] - 0.15 * (xlim[1] - xlim[0]),
 #     ylim[1],
